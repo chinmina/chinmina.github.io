@@ -10,7 +10,7 @@ hero:
     - text: Getting Started
       link: /guides/getting-started
       icon: right-arrow
-    - text: What is Chinmina?
+    - text: Learn more
       link: introduction
       icon: information
       variant: minimal
@@ -18,19 +18,20 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components"
 
-## Next steps
+## At a glance
 
 <CardGrid stagger>
-  <Card title="Update content" icon="pencil">
-    Edit `src/content/docs/index.mdx` to see this page change.
+  <Card title="Security" icon="seti:license">
+    Retire long-lived deploy keys and PATs for Git operations.
   </Card>
-  <Card title="Add new content" icon="add-document">
-    Add Markdown or MDX files to `src/content/docs` to create new pages.
+  <Card title="Simplicity" icon="rocket">
+    GitHub access for new pipelines is incredibly simple.
   </Card>
-  <Card title="Configure your site" icon="setting">
-    Edit your `sidebar` and other config in `astro.config.mjs`.
+  <Card title="Self-hosted" icon="laptop">
+    Like the Elastic Stack, BYO compute. Your environment, your security.
   </Card>
-  <Card title="Read the docs" icon="open-book">
-    Learn more in [the Starlight Docs](https://starlight.astro.build/).
+  <Card title="Visibility" icon="magnifier">
+    Audit logs give clarity over which pipelines are accessing what
+    repositories.
   </Card>
 </CardGrid>
