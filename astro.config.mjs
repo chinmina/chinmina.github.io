@@ -21,14 +21,15 @@ export default defineConfig({
         },
         {
           label: "Guides",
-          items: [
-            // Each item here is one entry in the navigation menu.
-            { label: "Private keys with KMS", slug: "guides/kms" },
-          ],
+          autogenerate: { directory: "guides" },
         },
         {
           label: "Reference",
           autogenerate: { directory: "reference" },
+        },
+        {
+          label: "Contributing",
+          autogenerate: { directory: "contributing" },
         },
       ],
     }),
