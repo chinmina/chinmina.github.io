@@ -1,0 +1,7 @@
+semi: false
+tabWidth: 2
+overrides:
+  - files: "*.mdx?"
+    options:
+      tabWidth: 3
+      proseWrap: always
