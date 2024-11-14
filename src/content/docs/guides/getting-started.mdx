@@ -3,9 +3,14 @@ title: Getting started
 description: What you need to prepare to get Chinmina going.
 ---
 
-import { Aside, Steps } from "@astrojs/starlight/components"
+import { Aside, Badge, Steps } from "@astrojs/starlight/components"
 
-Requirements:
+Chinmina itself is a simple service, but it sits in the middle of an ecosystem.
+This means that a working installation requires a number of setup items.
+
+## Requirements
+
+Before you start, there are a few things you'll need to have:
 
 1. A Buildkite organization, and a user with sufficient access to create an API
    token that can be used to get the details of any pipeline that is expected to
@@ -17,14 +22,14 @@ Requirements:
 4. Ability to allow Buildkite agents to download and use a custom plugin _or_
    ability to add a plugin to the default settings of the Buildkite agents.
 
-### Buildkite setup
+## Buildkite setup
 
 Create an API key with access to the REST API **only** with access to the `read_pipelines` scope.
 
 Save the key securely: it will be provided to the server in a later step. Use a
 "bot" user to create the token if you can.
 
-### Github setup
+## Github setup
 
 <Steps>
 
@@ -49,46 +54,57 @@ Be sure to collect:
 
 </Aside>
 
-### Configure and deploy the bridge server
+## Chinmina Bridge setup
 
 The server is a Go application expecting to read configuration from environment
-variables, and can be deployed to a server or as a container.
+variables, and can be deployed to a container runtime environment or a server.
+Container distribution is recommended.
 
-#### Variables
+It is possible to run multiple instances together in a cluster. While the
+internal cache is not shared between instances, this will only affect the
+latency, not the correctness.
 
-**Server**
+#### Essential configuration
 
-- `SERVER_PORT` (optional, default `8080`): the TCP port the server will listen on.
-- `SERVER_SHUTDOWN_TIMEOUT_SECS` (optional, default `25`): the number of seconds
-  the server will wait when asked to terminate with `SIGINT`
+A minimal configuration of the service requires at least the configuration
+below. See the [Configuration](../reference/configuration) reference for details of all
+configuration.
 
-**Authorization**
+- [`JWT_BUILDKITE_ORGANIZATION_SLUG`][jwt_buildkite_organization_slug] <Badge text="required"/>
 
-- `JWT_BUILDKITE_ORGANIZATION_SLUG` (**required**): the slug of your Buildkite
-  organization. This is the identifier of your organization that appears in your
-  Buildkite URLs.
-- `JWT_AUDIENCE` (optional, default=`app-token-issuer`): The expected value of the
-  `aud` claim in the JWT. Describes the intended audience of the issued JWT
-  token, guards against token reuse. Using a non-default value will require configuration of the credentials helper plugin.
-- `JWT_ISSUER_URL` (optional, default `https://agent.buildkite.com`): the
-  expected value of the `iss` claim in the agent JWT. Also used to discover the
-  JWKS configuration from the `.well-known` address.
-- `JWT_JWKS_STATIC` (optional): a local JWKS JSON file that can be used instead
-  of Buildkite. Used to verify the JWT sent by the Buildkite agents to the
-  server. This should only be required for server testing, as agents will only
-  create a token using the Buildkite key.
+  The slug of your Buildkite organization. This is the identifier of your
+  organization that appears in your Buildkite URLs.
 
-**Buildkite API**
+- [`JWT_AUDIENCE`][jwt_audience] <Badge text="optional" variant="tip"/> _default: `app-token-issuer`_
 
-- `BUILDKITE_API_TOKEN` (**required**): The API token created for pipeline
-  metadata lookups. **Store securely and provide to the container securely.**
+  The expected value of the `aud` claim in the JWT. Describes the intended
+  audience of the issued JWT token, and guards against token reuse. While this
+  is optional, it's a good idea for this to be unique to the installation.
 
-**GitHub API connectivity**
+- [`BUILDKITE_API_TOKEN`][buildkite_api_token] <Badge text="required"/>
 
-- `GITHUB_APP_PRIVATE_KEY` (**required**): The PEM formatted private key of the
-  created Github app. **Store securely and provide to the container securely.**
-  This is a highly sensitive credential.
-- `GITHUB_APP_ID` (**required**): The application ID of the Github application
-  created above.
-- `GITHUB_APP_INSTALLATION_ID` (**required**): The installation ID of the
-  created Github application into your organization.
+  The API token created for pipeline metadata lookups. **Store securely and
+  provide to the container securely.**
+
+- [`GITHUB_APP_PRIVATE_KEY`][github_app_private_key] <Badge text="required"/>
+
+  The PEM formatted private key of the created Github app. **Store securely and
+  provide to the container securely.** This is a highly sensitive credential.
+
+- [`GITHUB_APP_ID`][github_app_id] <Badge text="required"/>
+
+  The application ID of the Github application created above.
+
+- [`GITHUB_APP_INSTALLATION_ID`][github_app_installation_id] <Badge text="required"/>
+
+  The installation ID of the created Github application into your organization.
+
+The service will start (by default) on port 8080, but this is
+[configurable](../../reference/configuration#server_port)
+
+[jwt_buildkite_organization_slug]: ../../reference/configuration#jwt_buildkite_organization_slug
+[jwt_audience]: ../../reference/configuration#jwt_audience
+[buildkite_api_token]: ../../reference/configuration#buildkite_api_token
+[github_app_private_key]: ../../reference/configuration#github_app_private_key
+[github_app_id]: ../../reference/configuration#github_app_id
+[github_app_installation_id]: ../../reference/configuration#github_app_installation_id
