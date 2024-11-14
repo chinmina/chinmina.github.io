@@ -30,11 +30,15 @@ being built.
 | Issuer   | `https://token.actions.githubusercontent.com`                                                        |
 | Identity | `https://github.com/jamestelfer/chinmina-bridge/.github/workflows/release.yaml@refs/tags/<tag name>` |
 
-> [!IMPORTANT] > **Git tags are not static:** they can be updated to point to a different
-> commit SHA. Examine the recorded claims for the exact commit.
->
-> There are claims recorded for the exact commit of both the workflow that
-> produced the artifact and the commit that the artifact source was built from.
+:::caution
+
+**Git tags are not static:** they can be updated to point to a different
+commit SHA. Examine the recorded claims for the exact commit.
+
+There are claims recorded for the exact commit of both the workflow that
+produced the artifact and the commit that the artifact source was built from.
+
+:::
 
 ## Verifying an image release
 
@@ -61,6 +65,9 @@ cosign verify "chinmina/chinmina-bridge:$TAG" \
 The path `.[].optional.Bundle.Payload.logIndex` is the index entry in the public
 transparency log, recording the details of the signing event. The details of the
 event can be found at: https://search.sigstore.dev/.
+
+For a concrete example, check out the [log entry for
+v0.7.0](https://search.sigstore.dev/?logIndex=137373725).
 
 ## Verifying the binary releases
 
