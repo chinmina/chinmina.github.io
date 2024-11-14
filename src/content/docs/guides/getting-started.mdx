@@ -3,15 +3,18 @@ title: Getting started
 description: What you need to prepare to get Chinmina going.
 ---
 
+import { Aside, Steps } from "@astrojs/starlight/components"
+
 Requirements:
 
 1. A Buildkite organization, and a user with sufficient access to create an API
    token that can be used to get the details of any pipeline that is expected to
    be built.
-1. A Github organization, and a user with sufficient permissions to create a
+2. A Github organization, and a user with sufficient permissions to create a
    Github App and install it into the organization.
-1. Ability to deploy a server that can be accessed by the build agents (for example, an ECS service)
-1. Ability to allow Buildkite agents to download and use a custom plugin _or_
+3. Ability to deploy a server that can be accessed by the build agents (for
+   example, an ECS service)
+4. Ability to allow Buildkite agents to download and use a custom plugin _or_
    ability to add a plugin to the default settings of the Buildkite agents.
 
 ### Buildkite setup
@@ -23,13 +26,28 @@ Save the key securely: it will be provided to the server in a later step. Use a
 
 ### Github setup
 
-1. Create an application in your Github organization
-   - The application must request `contents:read`
-   - Note the application ID
-   - Create and save a private key for the application
-2. Install the application into the Github organization
-   - choose the repositories the application will have access to. This is the
-     limit of the resources that the application can vend tokens for.
+<Steps>
+
+1. Create an application in your Github organization, adding `contents:read` as the repository permissions. **Note the Application ID**.
+
+2. Create and save a private key for the application
+
+3. Install the application into the Github organization
+
+   Choose the repositories the application will have access to. This is the
+   limit of the resources that the application can vend tokens for.
+
+</Steps>
+
+<Aside type="tip">
+Be sure to collect:
+
+- the Application ID of the application created. This is found in the "About"
+  section of the "General" page of the application.
+- the Installation ID if the application in your organization. The Installation
+  ID is the last segment of the URL on the installation configuration page.
+
+</Aside>
 
 ### Configure and deploy the bridge server
 
