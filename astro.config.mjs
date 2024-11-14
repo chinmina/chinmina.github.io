@@ -6,11 +6,13 @@ import starlightHeadingBadges from "starlight-heading-badges"
 // https://astro.build/config
 export default defineConfig({
   site: "https://chinmina.github.io",
+
   integrations: [
     starlight({
       plugins: [starlightHeadingBadges()],
 
       title: "Chinmina",
+      logo: { src: "/src/assets/chinmina-logo-white.png", alt: "Chinmina" },
       social: {
         github: "https://github.com/chinmina/chinmina-bridge",
       },
