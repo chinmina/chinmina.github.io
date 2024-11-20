@@ -1,5 +1,5 @@
 ---
-title: Configuration Reference
+title: Configuration
 description: Details of all configuration options available.
 ---
 

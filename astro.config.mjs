@@ -23,7 +23,13 @@ export default defineConfig({
         },
         {
           label: "Guides",
-          autogenerate: { directory: "guides" },
+          items: [
+            { slug: "guides/getting-started" },
+            { slug: "guides/buildkite-integration" },
+            { slug: "guides/kms" },
+            { slug: "guides/observability" },
+            { slug: "guides/verifying-releases" },
+          ],
         },
         {
           label: "Reference",
