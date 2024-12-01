@@ -51,7 +51,15 @@ _(default: `app-token-issuer`)_
 
 The audience that is expected on incoming OIDC tokens. This value must be supplied to `buildkite-agent oidc create`.
 
-**It is recommended to set this value to a simple string relevant to the installation environment.**
+:::tip
+
+Recommendation: `chinmina:your-github-organization`. This is specific to the
+purpose of the token, and also scoped to the GitHub organization that tokens
+will be vended for. `chinmina-bridge`'s GitHub app is configured for a
+particular GitHub organization/user, so if you have multiple organizations,
+multiple agents will need to be running.
+
+:::
 
 ### Development settings
 
