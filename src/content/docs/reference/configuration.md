@@ -97,7 +97,7 @@ supplied the `read_pipelines` scope.
 
 Either `GITHUB_APP_PRIVATE_KEY` or `GITHUB_APP_PRIVATE_KEY_ARN` is required.
 
-`GITHUB_APP_PRIVATE_KEY_ARN` is strongly recommended where possible.
+`GITHUB_APP_PRIVATE_KEY_ARN` is strongly recommended where possible (see [KMS configuration](../../guides/kms)).
 
 :::
 
