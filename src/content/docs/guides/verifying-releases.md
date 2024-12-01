@@ -25,10 +25,10 @@ The certificates issued by the release are issued for the GitHub Actions OIDC
 provider, and the identity is the executed workflow, referenced by the Git tag
 being built.
 
-| Field    | Format                                                                                               |
-| -------- | ---------------------------------------------------------------------------------------------------- |
-| Issuer   | `https://token.actions.githubusercontent.com`                                                        |
-| Identity | `https://github.com/jamestelfer/chinmina-bridge/.github/workflows/release.yaml@refs/tags/<tag name>` |
+| Field    | Format                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Issuer   | `https://token.actions.githubusercontent.com`                                                     |
+| Identity | `https://github.com/chinmina/chinmina-bridge/.github/workflows/release.yaml@refs/tags/<tag name>` |
 
 :::caution
 
@@ -51,14 +51,14 @@ An image can be verified with the following `cosign` command:
 TAG=vX.Y.Z \
 cosign verify "chinmina/chinmina-bridge:$TAG" \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  --certificate-identity "https://github.com/jamestelfer/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG" \
+  --certificate-identity "https://github.com/chinmina/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG" \
   --output text
 
 # more details are available if you use JSON output:
 TAG=vX.Y.Z \
 cosign verify "chinmina/chinmina-bridge:$TAG" \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  --certificate-identity "https://github.com/jamestelfer/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG" \
+  --certificate-identity "https://github.com/chinmina/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG" \
   --output json | jq
 ```
 
@@ -82,7 +82,7 @@ ARCH=arm64
 
 # download the binary
 curl -L -o chinmina-bridge_linux_${ARCH}.tar.gz \
-  https://github.com/jamestelfer/chinmina-bridge/releases/download/${TAG}/chinmina-bridge_linux_${ARCH}.tar.gz
+  https://github.com/chinmina/chinmina-bridge/releases/download/${TAG}/chinmina-bridge_linux_${ARCH}.tar.gz
 
 # extract to the current directory
 tar xvf chinmina-bridge_linux_${ARCH}.tar.gz
@@ -92,7 +92,7 @@ cosign verify-blob \
   chinmina-bridge \
   --bundle chinmina-bridge.cosign.bundle \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-  --certificate-identity "https://github.com/jamestelfer/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG"
+  --certificate-identity "https://github.com/chinmina/chinmina-bridge/.github/workflows/release.yaml@refs/tags/$TAG"
 
 # peek the details
 jq -r '.rekorBundle.Payload.logIndex | "https://search.sigstore.dev/?logIndex=\(.)"' < chinmina-bridge.cosign.bundle
