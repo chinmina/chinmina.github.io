@@ -24,11 +24,11 @@ export default defineConfig({
         {
           label: "Guides",
           items: [
-            { slug: "guides/getting-started" },
-            { slug: "guides/buildkite-integration" },
-            { slug: "guides/kms" },
-            { slug: "guides/observability" },
-            { slug: "guides/verifying-releases" },
+            "guides/getting-started",
+            "guides/buildkite-integration",
+            "guides/kms",
+            "guides/observability",
+            "guides/verifying-releases",
           ],
         },
         {
