@@ -1,0 +1,74 @@
+---
+title: Local development
+description: Setting up a local development environment so you can contribute to Chinmina.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components"
+
+Running Chinmina locally is a crucial part of successfully contributing. Since
+Chinmina acts as a bridge between Buildkite and GitHub though, local execution
+has similar prerequisites to installing it into a standard environment.
+
+This guide will walk you through the setup of GitHub and Buildkite, then
+introduce running the server locally in Docker. It is possible to run the
+executable directly, but this tends to make running the server more difficult.
+
+## Setting up your local environment
+
+Required tools:
+
+2. [`direnv`](https://direnv.net/) for local environment configuration
+3. Docker (`docker compose`) to run the server on the local machine.
+4. Go language and toolchain.
+
+This project makes use of the Go language and toolchain, `direnv` , and `docker compose` to run the server. Setting these
+up is outside of the scope of this document, however note that
+
+<Aside type="tip">
+
+The Go environment in use needs to be able to build the version specified in the
+project's `go.mod` file.
+
+[Mise](https://mise.jdx.dev/) is a useful tool for ensuring that you have
+the right toolchain for this project, in such a way that it doesn't mess with
+other projects.
+
+</Aside>
+
+## Setting up GitHub and Buildkite
+
+Refer to the ["Getting Started" guide's](../guides/getting-started) sections on
+Buildkite and GitHub for the creation of the Buildkite API key and the GitHub
+application.
+
+Collect the configuration values as suggested.
+
+## Server configuration
+
+<Steps>
+
+1. Setup your local environment by creating a `.envrc.local` file, using the
+   template provided in the repository's `.envrc` file. This file's contents will
+   override any defaults set in `.envrc`.
+
+2. Using the "Getting started" guide's [essential
+   configuration](getting-started#chinmina-bridge-setup) section, fill in the
+   suggested values in `.envrc.local`.
+
+3. Run `direnv allow` to bring the updated configuration into the environment.
+
+</Steps>
+
+## Running the server
+
+This project uses the venerable `make` as a build tool.
+
+Run:
+
+- `make build` to build the executables
+- `make test` to ... run the tests
+- `make docker` to start the system with Docker Compose, running Chinmina, the Buildkite agent and Jaeger.
+
+When `compose` is running, the Builkite agents will process jobs from pipelines
+in your test organization, and authenticate to GitHub. Jaeger is accessible to
+observe the Chinmina telemetry.
