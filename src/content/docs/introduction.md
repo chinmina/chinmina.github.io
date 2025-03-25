@@ -6,7 +6,7 @@ description: A reference page in my new Starlight docs site.
 **Connect Buildkite to GitHub with secure, short-lived tokens.**
 
 Chinmina Bridge is a simple web service that acts as an intermediary between a
-Buildkite installation and a related [Github App][github-app]. Buildkite agents can request
+Buildkite installation and a related [GitHub App][github-app]. Buildkite agents can request
 [ephemeral GitHub access tokens][github-app-tokens] from Chinmina Bridge, removing the need to store
 Deploy Keys or Personal Access Tokens long term.
 
