@@ -91,6 +91,10 @@ Testing only. The issuer URL expected on incoming OIDC JWT tokens.
 The Buildkite token used to access the Buildkite REST API. Should only be
 supplied the `read_pipelines` scope.
 
+###### `BUILDKITE_AGENT_TAGS` 
+
+Used in testing only. These comma-separated, key-value pairs should be provided in order for the created agent containers to accept jobs.
+
 ## GitHub API
 
 :::tip
@@ -117,7 +121,14 @@ GitHub App ID of the app itself.
 
 ###### `GITHUB_APP_INSTALLATION_ID` :badge[required]
 
-The ID for the installation of the App in your organisation.
+The ID for the installation of the App in your organization.
+
+###### `GITHUB_ORG_PROFILE`
+
+The location of your organization profile, if in use. This should be a URL of
+the form `https://github.com/<OWNER>/<REPO>/<PATH_TO_FILE>`. No other format is accepted.
+
+The contents of this organization profile must conform to the [organization profile configuration format][org-profile-config].
 
 ## Open Telemetry
 
@@ -202,3 +213,4 @@ variables available.
 :::
 
 [otel-exporter-config]: https://opentelemetry.io/docs/specs/otel/protocol/exporter/#configuration-options
+[org-profile-config]: ../organization-profile
