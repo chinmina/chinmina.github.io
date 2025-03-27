@@ -1,5 +1,5 @@
 ---
-title: Organization Profiles
+title: Organization profiles
 description: Details of what an organization profile is and how it is used.
 ---
 
@@ -7,11 +7,16 @@ Organization profiles are a way to facilitate cross-repository access for
 pipelines as well as managing the permissions provided by the tokens that
 Chinmina Bridge creates.
 
+If you are using Chinmina to manage Buildkite's access to GitHub, you will
+need to use organization profiles in order to provide access to non-public
+repositories. Examples where you may need to do this include accessing private
+packages or releases, or loading Buildkite plugins from private repositories.
+
 :::tip
 
-To use an organization profile, you must provide the URL of the profile in the
-`GITHUB_ORG_PROFILE` environment variable, as well as request the profile in
-your request to Chinmina. If a profile is not specified, or if there is no
+To use an organization profile, you must provide the location of the profile in
+the `GITHUB_ORG_PROFILE` environment variable, as well as request the profile 
+in your request to Chinmina. If a profile is not specified, or if there is no
 profile configured for the organization, Chinimina will instead default to
 providing access to the repository that the pipeline is running in.
 

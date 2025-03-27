@@ -91,10 +91,6 @@ Testing only. The issuer URL expected on incoming OIDC JWT tokens.
 The Buildkite token used to access the Buildkite REST API. Should only be
 supplied the `read_pipelines` scope.
 
-###### `BUILDKITE_AGENT_TAGS` 
-
-Used in testing only. These comma-separated, key-value pairs should be provided in order for the created agent containers to accept jobs.
-
 ## GitHub API
 
 :::tip
@@ -125,8 +121,8 @@ The ID for the installation of the App in your organization.
 
 ###### `GITHUB_ORG_PROFILE`
 
-The location of your organization profile, if in use. This should be a URL of
-the form `https://github.com/<OWNER>/<REPO>/<PATH_TO_FILE>`. No other format is accepted.
+The location of your organization profile, if in use. This should be a triplet
+of the form `<OWNER>:<REPO>:<PATH_TO_FILE>`. No other format is accepted.
 
 The contents of this organization profile must conform to the [organization profile configuration format][org-profile-config].
 
