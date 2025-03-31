@@ -50,7 +50,7 @@ credential helper is configured in Git.
 
 In essence, Git calls the Credential Helper, which defers to Chinmina
 (authenticated with an OIDC token for this pipeline). Chinmina returns a result
-in the Git credentials helper format containing the required username and the
+in the Git credentials helper format containing the required username, and the
 token created for the pipeline.
 
 ```d2 sketch=true title="sequence diagram showing Git authentication integration with Chinmina"
