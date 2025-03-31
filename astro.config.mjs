@@ -3,6 +3,8 @@ import { defineConfig } from "astro/config"
 import starlight from "@astrojs/starlight"
 import starlightHeadingBadges from "starlight-heading-badges"
 
+import d2 from "astro-d2"
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://chinmina.github.io",
@@ -40,6 +42,9 @@ export default defineConfig({
           autogenerate: { directory: "contributing" },
         },
       ],
+    }),
+    d2({
+      layout: "elk",
     }),
   ],
 })

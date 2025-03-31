@@ -43,6 +43,41 @@ Enabling at the agent level is recommended (see below).
 
 :::
 
+## How it works
+
+The following gives a high-level overview of the actions performed when the
+credential helper is configured in Git.
+
+In essence, Git calls the Credential Helper, which defers to Chinmina
+(authenticated with an OIDC token for this pipeline). Chinmina returns a result
+in the Git credentials helper format containing the required username, and the
+token created for the pipeline.
+
+```d2 sketch=true title="sequence diagram showing Git authentication integration with Chinmina"
+shape: sequence_diagram
+
+buildkite-job: Buildkite Job
+git: Git
+credential-helper: Credential Helper
+chinmina: Chinmina Bridge
+buildkite-api: Buildkite API
+
+buildkite-job.clone -> git.auth: clone
+git.auth -> credential-helper.req: get credentials
+
+credential-helper.req -> buildkite-api.token: request OIDC token
+credential-helper.req <- buildkite-api.token: Buildkite OIDC token
+
+credential-helper.req -> chinmina.helper: request GH token\n(using Buildkite OIDC token)
+chinmina.helper -> buildkite-api.repo: get pipeline details
+chinmina.helper <- buildkite-api.repo: pipeline repository
+credential-helper.req <- chinmina.helper: scoped GitHub token
+
+git.auth <- credential-helper.req: \"x-access-token\" /app-token
+
+buildkite-job.clone <- git.auth: complete
+```
+
 ## Configuration
 
 ### On pipeline steps

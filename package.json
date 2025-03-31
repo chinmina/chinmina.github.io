@@ -14,6 +14,7 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/starlight": "^0.32.4",
     "astro": "^5.5.4",
+    "astro-d2": "^0.7.0",
     "sharp": "^0.33.5",
     "starlight-heading-badges": "^0.5.0",
     "typescript": "^5.8.2"
