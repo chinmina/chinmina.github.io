@@ -40,6 +40,18 @@ application.
 
 Collect the configuration values as suggested.
 
+Additionally, to run alongside Chinmina, there are several Buildkite Agent
+containers that are started. These will require the following environment
+variables to be forwarded in order to run correctly:
+
+###### `BUILDKITE_AGENT_TOKEN`
+
+The agent token available from Buildkite when setting up a queue.
+
+###### `BUILDKITE_AGENT_TAGS`
+
+Used in testing only. These comma-separated, key-value pairs should be provided in order for the created agent containers to accept jobs.
+
 ## Server configuration
 
 <Steps>
@@ -66,6 +78,6 @@ Run:
 - `make test` to ... run the tests
 - `make docker` to start the system with Docker Compose, running Chinmina, the Buildkite agent and Jaeger.
 
-When `compose` is running, the Builkite agents will process jobs from pipelines
+When `compose` is running, the Buildkite agents will process jobs from pipelines
 in your test organization, and authenticate to GitHub. Jaeger is accessible to
 observe the Chinmina telemetry.
