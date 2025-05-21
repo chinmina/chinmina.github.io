@@ -15,9 +15,13 @@ export default defineConfig({
 
       title: "Chinmina",
       logo: { src: "/src/assets/chinmina-logo-white.png", alt: "Chinmina" },
-      social: {
-        github: "https://github.com/chinmina/chinmina-bridge",
-      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/chinmina/chinmina-bridge",
+        },
+      ],
       sidebar: [
         {
           label: "Introduction",
