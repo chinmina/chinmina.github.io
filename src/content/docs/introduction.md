@@ -14,34 +14,48 @@ Deploy Keys or Personal Access Tokens long term.
 
 ## Benefits
 
-There are two substantial benefits here:
+There are two substantial benefits when Chinmina Bridge is integrated with your Buildkite stack:
 
-### 1. Security
+### Security
 
-1. The potential impact of a compromised token is lowered. Tokens are valid for
-   a maximum of one hour, and only provide read access to the pipeline
-   repository.
-2. Issuing keys per repository is no longer required. This often requires
-   elevated repository permissions, and keys issued to individuals have a higher
+1. Access tokens for the repository have a lifetime of one hour and only provide
+   read access to the pipeline repository. There is no token to store and
+   refresh: it's entirely automatic.
+
+2. Issuing [deploy keys per
+   repository](https://buildkite.com/docs/agent/v3/github-ssh-keys) is no longer
+   required. Deploy keys are long-lived credentials that require elevated
+   repository permissions, and keys issued to individuals have a higher
    potential to be accidentally leaked.
-3. The number of keys requiring storage is significantly decreased. The GitHub
-   app private key is stored: no other token storage is required.
-4. With KMS, the highly sensitive private key cannot be extracted. When configured
-5. Auditing
 
-### 2. Flexibility
+3. The GitHub app private key is the only key that is stored: no other token
+   storage is required.
+
+4. With KMS, the highly sensitive private key cannot be extracted. When
+   configured [as described in our guide](guides/kms), the Chinmina service uses
+   KMS to sign the GitHub JWT, and never has access to the raw key material.
+
+5. [Audit-friendly logs are written](guides/observability) for each token
+   request, whether successful or unsuccessful. These can be readily connected
+   to your SIEM system, adding transparency and traceability to the system.
+
+### Flexibility
 
 Once configured, Buildkite pipelines get automatic read access to their source
 repository. This reduces complexity in the provisioning process.
 
 ## Drawbacks
 
-1. You need to host the service, and keep it up. Given that it is a simple,
-   containerized HTTP service, this is thankfully relatively straightforward.
+1. Chinmina needs to be self-hosted alongside the Buildkite agent
+   infrastructure. It is a single point of failure in the system also, and
+   critical to keep up. Given that it is a simple, containerized HTTP service
+   with Open Telemetry support, this is thankfully relatively straightforward.
+
 2. The private key for the GitHub application is quite powerful, and needs to be
    carefully protected. It has the superset of permissions that it can delegate.
    Storing the key in AWS KMS and using careful resource and IAM policies on
-   access is therefore strongly recommended.
+   access is therefore [strongly recommended](guides/kms).
+
 3. Adequate controls are required on Buildkite pipeline creation. At present,
    the bridge will allow access by the pipeline to the configured repository.
    Controls are required to ensure that repository access is appropriately
