@@ -101,11 +101,11 @@ Either `GITHUB_APP_PRIVATE_KEY` or `GITHUB_APP_PRIVATE_KEY_ARN` is required.
 
 :::
 
-###### `GITHUB_APP_PRIVATE_KEY` :badge[required*]
+###### `GITHUB_APP_PRIVATE_KEY` :badge[required]
 
 The GitHub Application private key in PEM format, supplied as text (not a file path).
 
-###### `GITHUB_APP_PRIVATE_KEY_ARN` :badge[required*]
+###### `GITHUB_APP_PRIVATE_KEY_ARN` :badge[required]
 
 The AWS KMS key (or alias) resource ARN that has been configured for use by Chinmina.
 
