@@ -132,10 +132,17 @@ configuration.
   The API token created for pipeline metadata lookups. **Store securely and
   provide to the container securely.**
 
-- <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not available.**
+- **Either**:
+  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY_ARN" />
 
-  The PEM formatted private key of the created GitHub app. **Store securely and
-  provide to the container securely.** This is a highly sensitive credential.
+    It is **strongly** recommended to [store the private key in AWS KMS](./kms)
+    and provide the ARN of the key here. This will allow Chinmina to sign tokens
+    but protects the key from extraction and misuse.
+
+  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not available.**
+
+    The PEM formatted private key of the created GitHub app. **Store securely and
+    provide to the container securely.** This is a highly sensitive credential.
 
 - <ConfigRef name="GITHUB_APP_ID" />
 
