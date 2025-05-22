@@ -5,6 +5,11 @@ description: What you need to prepare to get Chinmina going.
 
 import { Aside, Badge, Steps } from "@astrojs/starlight/components"
 
+{/* Shorthand component for a badge that indicates a value to be collected. */}
+export function Later({ name }) {
+  return <Badge text={`📝 ${name}`} variant="tip" />;
+}
+
 Chinmina itself is a simple service, but it sits in the middle of an ecosystem.
 This means that a working installation requires a number of setup items.
 
@@ -25,7 +30,7 @@ Before you start, there are a few things you'll need to have:
 ## As you go
 
 Values to save for required configuration are marked in the instructions below
-like this: <Badge text="📝 ENV_VAR_NAME" variant="tip" />.
+like this: <Later name="ENV_VAR_NAME" />.
 
 Collect these values as you proceed so they can be provided for your
 installation's configuration.
@@ -33,7 +38,7 @@ installation's configuration.
 ## Buildkite setup
 
 Create an API key with access to the REST API **only** with access to the
-`read_pipelines` scope. Save as <Badge text="📝 BUILDKITE_API_TOKEN" variant="tip" />.
+`read_pipelines` scope. Save as <Later name="BUILDKITE_API_TOKEN" />.
 
 <Aside type="tip">
   Use a "bot" user to create the token if you can, as this will not be affected
@@ -50,11 +55,11 @@ Create an API key with access to the REST API **only** with access to the
    Collect the "Application ID" of the application created. This is found in the
    "About" section of the "General" page of the application in the GitHub UI.
 
-   Save as <Badge text="📝 GITHUB_APP_ID" variant="tip" />
+   Save as <Later name="GITHUB_APP_ID" />
 
 2. Create and save a private key for the application.
 
-   Save as <Badge text="📝 GITHUB_APP_PRIVATE_KEY" variant="tip" />.
+   Save as <Later name="GITHUB_APP_PRIVATE_KEY" />.
 
 3. Install the application into the GitHub organization
 
@@ -64,7 +69,7 @@ Create an API key with access to the REST API **only** with access to the
    Collect the "Installation ID" if the application in your organization. The Installation
    ID is the last segment of the URL on the installation configuration page.
 
-   Save as <Badge text="📝 GITHUB_APP_INSTALLATION_ID" variant="tip" />
+   Save as <Later name="GITHUB_APP_INSTALLATION_ID" />
 
 </Steps>
 
