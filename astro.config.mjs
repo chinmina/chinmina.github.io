@@ -8,6 +8,7 @@ import d2 from "astro-d2"
 // https://astro.build/config
 export default defineConfig({
   site: "https://chinmina.github.io",
+  trailingSlash: "never",
 
   integrations: [
     starlight({

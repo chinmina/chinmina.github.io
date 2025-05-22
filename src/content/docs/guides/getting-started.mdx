@@ -5,6 +5,11 @@ description: What you need to prepare to get Chinmina going.
 
 import { Aside, Badge, Steps } from "@astrojs/starlight/components"
 
+{/* Shorthand component for a badge that indicates a value to be collected. */}
+export function Later({ name }) {
+  return <Badge text={`📝 ${name}`} variant="tip" />;
+}
+
 Chinmina itself is a simple service, but it sits in the middle of an ecosystem.
 This means that a working installation requires a number of setup items.
 
@@ -25,7 +30,7 @@ Before you start, there are a few things you'll need to have:
 ## As you go
 
 Values to save for required configuration are marked in the instructions below
-like this: <Badge text="📝 ENV_VAR_NAME" variant="tip" />.
+like this: <Later name="ENV_VAR_NAME" />.
 
 Collect these values as you proceed so they can be provided for your
 installation's configuration.
@@ -33,7 +38,7 @@ installation's configuration.
 ## Buildkite setup
 
 Create an API key with access to the REST API **only** with access to the
-`read_pipelines` scope. Save as <Badge text="📝 BUILDKITE_API_TOKEN" variant="tip" />.
+`read_pipelines` scope. Save as <Later name="BUILDKITE_API_TOKEN" />.
 
 <Aside type="tip">
   Use a "bot" user to create the token if you can, as this will not be affected
@@ -50,11 +55,11 @@ Create an API key with access to the REST API **only** with access to the
    Collect the "Application ID" of the application created. This is found in the
    "About" section of the "General" page of the application in the GitHub UI.
 
-   Save as <Badge text="📝 GITHUB_APP_ID" variant="tip" />
+   Save as <Later name="GITHUB_APP_ID" />
 
 2. Create and save a private key for the application.
 
-   Save as <Badge text="📝 GITHUB_APP_PRIVATE_KEY" variant="tip" />.
+   Save as <Later name="GITHUB_APP_PRIVATE_KEY" />.
 
 3. Install the application into the GitHub organization
 
@@ -64,7 +69,7 @@ Create an API key with access to the REST API **only** with access to the
    Collect the "Installation ID" if the application in your organization. The Installation
    ID is the last segment of the URL on the installation configuration page.
 
-   Save as <Badge text="📝 GITHUB_APP_INSTALLATION_ID" variant="tip" />
+   Save as <Later name="GITHUB_APP_INSTALLATION_ID" />
 
 </Steps>
 
@@ -88,45 +93,65 @@ latency, not the correctness.
 
 #### Essential configuration
 
+export function ConfigRef({ name, default: defaultValue }) {
+  // ConfigRef renders a link to the Chinmina configuration reference
+
+  return (
+    <>
+      <a href={`../reference/configuration#${name.toLowerCase()}`}>
+        <code>{name}</code>
+      </a><> </>
+      {defaultValue ? (
+        <><Badge text="optional" variant="tip"/> <em>(default: <code>{defaultValue}</code>)</em></>
+      )
+      : (
+        <Badge text="required" variant="tip"/>
+      )}
+    </>
+  );
+}
+
+
 A minimal configuration of the service requires at least the configuration
 below. See the [Configuration](../reference/configuration) reference for details of all
 configuration.
 
-- [`JWT_BUILDKITE_ORGANIZATION_SLUG`][jwt_buildkite_organization_slug] <Badge text="required"/>
+- <ConfigRef name="JWT_BUILDKITE_ORGANIZATION_SLUG" />
 
   The slug of your Buildkite organization. This is the identifier of your
   organization that appears in your Buildkite URLs.
 
-- [`JWT_AUDIENCE`][jwt_audience] <Badge text="optional" variant="tip"/> _default: `app-token-issuer`_
+- <ConfigRef name="JWT_AUDIENCE" default="app-token-issuer" />
 
   The expected value of the `aud` claim in the JWT. Describes the intended
   audience of the issued JWT token, and guards against token reuse. While this
   is optional, it's a good idea for this to be unique to the installation.
 
-- [`BUILDKITE_API_TOKEN`][buildkite_api_token] <Badge text="required"/>
+- <ConfigRef name="BUILDKITE_API_TOKEN" />
 
   The API token created for pipeline metadata lookups. **Store securely and
   provide to the container securely.**
 
-- [`GITHUB_APP_PRIVATE_KEY`][github_app_private_key] <Badge text="required"/>
+- **Either**:
+  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY_ARN" />
 
-  The PEM formatted private key of the created GitHub app. **Store securely and
-  provide to the container securely.** This is a highly sensitive credential.
+    It is **strongly** recommended to [store the private key in AWS KMS](./kms)
+    and provide the ARN of the key here. This will allow Chinmina to sign tokens
+    but protects the key from extraction and misuse.
 
-- [`GITHUB_APP_ID`][github_app_id] <Badge text="required"/>
+  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not available.**
+
+    The PEM formatted private key of the created GitHub app. **Store securely and
+    provide to the container securely.** This is a highly sensitive credential.
+
+- <ConfigRef name="GITHUB_APP_ID" />
 
   The application ID of the GitHub application created above.
 
-- [`GITHUB_APP_INSTALLATION_ID`][github_app_installation_id] <Badge text="required"/>
+- <ConfigRef name="GITHUB_APP_INSTALLATION_ID" />
 
   The installation ID of the created GitHub application into your organization.
 
 The service will start (by default) on port 8080, but this is
-[configurable](../../reference/configuration#server_port)
-
-[jwt_buildkite_organization_slug]: ../../reference/configuration#jwt_buildkite_organization_slug
-[jwt_audience]: ../../reference/configuration#jwt_audience
-[buildkite_api_token]: ../../reference/configuration#buildkite_api_token
-[github_app_private_key]: ../../reference/configuration#github_app_private_key
-[github_app_id]: ../../reference/configuration#github_app_id
-[github_app_installation_id]: ../../reference/configuration#github_app_installation_id
+[configurable](../../reference/configuration#server_port) if necessary.
+Generally speaking, this is best handled via container port mapping.
