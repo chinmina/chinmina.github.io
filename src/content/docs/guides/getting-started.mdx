@@ -93,45 +93,57 @@ latency, not the correctness.
 
 #### Essential configuration
 
+export function ConfigRef({ name, default: defaultValue }) {
+  // ConfigRef renders a link to the Chinmina configuration reference
+
+  return (
+    <>
+      <a href={`../reference/configuration#${name.toLowerCase()}`}>
+        <code>{name}</code>
+      </a><> </>
+      {defaultValue ? (
+        <><Badge text="optional" variant="tip"/> <em>(default: <code>{defaultValue}</code>)</em></>
+      )
+      : (
+        <Badge text="required" variant="tip"/>
+      )}
+    </>
+  );
+}
+
+
 A minimal configuration of the service requires at least the configuration
 below. See the [Configuration](../reference/configuration) reference for details of all
 configuration.
 
-- [`JWT_BUILDKITE_ORGANIZATION_SLUG`][jwt_buildkite_organization_slug] <Badge text="required"/>
+- <ConfigRef name="JWT_BUILDKITE_ORGANIZATION_SLUG" />
 
   The slug of your Buildkite organization. This is the identifier of your
   organization that appears in your Buildkite URLs.
 
-- [`JWT_AUDIENCE`][jwt_audience] <Badge text="optional" variant="tip"/> _default: `app-token-issuer`_
+- <ConfigRef name="JWT_AUDIENCE" default="app-token-issuer" />
 
   The expected value of the `aud` claim in the JWT. Describes the intended
   audience of the issued JWT token, and guards against token reuse. While this
   is optional, it's a good idea for this to be unique to the installation.
 
-- [`BUILDKITE_API_TOKEN`][buildkite_api_token] <Badge text="required"/>
+- <ConfigRef name="BUILDKITE_API_TOKEN" />
 
   The API token created for pipeline metadata lookups. **Store securely and
   provide to the container securely.**
 
-- [`GITHUB_APP_PRIVATE_KEY`][github_app_private_key] <Badge text="required"/>
+- <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not available.**
 
   The PEM formatted private key of the created GitHub app. **Store securely and
   provide to the container securely.** This is a highly sensitive credential.
 
-- [`GITHUB_APP_ID`][github_app_id] <Badge text="required"/>
+- <ConfigRef name="GITHUB_APP_ID" />
 
   The application ID of the GitHub application created above.
 
-- [`GITHUB_APP_INSTALLATION_ID`][github_app_installation_id] <Badge text="required"/>
+- <ConfigRef name="GITHUB_APP_INSTALLATION_ID" />
 
   The installation ID of the created GitHub application into your organization.
 
 The service will start (by default) on port 8080, but this is
 [configurable](../../reference/configuration#server_port)
-
-[jwt_buildkite_organization_slug]: ../../reference/configuration#jwt_buildkite_organization_slug
-[jwt_audience]: ../../reference/configuration#jwt_audience
-[buildkite_api_token]: ../../reference/configuration#buildkite_api_token
-[github_app_private_key]: ../../reference/configuration#github_app_private_key
-[github_app_id]: ../../reference/configuration#github_app_id
-[github_app_installation_id]: ../../reference/configuration#github_app_installation_id
