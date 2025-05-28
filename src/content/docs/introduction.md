@@ -90,7 +90,7 @@ If an organization profile is specified, Chinmina verifies that the requested re
 For valid requests, GitHub is used to create an app token with permissions specified by the profile's config for the requested repository.
 
 > [!NOTE]
-> In both scenarios, tokens vended by Chinmina have a maxiumum lifetime of an hour (due to caching it may only last for 45 minutes however).
+> In both scenarios, tokens vended by Chinmina have a maximum lifetime of an hour (due to caching, it may only last for 45 minutes, however).
 
 ## Endpoints
 
