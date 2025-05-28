@@ -71,6 +71,12 @@ Chinmina Bridge accepts HTTP connections from Buildkite agents. The request
 includes a [Buildkite OIDC][buildkite-oidc] token that is used to authorize
 requests.
 
+For `git-credentials` requests, a set of credential helpers are configured on the Buildkite agent's environment on startup.
+Once a git operation is specified, git will iterate over all of the configured credential helpers by making requests to Chinmina until
+one of the returned credentials are valid. These credentials are used for subsequent git operations.
+
+![Chinmina git-credentials auth flow](../../assets/chinmina-git-credentials-auth-flow.png)
+
 ### No organization profile (default)
 
 > [!TIP]
