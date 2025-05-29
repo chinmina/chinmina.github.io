@@ -77,9 +77,8 @@ requests.
 > This is Chinmina's default behaviour. Unless you've explicitly configured [organization profiles](reference/organization-profile),
 > you should expect Chinmina to behave as described below.
 
-If no organization profile is specified, the Buildkite OIDC token identifies the Buildkite
-pipeline that is executing, so the associated repository can be looked up. If the associated and requested repositories match,
-the request is valid.
+If no organization profile is specified, the Buildkite OIDC token identifies the Buildkite pipeline that is executing,
+so the associated repository can be looked up. If the associated and requested repositories match, the request is valid.
 
 For valid requests, GitHub is used to create an app token with `contents:read` permissions for the pipeline's repository.
 
