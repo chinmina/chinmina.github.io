@@ -71,19 +71,36 @@ Chinmina Bridge accepts HTTP connections from Buildkite agents. The request
 includes a [Buildkite OIDC][buildkite-oidc] token that is used to authorize
 requests.
 
-The token identifies the Buildkite pipeline that is executing, so the associated
-repository can be looked up.
+### No organization profile (default)
 
-If the request is valid, GitHub is used to create an app token with
-`contents:read` permissions on the pipeline's repository. This token has a
-maxiumum lifetime of an hour (due to caching it may only last for 45 minutes
-however).
+> [!TIP]
+> This is Chinmina's default behaviour. Unless you've explicitly configured [organization profiles](reference/organization-profile),
+> you should expect Chinmina to behave as described below.
 
-Three endpoints are exposed:
+If no organization profile is specified, the Buildkite OIDC token identifies the Buildkite pipeline that is executing,
+so the associated repository can be looked up. If the associated and requested repositories match, the request is valid.
 
-- `/token`, which returns a token and its expiry, and
+For valid requests, GitHub is used to create an app token with `contents:read` permissions for the pipeline's repository.
+
+### Organization profile
+
+If an organization profile is specified, Chinmina verifies that the requested repository is allow-listed in the specified profile's config.
+
+For valid requests, GitHub is used to create an app token with permissions specified by the profile's config for the requested repository.
+
+> [!NOTE]
+> In both scenarios, tokens vended by Chinmina have a maximum lifetime of an hour (due to caching, it may only last for 45 minutes, however).
+
+## Endpoints
+
+Five endpoints are exposed:
+
+- `/token`, which returns a token and its expiry
+- `/organization/token/{profile}`, which returns a token and its expiry for a given organization profile
 - `/git-credentials`, which returns the token and repository metadata in the
   [Git Credentials format][git-credential-helper].
+- `/organization/git-credentials/{profile}`, which returns the token and repository metadata in the
+  [Git Credentials format][git-credential-helper] for a given organization profile.
 - `/healthcheck`, which returns 200. It is used for healthcheck requests from
   load balancers and the like.
 
