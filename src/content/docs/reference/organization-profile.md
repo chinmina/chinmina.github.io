@@ -19,7 +19,7 @@ Profiles are useful for a variety of use cases where low risk access is required
 - Loading Buildkite plugins from private repositories
 - Cloning or reading multiple private repositories within a pipeline
 
-# Organization Profile Structure
+## Organization profile structure
 
 The organization profile is provided as a YAML file with structure as follows:
 
