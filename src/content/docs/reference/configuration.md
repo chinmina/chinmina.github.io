@@ -124,7 +124,11 @@ The ID for the installation of the App in your organization.
 The location of your organization profile, if in use. This should be a triplet
 of the form `<OWNER>:<REPO>:<PATH_TO_FILE>`. No other format is accepted.
 
-The contents of this organization profile must conform to the [organization profile configuration format][org-profile-config].
+The source file for profiles **must** be configured as below. If the download or validation steps fail, the server will start but no profiles will be available.
+
+1. The GitHub application for Chinmina has read access to the repository hosting the file
+2. The organization profiles file content must conform to the [organization
+   profile configuration format][org-profile-config].
 
 ## Open Telemetry
 
