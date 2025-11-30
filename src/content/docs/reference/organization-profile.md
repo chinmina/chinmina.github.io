@@ -3,26 +3,24 @@ title: Organization profiles
 description: Details of what an organization profile is and how it is used.
 ---
 
-Organization profiles are a way to facilitate cross-repository access for
-pipelines as well as managing the permissions provided by the tokens that
-Chinmina Bridge creates.
+An organization profile defines repository access and permissions available to
+all agents associated with the Buildkite organization.
 
-If you are using Chinmina to manage Buildkite's access to GitHub, you will
-need to use organization profiles in order to provide access to non-public
-repositories. Examples where you may need to do this include accessing private
-packages or releases, or loading Buildkite plugins from private repositories.
+The location of the organizational profile is configured via the
+[`GITHUB_ORG_PROFILE`](../reference/configuration#github_org_profile)
+environment variable.
 
-:::tip
+Profile-related tokens are requested via separate URL paths. Tokens will not be
+vended on these paths unless configuration is present.
 
-To use an organization profile, you must provide the location of the profile in
-the `GITHUB_ORG_PROFILE` environment variable, as well as request the profile
-in your request to Chinmina. If a profile is not specified, or if there is no
-profile configured for the organization, Chinimina will instead default to
-providing access to the repository that the pipeline is running in.
+Profiles are useful for a variety of use cases where low-risk access is required
+by a wide set of repositories. For example:
 
-:::
+- Accessing private packages or releases
+- Loading Buildkite plugins from private repositories
+- Cloning or reading multiple private repositories within a pipeline
 
-# Organization Profile Structure
+## Organization profile structure
 
 The organization profile is provided as a YAML file with structure as follows:
 
@@ -35,31 +33,31 @@ organization:
         permissions: ["<permission>"]
 ```
 
-## Fields
+### Fields
 
-### `organization`
+##### `organization`
 
 The root element that contains all organization-related configurations.
 
-### `profiles`
+##### `profiles`
 
 A list of profiles within the organization. Each profile must contain:
 
-#### `name`
+###### `name`
 
 The name of the profile. This should be a unique identifier for the profile.
 
-#### `repositories`
+###### `repositories`
 
 A list of repositories that the profile has access to. This list includes
 only the repository name and does not include the owner or organization name.
 
-#### `permissions`
+###### `permissions`
 
-A list of permissions granted to the profile. These permissions are defined
-in the [GitHub documentation for tokens][github-token-permissions].
+A list of permissions granted to the profile. See the [GitHub documentation for
+tokens][github-token-permissions] for available permission values.
 
-# Example
+### Example
 
 ```yaml
 organization:
