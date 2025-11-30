@@ -13,7 +13,8 @@ environment variable.
 Profile-related tokens are requested via separate URL paths. Tokens will not be
 vended on these paths unless configuration is present.
 
-Profiles are useful for a variety of use cases where low risk access is required by a wide set of repositories. For example:
+Profiles are useful for a variety of use cases where low-risk access is required
+by a wide set of repositories. For example:
 
 - Accessing private packages or releases
 - Loading Buildkite plugins from private repositories
@@ -32,7 +33,7 @@ organization:
         permissions: ["<permission>"]
 ```
 
-## Fields
+### Fields
 
 ##### `organization`
 
@@ -56,7 +57,7 @@ only the repository name and does not include the owner or organization name.
 A list of permissions granted to the profile. See the [GitHub documentation for
 tokens][github-token-permissions] for available permission values.
 
-# Example
+### Example
 
 ```yaml
 organization:
