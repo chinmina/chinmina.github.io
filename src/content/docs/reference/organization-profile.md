@@ -3,8 +3,8 @@ title: Organization profiles
 description: Details of what an organization profile is and how it is used.
 ---
 
-An organization profile defines repository access and permissions available to
-all agents associated with the Buildkite organization.
+An organization profile defines sets of repository access and permissions available to
+**all** agents associated with the Buildkite organization.
 
 The location of the organizational profile is configured via the
 [`GITHUB_ORG_PROFILE`](../reference/configuration#github_org_profile)

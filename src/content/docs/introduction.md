@@ -1,20 +1,26 @@
 ---
 title: Introduction
-description: A reference page in my new Starlight docs site.
+description: The what and why of Chinmina Bridge
 ---
 
 **Connect Buildkite to GitHub with secure, short-lived tokens.**
 
 Chinmina Bridge is a simple web service that acts as an intermediary between a
-Buildkite installation and a related [GitHub App][github-app]. Buildkite agents can request
-[ephemeral GitHub access tokens][github-app-tokens] from Chinmina Bridge, removing the need to store
-Deploy Keys or Personal Access Tokens long term.
+Buildkite installation and a related [GitHub App][github-app]. Buildkite agents
+can request [ephemeral GitHub access tokens][github-app-tokens] from Chinmina
+Bridge, removing the need to store Deploy Keys or Personal Access Tokens long
+term.
 
 ![Buildkite connecting to GitHub via Chinmina](../../assets/chinmina-high-level.png)
 
 ## Benefits
 
-There are two substantial benefits when Chinmina Bridge is integrated with your Buildkite stack:
+There are substantial security and flexibility benefits when Chinmina Bridge is
+integrated with your Buildkite stack, as outlined below. While initial
+deployment is not trivial, it provides a level of auditability and manageability
+that isn't present in the standard Buildkite/GitHub integration that makes
+Chinmina ideal for scaling Buildkite deployments from a handful to hundreds of
+repositories.
 
 ### Security
 
@@ -29,7 +35,8 @@ There are two substantial benefits when Chinmina Bridge is integrated with your 
    potential to be accidentally leaked.
 
 3. The GitHub app private key is the only key that is stored: no other token
-   storage is required.
+   storage is required in secrets or S3, and nothing to manage per-repository in
+   GitHub.
 
 4. With KMS, the highly sensitive private key cannot be extracted. When
    configured [as described in our guide](guides/kms), the Chinmina service uses
@@ -46,10 +53,11 @@ repository. This reduces complexity in the provisioning process.
 
 ## Drawbacks
 
-1. Chinmina needs to be self-hosted alongside the Buildkite agent
-   infrastructure. It is a single point of failure in the system also, and
-   critical to keep up. Given that it is a simple, containerized HTTP service
-   with Open Telemetry support, this is thankfully relatively straightforward.
+1. Chinmina is not available as a cloud offering: it needs to be self-hosted and
+   reachable by the Buildkite agent infrastructure. It is a single point of
+   failure in the system also, and critical to keep up. Given that it is a
+   simple, containerized HTTP service with Open Telemetry support and easy
+   scaling, this is thankfully relatively straightforward.
 
 2. The private key for the GitHub application is quite powerful, and needs to be
    carefully protected. It has the superset of permissions that it can delegate.
@@ -61,35 +69,35 @@ repository. This reduces complexity in the provisioning process.
    Controls are required to ensure that repository access is appropriately
    limited.[^1]
 
-[^1]:
-    Changing this behaviour is a short-term goal. In upcoming releases,
-    configuration will be required in order to enable repository access.
+[^1]: Changing this behaviour is on the road map. In upcoming releases, you will be able to require some central configuration will be required in order to enable repository access.
 
 ## How it works
 
-Chinmina Bridge accepts HTTP connections from Buildkite agents. The request
-includes a [Buildkite OIDC][buildkite-oidc] token that is used to authorize
-requests.
+Chinmina Bridge accepts HTTP connections from Buildkite agents. GitHub tokens
+are requested from one of the available [endpoints](#endpoints) using [Buildkite
+OIDC][buildkite-oidc] token for authorization.
 
-### No organization profile (default)
+GitHub tokens vended by Chinmina have a maximum lifetime of an hour. Chinmina
+will cache tokens internally for up to 15 minutes, so the token received by an
+agent will have an effective lifetime of between 45 and 60 minutes.
 
-> [!TIP]
-> This is Chinmina's default behaviour. Unless you've explicitly configured [organization profiles](reference/organization-profile),
-> you should expect Chinmina to behave as described below.
+### Pipeline-based
 
-If no organization profile is specified, the Buildkite OIDC token identifies the Buildkite pipeline that is executing,
-so the associated repository can be looked up. If the associated and requested repositories match, the request is valid.
+This is the simplest way of working with Chinmina, where a token is retrieved
+for the repository linked to the pipeline that is running the current build.
+This is a direct replacement for the deploy key or PAT that would be required
+instead.
 
-For valid requests, GitHub is used to create an app token with `contents:read` permissions for the pipeline's repository.
+Requests to `/token` and `/git-credentials` are authorized with the [Buildkite
+OIDC][buildkite-oidc] token, whose claims identify the executing pipeline. From
+the pipeline, the associated GitHub repository is looked up, and a token with
+`contents:read` permission is returned for that repository.
 
-### Organization profile
+### Organization profiles
 
-If an organization profile is specified, Chinmina verifies that the requested repository is allow-listed in the specified profile's config.
-
-For valid requests, GitHub is used to create an app token with permissions specified by the profile's config for the requested repository.
-
-> [!NOTE]
-> In both scenarios, tokens vended by Chinmina have a maximum lifetime of an hour (due to caching, it may only last for 45 minutes, however).
+If the `/organization/*` routes are used, Chinmina will use the [organization
+profile][org-profile] to determine the repositories and permissions for the
+GitHub token (after authorizing the request).
 
 ## Endpoints
 
@@ -100,7 +108,7 @@ Five endpoints are exposed:
 - `/git-credentials`, which returns the token and repository metadata in the
   [Git Credentials format][git-credential-helper].
 - `/organization/git-credentials/{profile}`, which returns the token and repository metadata in the
-  [Git Credentials format][git-credential-helper] for a given organization profile.
+  [Git Credentials format][git-credential-helper] for a given [organization profile][org-profile].
 - `/healthcheck`, which returns 200. It is used for healthcheck requests from
   load balancers and the like.
 
@@ -108,3 +116,4 @@ Five endpoints are exposed:
 [github-app-tokens]: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app
 [buildkite-oidc]: https://buildkite.com/docs/agent/v3/cli-oidc
 [git-credential-helper]: https://git-scm.com/docs/gitcredentials#_custom_helpers
+[org-profile]: reference/organization-profile
