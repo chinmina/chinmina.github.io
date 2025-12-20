@@ -41,7 +41,21 @@ export default defineConfig({
         },
         {
           label: "Reference",
-          autogenerate: { directory: "reference" },
+          items: [
+            "reference/configuration",
+            "reference/git-credentials-format",
+            "reference/organization-profile",
+            {
+              label: "API",
+              items: [
+                "reference/api/health-check-and-status",
+                "reference/api/git-credentials",
+                "reference/api/post-token",
+                "reference/api/profile-git-credentials",
+                "reference/api/profile-token",
+              ],
+            },
+          ],
         },
         {
           label: "Contributing",
