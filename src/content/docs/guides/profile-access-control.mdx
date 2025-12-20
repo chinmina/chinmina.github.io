@@ -1,0 +1,176 @@
+---
+title: Restricting profile access
+description: Control which pipelines can use organization profiles with claim-based matching.
+---
+
+import { Aside } from "@astrojs/starlight/components"
+
+Organization profiles can restrict access to specific Buildkite pipelines using claim-based matching. Match rules evaluate JWT claims from the Buildkite OIDC token against configured patterns, providing fine-grained access control.
+
+See the [organization profile reference](../reference/organization-profile) for complete configuration details.
+
+## Use cases
+
+### Release pipeline access
+
+Pipelines ending in `-release` on the `main` branch can publish packages.
+
+```yaml
+organization:
+  profiles:
+    - name: "release-publisher"
+      match:
+        - claim: pipeline_slug
+          valuePattern: ".*-release"
+        - claim: build_branch
+          value: "main"
+      repositories: [release-tools, shared-infra]
+      permissions: [contents:write, packages:write]
+```
+
+Add new release pipelines without updating profile configuration.
+
+### Production deployment
+
+Only specific production pipelines on the `main` branch can deploy infrastructure.
+
+```yaml
+organization:
+  profiles:
+    - name: "prod-deploy"
+      match:
+        - claim: pipeline_slug
+          valuePattern: "(silk|cotton)-prod"
+        - claim: build_branch
+          value: "main"
+      repositories: [infra]
+      permissions: [contents:write, deployments:write]
+```
+
+Enforce both pipeline and branch requirements in a single policy.
+
+### Baseline shared access
+
+All pipelines have read access to shared utilities.
+
+```yaml
+organization:
+  profiles:
+    - name: "shared-utilities"
+      # No `match` = available to all
+      repositories: [shared-utilities]
+      permissions: [contents:read]
+```
+
+Profiles without match rules work as before, available to any pipeline.
+
+## Match rule patterns
+
+### Exact matching
+
+Use `value` for known strings. This is the fastest match type.
+
+```yaml
+match:
+  - claim: pipeline_slug
+    value: "silk-prod"  # Matches only "silk-prod"
+```
+
+### Regex matching
+
+Use `valuePattern` for flexible patterns. Supports [RE2 regex syntax](https://github.com/google/re2/wiki/Syntax).
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: ".*-release"  # Matches any pipeline ending in "-release"
+```
+
+Patterns are automatically anchored to match the full string. Pattern `prod` matches only "prod", not "not-prod".
+
+### Multiple conditions
+
+All conditions must match (AND logic).
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: "silk-.*"
+  - claim: build_branch
+    value: "main"
+# Both conditions required
+```
+
+### No conditions
+
+Empty `match` array makes the profile available to all pipelines.
+
+```yaml
+match: []  # Available to any pipeline
+```
+
+## Available claims
+
+Match rules can evaluate the following JWT claims:
+
+| Claim | Description |
+|-------|-------------|
+| `pipeline_slug` | Pipeline's slug |
+| `pipeline_id` | Pipeline UUID |
+| `build_number` | Build number (as string) |
+| `build_branch` | Git branch name |
+| `build_tag` | Git tag (if present) |
+| `build_commit` | Git commit SHA |
+| `cluster_id`, `cluster_name` | Cluster identifiers |
+| `queue_id`, `queue_key` | Queue identifiers |
+| `agent_tag:NAME` | Dynamic agent tags |
+
+<Aside type="tip">
+Use `pipeline_slug` or `pipeline_id` as primary authorization factors. These claims are controlled by the Buildkite organization and provide the strongest authorization signal.
+</Aside>
+
+## Request flow
+
+```d2 sketch=true title="sequence diagram showing organization profile token request with claim matching"
+shape: sequence_diagram
+
+pipeline: Buildkite Pipeline
+chinmina: Chinmina Bridge
+buildkite-api: Buildkite API
+github: GitHub App
+
+pipeline.req -> chinmina.auth: "POST /organization/token/{profile}\n(with Buildkite OIDC token)"
+
+chinmina.auth -> chinmina.match: validate JWT claims
+chinmina.match -> chinmina.match: evaluate match rules\nagainst JWT claims
+
+chinmina.match -> buildkite-api.lookup: get pipeline details
+chinmina.match <- buildkite-api.lookup: pipeline metadata
+
+chinmina.match -> github.token: request scoped token\n(repos + permissions from profile)
+chinmina.match <- github.token: GitHub access token
+
+pipeline.req <- chinmina.auth: token + expiry
+```
+
+When match conditions are not met, Chinmina returns 403 immediately after match evaluation, before any external API calls.
+
+## Troubleshooting
+
+### Profile returns 403 (access denied)
+
+Pipeline doesn't match profile conditions.
+
+The HTTP response returns a generic "Forbidden" message. Check [audit logs](observability#audit-logs) for `attemptedPatterns` to see which condition failed and the `error` field for detailed information. Verify the pipeline's claim values match the configured patterns.
+
+### Profile returns 404 (unavailable: validation failed)
+
+Profile failed validation at service startup.
+
+Check service startup logs for validation warnings. Fix the invalid configuration (e.g., invalid regex pattern) and restart the service.
+
+### Profile matches too broadly
+
+Pattern is overly permissive.
+
+Review audit logs to identify unexpected matches. Make the pattern more specific. Patterns are automatically anchored, but `.*` can still match broadly.

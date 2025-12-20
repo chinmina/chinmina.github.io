@@ -97,7 +97,8 @@ the pipeline, the associated GitHub repository is looked up, and a token with
 
 If the `/organization/*` routes are used, Chinmina will use the [organization
 profile][org-profile] to determine the repositories and permissions for the
-GitHub token (after authorizing the request).
+GitHub token. Profiles can optionally [restrict access](guides/profile-access-control)
+to specific pipelines via claim matching.
 
 ## Endpoints
 

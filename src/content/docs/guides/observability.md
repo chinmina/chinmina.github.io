@@ -71,8 +71,21 @@ All audit logs are in single-line JSON format, using the `level` of `audit`.
      [RFC-3339](https://pkg.go.dev/time#RFC3339) date time string
    - `expiryRemaining` is the number of seconds that the created GitHub token
      will be valid for at the time of logging.
+5. Profile data
+   - `requestedProfile` is the profile name requested (empty for pipeline-based requests)
+   - `matches` is an array of matched claim/value pairs on successful profile access
+   - `attemptedPatterns` is an array showing which condition failed on denied access
+6. Repository data
+   - `requestedRepository` contains the repository URL supplied by the client (present when using `/git-credentials` endpoints)
+   - `vendedRepository` contains the repository URL the token was vended for (only present on successful token issuance)
 
-```json title="JSON audit log example"
+:::note[Error message security]
+
+HTTP error responses return generic messages like "Forbidden" to avoid leaking policy details to clients. Detailed error information is only available in audit logs. This prevents unauthorized users from learning about profile configurations or match conditions.
+
+:::
+
+```json title="JSON audit log example: pipeline-based token request"
 {
   "level": "audit",
   "method": "POST",
@@ -92,6 +105,48 @@ All audit logs are in single-line JSON format, using the `level` of `audit`.
   "authAudience": ["github-app-auth:example-org"],
   "repositories": ["https://github.com/example-org/example-repo.git"],
   "permissions": ["contents:read"],
+  "type": "audit",
+  "time": "2025-01-20T04:47:00Z",
+  "message": "audit_event"
+}
+```
+
+```json title="JSON audit log example: successful organization profile access"
+{
+  "level": "audit",
+  "method": "POST",
+  "path": "/organization/token/release-publisher",
+  "status": 200,
+  "sourceIP": "1.2.3.4:34340",
+  "userAgent": "curl/8.3.0",
+  "requestedProfile": "release-publisher",
+  "authorized": true,
+  "matches": [
+    {"claim": "pipeline_slug", "value": "silk-release"},
+    {"claim": "build_branch", "value": "main"}
+  ],
+  "repositories": ["https://github.com/example-org/release-tools.git"],
+  "permissions": ["contents:write", "packages:write"],
+  "type": "audit",
+  "time": "2025-01-20T04:47:00Z",
+  "message": "audit_event"
+}
+```
+
+```json title="JSON audit log example: denied profile access (match failed)"
+{
+  "level": "audit",
+  "method": "POST",
+  "path": "/organization/token/release-publisher",
+  "status": 403,
+  "sourceIP": "1.2.3.4:34340",
+  "userAgent": "curl/8.3.0",
+  "requestedProfile": "release-publisher",
+  "authorized": true,
+  "attemptedPatterns": [
+    {"claim": "pipeline_slug", "pattern": ".*-release", "value": "silk-staging"}
+  ],
+  "error": "profile match conditions not met",
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
   "message": "audit_event"
