@@ -14,7 +14,8 @@ Buildkite pipelines:
 
 2. **Token generation**: This allows Buildkite pipelines to generate a GitHub
   token that can be used to access private repositories, such as downloading
-  private release assets.
+  private release assets. Tokens can be exported automatically as environment
+  variables or retrieved programmatically via a helper script.
 
 Git authentication integration removes the need to configure SSH deploy keys for
 each repository, and token generation is a replacement for long-lived GitHub
@@ -24,21 +25,26 @@ Each use case is integrated using a Buildkite plugin:
 
 - [Chinmina Git Credentials][credentials-plugin]: configures a Git credentials
   helper that uses Chinmina Bridge to authenticate with GitHub.
-- [Chinmina Token][chinmina-token]: A [library plugin][library-plugin] that adds
-  a `chinmina_token` script to fetch a GitHub token from Chinmina Bridge.
+- [Chinmina Token][chinmina-token]: Retrieves GitHub tokens from Chinmina Bridge,
+  either by automatically exporting them as environment variables or by adding a
+  `chinmina_token` helper script for dynamic token retrieval.
 
-:::note
+:::caution[Recommended setup]
 
-The plugins can be configured as usual in pipeline steps, but also in the
-Buildkite agent hooks. Agent hooks ensure that Chinmina is integrated into all
-pipelines that run on the agent, without the need for further configuration.
+The plugins *can* be configured in individual pipeline steps, but production
+installations should load the plugins in the Buildkite agent `bootstrap` and
+`environment` hooks.
 
-For Git authentication integration in particular it is **highly recommended** to
-use agent hooks (see below).
+This configuration ensures that Chinmina is integrated into all pipelines that run on
+the agent, without the need for further configuration. See "[Enabling on the
+agent](#enabling-on-the-agent-for-all-pipelines)" for setup instructions.
+
+This is the only practical way to use Chinmina Bridge for Git authentication in
+particular.
 
 :::
 
-## Configuring the extensions in a pipeline
+## Configuration
 
 Full documentation for each plugin:
   - [Chinmina Git Credentials][credentials-plugin]
@@ -51,32 +57,132 @@ Collect the following information from your Chinmina Bridge instance:
 
 **If the audience doesn't match the value expected by Chinmina Bridge, all requests will fail.**
 
-Using them in a pipeline should then look quite familiar:
+### Prerequisites
+
+1. If `openssl` is present on the agent, both plugins will use it to encrypt a
+   cached OIDC token, speeding up successive token requests in the same job.
+2. The `chinmina-token` plugin requires `jq` to be installed on the Buildkite
+   agent.
+
+## Using tokens in pipelines
+
+The examples below show full plugin configuration including `chinmina-url` and
+`audience` parameters. When agent-level defaults are configured (see "Enabling
+on the agent" below), these parameters can be omitted from pipeline
+configuration.
+
+### Environment mode (declarative)
+
+The simplest way to use tokens is via the `environment` parameter, which
+automatically exports tokens as environment variables. This is the recommended
+approach for most use cases.
 
 ```yml
 steps:
-  - command: ls
+  - label: "Deploy to production"
+    command: |
+      # GITHUB_TOKEN is automatically available
+      gh release download --repo myorg/myrepo --pattern "*.zip"
     plugins:
-      # Git authentication via helper
-      - chinmina/chinmina-git-credentials#v1.0.2:
+      - chinmina/chinmina-token#v1.2.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
-      # Token helper script
-      - chinmina/chinmina-token#v1.0.1:
-          chinmina-url: "https://chinmina-bridge-url"
-          audience: "chinmina:your-github-organization"
+          environment:
+            - GITHUB_TOKEN=repo:default
 ```
-In order for this plugin to work for a whole pipeline, it must be enabled on
-every step. **This includes any steps configured in the [pipeline
-configuration][pipeline-configuration].**
-
-In practice, this becomes quite repetitive and prone to misconfiguration. The
-only other option available is configuring the plugin on the agent.
 
 :::tip
 
-To use the Git authentication integration, each Buildkite pipeline needs to be
-configured with an **HTTPS Git URL** in the Buildkite pipeline settings.
+Tokens retrieved from Chinmina Bridge are automatically redacted from build logs.
+
+:::
+
+#### Multiple tokens
+
+For workflows requiring multiple tokens (e.g., accessing different organizations
+or profiles):
+
+```yml
+steps:
+  - label: "Build with private dependencies"
+    command: |
+      # Multiple tokens available for different purposes
+      npm config set //npm.pkg.github.com/:_authToken "$GITHUB_NPM_TOKEN"
+      npm install
+
+      # Deploy using different token
+      gh release create --repo myorg/releases "$VERSION"
+    plugins:
+      - chinmina/chinmina-token#v1.2.0:
+          chinmina-url: "https://chinmina-bridge-url"
+          audience: "chinmina:your-github-organization"
+          environment:
+            - GITHUB_TOKEN=repo:default
+            - GITHUB_NPM_TOKEN=org:npm-packages
+```
+
+### Library mode (dynamic)
+
+For dynamic token selection or complex scripting scenarios, use the
+`chinmina_token` helper script directly. When the plugin is configured without
+an `environment` parameter, it adds the `chinmina_token` script to PATH.
+
+```yml
+steps:
+  - plugins:
+      - chinmina/chinmina-token#v1.2.0:
+          chinmina-url: "https://chinmina-bridge-url"
+          audience: "chinmina:your-github-organization"
+```
+
+Then in your scripts:
+
+```bash
+# Dynamically select profile based on environment
+if [[ "$ENVIRONMENT" == "production" ]]; then
+  export GITHUB_TOKEN=$(chinmina_token "org:prod-profile")
+else
+  export GITHUB_TOKEN=$(chinmina_token "org:staging-profile")
+fi
+
+# Or get a token for the repository
+export GITHUB_TOKEN=$(chinmina_token "repo:default")
+
+# Use with gh CLI
+gh release download --repo "${repo}" \
+  --pattern "release-file-${arch}.zip" \
+  --dir "${directory}" \
+  "${tag}"
+```
+
+#### When to use each approach
+
+| Use Case | Recommended Approach |
+|----------|---------------------|
+| Static token needs known upfront | `environment` array (declarative) |
+| Multiple tokens for different services | `environment` array |
+| Dynamic profile selection | `chinmina_token` script |
+| Conditional token logic | `chinmina_token` script |
+| Token needed only in specific conditions | `chinmina_token` script |
+
+## Using Git credentials for authentication
+
+The [Chinmina Git Credentials][credentials-plugin] plugin enables Git operations
+to authenticate with GitHub using tokens from Chinmina Bridge.
+
+```yml
+steps:
+  - command: git clone https://github.com/myorg/private-repo.git
+    plugins:
+      - chinmina/chinmina-git-credentials#v1.0.2:
+          chinmina-url: "https://chinmina-bridge-url"
+          audience: "chinmina:your-github-organization"
+```
+
+:::tip
+
+Each Buildkite pipeline needs to be configured with an **HTTPS Git URL** in the
+Buildkite pipeline settings.
 
 Alternatively, the `BUILDKITE_REPO` value can be overridden in the agent
 `environment` hook to use an HTTPS URL instead of the SSH form.
@@ -85,96 +191,7 @@ Alternatively, the `BUILDKITE_REPO` value can be overridden in the agent
 
 :::
 
-## Enabling on the agent (for _all_ pipelines)
-
-This method enables the plugin in the agent `environment` hook, using a plugin
-version that has been downloaded in the agent `bootstrap`.
-
-This will enable the functionality to fetch GitHub token and authenticate via
-Chinmina Bridge on all builds running on the agent.
-
-If more control over activation of this feature is required, consider adding
-extra conditions _as code_ to the `environment` hook. For example, it's possible
-to enable the plugin based on the presence of an environment variable. Then it
-will be enabled in a consistent way for every pipeline that defines the
-environment variable in the pipeline settings.
-
-:::note
-
-The steps below show implementation for
-`chinmina-git-credentials-buildkite-plugin` and can be similarly implemented for
-`chinmina-token-buildkite-plugin` as well.
-
-:::
-
-<Steps>
-
-1.  Alter the agent `bootstrap` hook to clone the plugin source to the agent so
-    it can be activated by any step.
-
-    ```bash
-    plugin_repo="https://github.com/chinmina/chinmina-token-buildkite-plugin.git"
-    plugin_version="v1.0.0"
-    plugin_dir="/buildkite/plugins/chinmina-token-buildkite-plugin"
-
-    [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
-
-    GIT_CONFIG_COUNT=1 \
-    GIT_CONFIG_KEY_0=advice.detachedHead \
-    GIT_CONFIG_VALUE_0=false \
-      git clone --depth 1 --single-branch --no-tags \
-        --branch "${plugin_version}" -- \
-        "${plugin_repo}" "${plugin_dir}"
-    ```
-
-2.  Call the plugin's `environment` hook directly from the agent's `environment`
-    hook, specifying the plugin parameters directly.
-
-    ```bash title="Execute plugin environment hook directly"
-    BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL:-https://chinmina.url-to-instance.io}" \
-    BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE:-chinmina:your-org}" \
-        source /buildkite/plugins/chinmina-token-buildkite-plugin/hooks/environment
-    ```
-
-    :::note
-
-    It is possible to clone the plugin in the `environment` hook **but** this means
-    the plugin is cloned when every job starts, adding additional latency.
-
-    :::
-
-</Steps>
-
-
-## Getting a token directly
-
-The `chinmina-token` plugin is a library plugin that adds a `chinmina_token`
-function to the step's environment.
-
-The following example shows how to use the `chinmina_token` function to get a token
-and use it with the GitHub CLI to download a release asset from a private repository.
-
-```bash
-# use the helper function to get a token
-export GITHUB_TOKEN=$(chinmina_token "org:profile-name")
-
-# The GH CLI will use GITHUB_TOKEN as its authorization for any API requests:
-
-# ... show this to the console
-gh auth status
-
-# ... download a release from a private repo
-gh releases download --repo "${repo}" \
-  --pattern "release-file=${arch}.zip" \
-  --dir "${directory}" \
-  "${tag}"
-```
-
-## How Chinmina-integrated Git authentication works
-
-The [Chinmina Git Credentials][credentials-plugin] Buildkite plugin integrates
-Chinmina with Git, allowing authentication tokens to be retrieved on-demand in
-the Git authentication flow.
+### How it works
 
 There are two cooperating parts to the plugin:
 
@@ -212,6 +229,100 @@ git.auth <- credential-helper.req: \"x-access-token\" /app-token
 
 buildkite-job.clone <- git.auth: complete
 ```
+
+## Enabling on the agent (for all pipelines)
+
+:::tip
+
+This is the recommended way to integrate Chinmina with Buildkite, especially for
+Git authentication. Using the plugins on a step-by-step basis is inconvenient
+and inefficient.
+
+:::
+
+This method enables the plugins in the agent `environment` hook, using plugin
+versions that have been downloaded in the agent `bootstrap`.
+
+This will enable the functionality to fetch GitHub tokens and authenticate via
+Chinmina Bridge on all builds running on the agent.
+
+If more control over activation of this feature is required, add extra
+conditions _as code_ to the `environment` hook. For example, enable the plugin
+based on the presence of an environment variable. This activates the plugin
+consistently for every pipeline that defines the environment variable in the
+pipeline settings.
+
+<Steps>
+
+1.  Alter the agent `bootstrap` hook to clone both plugin sources to the agent so
+    they can be activated by any step.
+
+    ```bash
+    # Chinmina Token plugin
+    plugin_repo="https://github.com/chinmina/chinmina-token-buildkite-plugin.git"
+    plugin_version="v1.2.0"
+    plugin_dir="/buildkite/plugins/chinmina-token-buildkite-plugin"
+
+    [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
+
+    GIT_CONFIG_COUNT=1 \
+    GIT_CONFIG_KEY_0=advice.detachedHead \
+    GIT_CONFIG_VALUE_0=false \
+      git clone --depth 1 --single-branch --no-tags \
+        --branch "${plugin_version}" -- \
+        "${plugin_repo}" "${plugin_dir}"
+
+    # Chinmina Git Credentials plugin
+    plugin_repo="https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin.git"
+    plugin_version="v1.0.2"
+    plugin_dir="/buildkite/plugins/chinmina-git-credentials-buildkite-plugin"
+
+    [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
+
+    GIT_CONFIG_COUNT=1 \
+    GIT_CONFIG_KEY_0=advice.detachedHead \
+    GIT_CONFIG_VALUE_0=false \
+      git clone --depth 1 --single-branch --no-tags \
+        --branch "${plugin_version}" -- \
+        "${plugin_repo}" "${plugin_dir}"
+    ```
+
+2.  Call the plugins' `environment` hooks directly from the agent's `environment`
+    hook, specifying the plugin parameters directly. These defaults will be used
+    by all pipelines unless explicitly overridden.
+
+    ```bash title="Execute plugin environment hooks directly"
+    # Configure Chinmina Token plugin
+    BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL:-https://chinmina.url-to-instance.io}" \
+    BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE:-chinmina:your-org}" \
+        source /buildkite/plugins/chinmina-token-buildkite-plugin/hooks/environment
+
+    # Configure Chinmina Git Credentials plugin
+    BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_CHINMINA_URL="${BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_CHINMINA_URL:-https://chinmina.url-to-instance.io}" \
+    BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_AUDIENCE="${BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_AUDIENCE:-chinmina:your-org}" \
+        source /buildkite/plugins/chinmina-git-credentials-buildkite-plugin/hooks/environment
+    ```
+
+    With this configuration, pipelines no longer need to specify `chinmina-url`
+    and `audience` parameters:
+
+    ```yml
+    plugins:
+      - chinmina/chinmina-token#v1.2.0:
+          environment:
+            - GITHUB_TOKEN=repo:default
+    ```
+
+    :::note
+
+    The bootstrap hook is only run when the agent starts. Cloning the plugins in
+    the bootstrap hook is more efficient than doing so in the environment hook,
+    and also faster.
+
+    :::
+
+</Steps>
+
 [chinmina-bridge]: ../introduction/
 [chinmina-token]: https://github.com/chinmina/chinmina-token-buildkite-plugin
 [credentials-plugin]: https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin
