@@ -1,0 +1,201 @@
+---
+title: Profile matching
+description: Control which pipelines can use profiles with claim-based access rules.
+---
+
+import { Aside } from "@astrojs/starlight/components"
+
+Profile matching restricts access to specific Buildkite pipelines using claim-based rules. Match rules evaluate JWT claims from the Buildkite OIDC token against configured patterns, providing fine-grained access control.
+
+Both [pipeline profiles](pipeline) and [organization profiles](organization) support the same matching syntax.
+
+## Match rule syntax
+
+**Match rules are optional.** Omit the `match` field entirely to make a profile available to all pipelines.
+
+When present, the `match` field contains a list of conditions that must all be satisfied (AND logic) for a pipeline to use the profile.
+
+```yaml
+pipeline:
+  profiles:
+    - name: "release"
+      match:
+        - claim: build_branch
+          value: "main"
+        - claim: pipeline_slug
+          valuePattern: ".*-prod"
+      permissions: ["contents:write"]
+```
+
+<Aside type="tip">
+
+Profiles offer a great deal of flexibility through claim-based matching, and
+this can be harmful if misused.
+
+Establish clear rules for profile usage in your organization, and automate
+profile configuration checks to ensure compliance. For example, highlight
+addition or changes that broaden access, or those that affect profiles that are
+globally available (have no match rules).
+
+</Aside>
+
+Chinmina Bridge is deliberately unopinionated about the kinds of profiles that
+are appropriate, as this will vary per organization.
+
+### Exact matching
+
+Use `value` for known strings. This is the fastest match type.
+
+```yaml
+match:
+  - claim: pipeline_slug
+    value: "silk-prod"  # Matches only "silk-prod"
+```
+
+### Regex matching
+
+Use `valuePattern` for flexible patterns. Supports [RE2 regex syntax](https://github.com/google/re2/wiki/Syntax).
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: ".*-release"  # Matches any pipeline ending in "-release"
+```
+
+#### Anchoring
+
+Patterns are automatically anchored to match the entire value. Chinmina wraps
+patterns with `\A(?:` and `)\z` around the pattern, forcing full-string matches.
+This prevents accidental partial matches.
+
+For example:
+
+1. Pattern `prod` matches only "prod", not "not-prod".
+2. For partial matches: `.*-prod` matches "silk-prod" and "cotton-prod".
+
+<Aside type="tip">
+While pattern matching allows flexibility, prefer exact matches when possible for simplicity.
+</Aside>
+
+### Multiple conditions
+
+All conditions must match (AND logic).
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: "silk-.*"
+  - claim: build_branch
+    value: "main"
+# Both conditions required
+```
+
+## Available claims
+
+Match rules can evaluate the following JWT claims from the Buildkite OIDC token:
+
+| Claim | Description |
+|-------|-------------|
+| `pipeline_slug` | Pipeline's slug |
+| `pipeline_id` | Pipeline UUID |
+| `build_number` | Build number (as string) |
+| `build_branch` | Git branch name |
+| `build_tag` | Git tag (if present) |
+| `build_commit` | Git commit SHA |
+| `cluster_id`, `cluster_name` | Cluster identifiers |
+| `queue_id`, `queue_key` | Queue identifiers |
+| `agent_tag:NAME` | Dynamic agent tags (e.g., `agent_tag:queue`) |
+
+<Aside type="tip">
+
+`_id` claims are UUIDs and are not vulnerable to misuse through renaming. Use
+them if you need stable identifiers (this will depend on your organization's
+pipeline management practices). They are not human-friendly when they appear in
+the profile however, so balance usability and stability as needed.
+
+If you use the UUID **and** the string variant in the same profile, you get the
+security of one and the readability of the other.
+
+Note also that if you rely on `build_branch` or `build_tag`, you will need to
+back this with GitHub controls on their usage for it to be effective.
+
+</Aside>
+
+## Common patterns
+
+### Release pipelines only
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: ".*-release"
+```
+
+### Main branch only
+
+```yaml
+match:
+  - claim: build_branch
+    value: "main"
+```
+
+### Production pipelines on main
+
+```yaml
+match:
+  - claim: pipeline_slug
+    valuePattern: "(silk|cotton)-prod"
+  - claim: build_branch
+    value: "main"
+```
+
+### Specific cluster
+
+```yaml
+match:
+  - claim: cluster_name
+    value: "production-us-east"
+```
+
+### Tagged releases
+
+```yaml
+match:
+  - claim: build_tag
+    valuePattern: "v[0-9]+\\.[0-9]+\\.[0-9]+"  # v1.2.3 format
+```
+
+## Troubleshooting
+
+### Profile returns 403 (access denied)
+
+Pipeline doesn't match profile conditions.
+
+The HTTP response returns a generic "Forbidden" message. Check [audit
+logs](../../guides/observability#audit-logs) for `attemptedPatterns` to see
+which condition failed and the `error` field for detailed information. Verify
+the pipeline's claim values match the configured patterns.
+
+### Profile returns 404 (unavailable: validation failed)
+
+Profile failed validation at service startup.
+
+Check service startup logs for validation warnings. Fix the invalid
+configuration (e.g., invalid regex pattern) and restart the service.
+
+### Profile matches too broadly
+
+Pattern is overly permissive.
+
+Review audit logs to identify unexpected matches. Make the pattern more
+specific. Patterns are automatically anchored, but `.*` can still match broadly.
+Replace `.*` with more specific patterns when possible.
+
+### Regex pattern rejected at startup
+
+Invalid RE2 regex syntax.
+
+Consult the [RE2 syntax guide](https://github.com/google/re2/wiki/Syntax) for supported patterns. Common issues:
+- Backreferences are not supported
+- Some Perl regex features are unavailable
+- Escape special characters with backslash

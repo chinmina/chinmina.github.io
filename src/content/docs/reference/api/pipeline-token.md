@@ -1,9 +1,17 @@
 ---
-title: POST /token
+title: POST /token/{profile}
 description: API reference for the token vending endpoint that returns short-lived GitHub installation tokens.
 ---
 
-The `POST /token` endpoint vends short-lived GitHub installation tokens validated against Buildkite OIDC tokens. The endpoint operates in two modes: default mode (automatic pipeline repository detection) and profile mode (custom permission scopes and multi-repository access).
+The `POST /token/{profile}` (and legacy `POST /token`) endpoints vend
+short-lived GitHub installation tokens validated against Buildkite OIDC tokens.
+
+The profile parameter selects the pipeline profile that will be used when
+creating the token using permissions defined by the specified [pipeline
+profile](../profiles/pipeline).
+
+There is a special profile name `default`, that is always available. The default
+profile can be requested via `POST /token/default` or `POST /token`.
 
 ## Purpose
 
@@ -32,6 +40,24 @@ protocol.
 | --------------- | -------- | ------------------------------------------ |
 | `Authorization` | Yes      | Bearer token containing Buildkite OIDC JWT |
 | `Content-Type`  | Yes      | Must be `application/json`                 |
+
+### Profile parameter
+
+The optional `{profile}` path parameter specifies which pipeline profile to use:
+
+- `/token` (no parameter): Uses pipeline default permissions
+- `/token/default`: Same as `/token` (explicitly requests default permissions)
+- `/token/{profile-name}`: Uses the named pipeline profile
+
+Profile names are used directly in the path. The API does not use prefixes (prefixes like `repo:` are part of the plugin interface only).
+
+Examples:
+
+- `POST /token` → default pipeline permissions
+- `POST /token/pr-commenter` → "pr-commenter" pipeline profile
+- `POST /token/release` → "release" pipeline profile
+
+If the profile does not exist or the pipeline doesn't match the profile's access rules, the request returns an error.
 
 ### Request body
 
@@ -67,8 +93,10 @@ When a token is successfully vended, the response is a JSON object:
 
 ### Error responses
 
-| Status code                    | Condition                                                     |
-| ------------------------------ | ------------------------------------------------------------- |
-| `401 Unauthorized`             | Missing or invalid JWT                                        |
-| `413 Request Entity Too Large` | Request body exceeds 20 KB                                    |
-| `500 Internal Server Error`    | Token vending failure, profile not found, or GitHub API error |
+| Status code                    | Condition                                                       |
+| ------------------------------ | --------------------------------------------------------------- |
+| `401 Unauthorized`             | Missing or invalid JWT                                          |
+| `403 Forbidden`                | Pipeline doesn't match profile's access rules                   |
+| `404 Not Found`                | Profile does not exist or failed validation                     |
+| `413 Request Entity Too Large` | Request body exceeds 20 KB                                      |
+| `500 Internal Server Error`    | Token vending failure, Buildkite API error, or GitHub API error |

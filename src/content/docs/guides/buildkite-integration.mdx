@@ -99,8 +99,7 @@ Tokens retrieved from Chinmina Bridge are automatically redacted from build logs
 
 #### Multiple tokens
 
-For workflows requiring multiple tokens (e.g., accessing different organizations
-or profiles):
+For workflows requiring multiple tokens (e.g., accessing different profiles or repositories):
 
 ```yml
 steps:
@@ -110,16 +109,18 @@ steps:
       npm config set //npm.pkg.github.com/:_authToken "$GITHUB_NPM_TOKEN"
       npm install
 
-      # Deploy using different token
+      # Deploy using different token with elevated permissions
       gh release create --repo myorg/releases "$VERSION"
     plugins:
       - chinmina/chinmina-token#v1.2.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
-            - GITHUB_TOKEN=repo:default
-            - GITHUB_NPM_TOKEN=org:npm-packages
+            - GITHUB_TOKEN=repo:release        # pipeline profile
+            - GITHUB_NPM_TOKEN=org:npm-packages # organization profile
 ```
+
+Profile prefixes (`repo:`, `org:`) identify the profile type for the plugin. Pipeline profiles (`repo:`) grant permissions to the pipeline's repository, while organization profiles (`org:`) grant access to specific repositories across the organization.
 
 ### Library mode (dynamic)
 
@@ -145,7 +146,10 @@ else
   export GITHUB_TOKEN=$(chinmina_token "org:staging-profile")
 fi
 
-# Or get a token for the repository
+# Get a token for pipeline repository with elevated permissions
+export GITHUB_TOKEN=$(chinmina_token "repo:release")
+
+# Or get a token with default pipeline permissions
 export GITHUB_TOKEN=$(chinmina_token "repo:default")
 
 # Use with gh CLI

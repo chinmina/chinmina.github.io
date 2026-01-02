@@ -19,8 +19,8 @@ making direct API calls, or want more flexible response handling.
 
 - [Buildkite integration guide](../../guides/buildkite-integration) for details
   on how this endpoint is used in practice.
-- [Profile system](../../guides/profile-access-control#profile-system) for
-  details on how profiles are configured and managed.
+- [Customizing token permissions guide](../../guides/customizing-permissions) for
+  practical setup and usage instructions.
 
 ## Purpose
 
@@ -41,13 +41,14 @@ repositories and permissions for different use cases.
 
 ### Profile parameter
 
-The `{profile}` path parameter specifies which organization profile to use, in the format:
+The `{profile}` path parameter specifies which organization profile to use. Profile names are used directly without prefixes.
 
-```
-org:{profile-name}
-```
+Examples:
+- `POST /organization/token/deploy`
+- `POST /organization/token/package-registry`
+- `POST /organization/token/buildkite-plugin`
 
-Example: `POST /organization/token/org:deploy`
+The API does not use prefixes. Prefixes like `org:` are part of the plugin interface only and are translated by the plugins to the appropriate API paths.
 
 ### Request body
 

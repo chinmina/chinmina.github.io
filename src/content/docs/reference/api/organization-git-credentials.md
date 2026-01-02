@@ -14,7 +14,7 @@ when vending GitHub tokens. Profiles allow configuring different sets of
 repositories and permissions for different use cases.
 
 This endpoint serves the same underlying function as [POST
-/organization/token/{profile}](./profile-token) (vending GitHub installation
+/organization/token/{profile}](./organization-token) (vending GitHub installation
 tokens), however its request and response format follows Git's [credential
 helper protocol][helper-protocol]. This allows Chinmina Bridge to act as a Git
 credential helper, enabling transparent authentication for Git operations
@@ -33,8 +33,8 @@ handling.
 
 - [Buildkite integration guide](../../guides/buildkite-integration) for details
   on how this endpoint is used in practice.
-- [Profile system](../../guides/profile-access-control#profile-system) for
-  details on how profiles are configured and managed.
+- [Customizing token permissions guide](../../guides/customizing-permissions) for
+  practical setup and usage instructions.
 
 ## Request format
 
@@ -49,13 +49,14 @@ handling.
 
 ### Profile parameter
 
-The `{profile}` path parameter specifies which organization profile to use, in the format:
+The `{profile}` path parameter specifies which organization profile to use. Profile names are used directly without prefixes.
 
-```
-org:{profile-name}
-```
+Examples:
+- `POST /organization/git-credentials/deploy`
+- `POST /organization/git-credentials/package-registry`
+- `POST /organization/git-credentials/buildkite-plugin`
 
-Example: `POST /organization/git-credentials/org:deploy`
+The API does not use prefixes. Prefixes like `org:` are part of the plugin interface only and are translated by the plugins to the appropriate API paths.
 
 ### Request body
 
