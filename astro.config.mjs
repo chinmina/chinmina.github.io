@@ -33,9 +33,9 @@ export default defineConfig({
           items: [
             "guides/getting-started",
             "guides/buildkite-integration",
+            "guides/customizing-permissions",
             "guides/kms",
             "guides/observability",
-            "guides/profile-access-control",
             "guides/verifying-releases",
           ],
         },
@@ -44,15 +44,23 @@ export default defineConfig({
           items: [
             "reference/configuration",
             "reference/git-credentials-format",
-            "reference/organization-profile",
+            {
+              label: "Profiles",
+              items: [
+                "reference/profiles",
+                "reference/profiles/pipeline",
+                "reference/profiles/organization",
+                "reference/profiles/matching",
+              ],
+            },
             {
               label: "API",
               items: [
                 "reference/api/health-check-and-status",
-                "reference/api/git-credentials",
-                "reference/api/post-token",
-                "reference/api/profile-git-credentials",
-                "reference/api/profile-token",
+                "reference/api/pipeline-git-credentials",
+                "reference/api/pipeline-token",
+                "reference/api/organization-git-credentials",
+                "reference/api/organization-token",
               ],
             },
           ],

@@ -121,14 +121,15 @@ The ID for the installation of the App in your organization.
 
 ###### `GITHUB_ORG_PROFILE`
 
-The location of your organization profile, if in use. This should be a triplet
+The location of your profile configuration file, if in use. This should be a triplet
 of the form `<OWNER>:<REPO>:<PATH_TO_FILE>`. No other format is accepted.
+
+The profile configuration file contains both [pipeline profiles][pipeline-profile-config] and [organization profiles][org-profile-config].
 
 The source file for profiles **must** be configured as below. If the download or validation steps fail, the server will start but no profiles will be available.
 
 1. The GitHub application for Chinmina has read access to the repository hosting the file
-2. The organization profiles file content must conform to the [organization
-   profile configuration format][org-profile-config].
+2. The profile configuration file content must conform to the [profile configuration format][profiles-config].
 
 ## Open Telemetry
 
@@ -213,4 +214,6 @@ variables available.
 :::
 
 [otel-exporter-config]: https://opentelemetry.io/docs/specs/otel/protocol/exporter/#configuration-options
-[org-profile-config]: ../organization-profile
+[profiles-config]: profiles/
+[pipeline-profile-config]: profiles/pipeline
+[org-profile-config]: profiles/organization

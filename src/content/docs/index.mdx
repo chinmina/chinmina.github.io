@@ -3,18 +3,18 @@ title: Chinmina Bridge
 description: Connect Buildkite to GitHub with secure, short-lived tokens.
 template: splash
 hero:
-  tagline: Connect Buildkite to GitHub with secure, short-lived tokens.
+  tagline: No more PATs, no more deploy keys. Integrate Buildkite to GitHub with secure, short-lived tokens.
   image:
     light: ../../assets/chinmina-logo-lightmode.png
     dark: ../../assets/chinmina-logo-darkmode.png
     alt: Chinmina Bridge logo
   actions:
-    - text: Getting Started
-      link: /guides/getting-started
-      icon: right-arrow
     - text: Learn more
       link: introduction
       icon: information
+    - text: Getting Started
+      link: /guides/getting-started
+      icon: right-arrow
       variant: minimal
 ---
 
@@ -24,16 +24,23 @@ import { Card, CardGrid } from "@astrojs/starlight/components"
 
 <CardGrid stagger>
   <Card title="Security" icon="seti:license">
-    Retire long-lived deploy keys and PATs for Git operations.
+    Authenticate to GitHub using short-lived tokens instead of long-lived PATs or deploy keys.
+    Manage one GitHub application instead of hundreds of secrets across the organization.
   </Card>
   <Card title="Simplicity" icon="rocket">
-    GitHub access for new pipelines is incredibly simple.
+    GitHub access for new pipelines is automatic, and additional access permissions can be granted
+    centrally in a fully visible and auditable fashion.
   </Card>
   <Card title="Self-hosted" icon="laptop">
-    Like the Elastic Stack, BYO compute. Your environment, your security.
+    Like the Elastic Stack, BYO compute. Your environment, your security. Fits your
+    existing compliance requirements and infrastructure.
   </Card>
   <Card title="Visibility" icon="magnifier">
-    Audit logs give clarity over which pipelines are accessing what
-    repositories.
+    Audit logs give clarity over access: pipelines, repositories and permissions are fully visible
+    and auditable. Errors are also recorded for later analysis as required.
+  </Card>
+  <Card title="Easy integration" icon="setting">
+    Designed with Buildkite in mind, Chinmina Bridge provides plugins that make integration seamless.
+    Full or partial cutover? Your choice. Progressive adoption is easy.
   </Card>
 </CardGrid>

@@ -1,0 +1,165 @@
+---
+title: Customizing token permissions
+description: Grant elevated permissions or access additional repositories from Buildkite pipelines.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components"
+
+By default, Chinmina Bridge vends GitHub tokens with read-only access to the pipeline's repository. Profiles extend this capability, allowing pipelines to request elevated permissions or access additional repositories.
+
+## Why customize permissions?
+
+### Elevated permissions for your repository
+
+Use pipeline profiles when your pipeline needs to:
+- Write comments on pull requests during automated code review
+- Publish releases directly from the pipeline
+- Manage deployment status
+
+Pipeline profiles grant additional permissions while keeping access scoped to the pipeline's own repository.
+
+### Access to other repositories
+
+Use organization profiles when your pipeline needs to access repositories beyond its own:
+- Publishing to organization-wide Homebrew taps or package registries
+- Loading Buildkite plugins from private repositories
+- Reading shared configuration or tooling repositories
+
+Organization profiles provide controlled access to a static list of repositories across the organization.
+
+## Setting up profiles
+
+<Steps>
+
+1. Create the profile configuration file
+
+   Create a YAML file in a GitHub repository. This file will contain profile definitions for your organization.
+
+   ```yaml
+   pipeline:
+     defaults:
+       permissions: ["contents:read"]
+     profiles:
+       - name: "pr-commenter"
+         permissions: ["contents:read", "pull_requests:write"]
+       - name: "release"
+         permissions: ["contents:write"]
+
+   organization:
+     profiles:
+       - name: "shared-plugins"
+         repositories: ["buildkite-plugin-1", "buildkite-plugin-2"]
+         permissions: ["contents:read"]
+   ```
+
+2. Configure Chinmina Bridge
+
+   Set the `GITHUB_ORG_PROFILE` environment variable to the location of your configuration file:
+
+   ```
+   GITHUB_ORG_PROFILE=your-org:config-repo:path/to/profiles.yaml
+   ```
+
+   Format: `<OWNER>:<REPO>:<PATH_TO_FILE>`
+
+   The GitHub App for Chinmina must have read access to this repository.
+
+3. Verify the configuration
+
+   Check Chinmina logs at startup. If the profile file loads successfully, you'll see profile statistics:
+
+   ```
+   [info] Profiles loaded: 2 pipeline, 1 organization
+   ```
+
+   If validation fails, errors will be logged and profiles will not be available.
+
+</Steps>
+
+## Using profiles in pipelines
+
+### With the Chinmina Token plugin
+
+The [Chinmina Token plugin][chinmina-token] makes profile tokens available as environment variables.
+
+#### Environment mode (declarative)
+
+Specify profiles in the plugin configuration:
+
+```yaml
+steps:
+  - label: "Comment on PR"
+    command: gh pr comment $BUILDKITE_PULL_REQUEST --body "Tests passed!"
+    plugins:
+      - chinmina/chinmina-token#v1.2.0:
+          environment:
+            - GITHUB_TOKEN=repo:pr-commenter
+```
+
+Profile prefixes:
+- `repo:profile-name` → pipeline profile
+- `org:profile-name` → organization profile
+
+#### Library mode (dynamic)
+
+For dynamic profile selection, use the `chinmina_token` helper script:
+
+```yaml
+steps:
+  - command: |
+      # Select profile based on branch
+      if [[ "$BUILDKITE_BRANCH" == "main" ]]; then
+        export GITHUB_TOKEN=$(chinmina_token "repo:release")
+      else
+        export GITHUB_TOKEN=$(chinmina_token "repo:default")
+      fi
+
+      gh release create "$TAG" --notes "Release $TAG"
+    plugins:
+      - chinmina/chinmina-token#v1.2.0: {}
+```
+
+### With the Git Credentials plugin
+
+The [Chinmina Git Credentials plugin][credentials-plugin] can use profiles for Git operations:
+
+```yaml
+steps:
+  - command: git clone https://github.com/myorg/private-plugin.git
+    plugins:
+      - chinmina/chinmina-git-credentials#v1.0.2:
+          profile: org:shared-plugins
+```
+
+<Aside type="note">
+Git credentials plugin support for profiles requires plugin version 1.1.0 or later.
+</Aside>
+
+## Restricting profile access
+
+Profiles restrict access to specific pipelines using claim-based matching. Sensitive permissions are only available to authorized pipelines.
+
+Example: Only allow release profiles on the `main` branch:
+
+```yaml
+pipeline:
+  profiles:
+    - name: "release"
+      match:
+        - claim: build_branch
+          value: "main"
+      permissions: ["contents:write"]
+```
+
+Pipelines on other branches will receive a 403 error when requesting this profile.
+
+## Next steps
+
+See the [profile reference](../reference/profiles) for:
+- Complete field definitions
+- Match rule syntax and patterns
+- Available claims for authorization
+- Troubleshooting
+
+[chinmina-token]: https://github.com/chinmina/chinmina-token-buildkite-plugin
+[credentials-plugin]: https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin
