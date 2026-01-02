@@ -11,9 +11,10 @@ The profile parameter selects the pipeline profile that will be used when
 creating the token using permissions defined by the specified [pipeline
 profile](../profiles/pipeline).
 
-There is a special profile name `default`, that is always available. The default
-profile can be requested via `POST /git-credentials/default` or `POST
-/git-credentials`.
+The reserved profile name `default` is always available. The default profile can
+be requested via `POST /git-credentials/default` or `POST /git-credentials`.
+Permissions for the `default` profile [can be
+changed](../profiles/pipeline#default) but `match` rules cannot be added.
 
 ## Purpose
 
@@ -24,7 +25,8 @@ act as a Git credential helper, enabling transparent authentication for Git
 operations without requiring separate credential extraction and configuration
 steps.
 
-See the [Buildkite integration guide](../../guides/buildkite-integration) for details on how this endpoint is used in practice.
+See the [Buildkite integration guide](../../guides/buildkite-integration) for
+details on how this endpoint is used in practice.
 
 :::note
 
@@ -52,7 +54,8 @@ The optional `{profile}` path parameter specifies which pipeline profile to use:
 - `/git-credentials/default`: Same as `/git-credentials` (explicitly requests default permissions)
 - `/git-credentials/{profile-name}`: Uses the named pipeline profile
 
-Profile names are used directly in the path. The API does not use prefixes (prefixes like `repo:` are part of the plugin interface only).
+Profile names are used directly in the path. The API does not use prefixes
+(prefixes like `repo:` are part of the plugin interface only).
 
 Examples:
 
@@ -60,7 +63,8 @@ Examples:
 - `POST /git-credentials/pr-commenter` → "pr-commenter" pipeline profile
 - `POST /git-credentials/release` → "release" pipeline profile
 
-If the profile does not exist or the pipeline doesn't match the profile's access rules, the request returns an error.
+If the profile does not exist or the pipeline doesn't match the profile's access
+rules, the request returns an error.
 
 ### Request body
 
@@ -84,11 +88,15 @@ password=ghs_...
 password_expiry_utc=1705320600
 ```
 
-The response body is plain text with newline-separated key-value pairs. Git parses this and uses the credentials for the requested operation.
+The response body is plain text with newline-separated key-value pairs. Git
+parses this and uses the credentials for the requested operation.
 
 ### Empty response (200 OK)
 
-When the requested repository does not match the pipeline's repository the endpoint returns a successful but empty response. See [Git credentials format](../../reference/git-credentials-format#empty-response) for details on empty response behavior.
+When the requested repository does not match the pipeline's repository, the
+endpoint returns a successful but empty response. See [Git credentials
+format](../../reference/git-credentials-format#empty-response) for details on
+empty response behavior.
 
 ### Error responses
 

@@ -3,15 +3,18 @@ title: POST /token/{profile}
 description: API reference for the token vending endpoint that returns short-lived GitHub installation tokens.
 ---
 
-The `POST /token/{profile}` (and legacy `POST /token`) endpoints vend
-short-lived GitHub installation tokens validated against Buildkite OIDC tokens.
+The `POST /token/{profile}` (and legacy `POST /token`)
+endpoints vend short-lived GitHub installation tokens validated against
+Buildkite OIDC tokens.
 
 The profile parameter selects the pipeline profile that will be used when
 creating the token using permissions defined by the specified [pipeline
 profile](../profiles/pipeline).
 
-There is a special profile name `default`, that is always available. The default
-profile can be requested via `POST /token/default` or `POST /token`.
+The reserved profile name `default` is always available. The default profile can
+be requested via `POST /token/default` or `POST /token`.
+Permissions for the `default` profile [can be
+changed](../profiles/pipeline#default) but `match` rules cannot be added.
 
 ## Purpose
 
@@ -49,7 +52,8 @@ The optional `{profile}` path parameter specifies which pipeline profile to use:
 - `/token/default`: Same as `/token` (explicitly requests default permissions)
 - `/token/{profile-name}`: Uses the named pipeline profile
 
-Profile names are used directly in the path. The API does not use prefixes (prefixes like `repo:` are part of the plugin interface only).
+Profile names are used directly in the path. The API does not use prefixes
+(prefixes like `repo:` are part of the plugin interface only).
 
 Examples:
 
@@ -57,7 +61,8 @@ Examples:
 - `POST /token/pr-commenter` → "pr-commenter" pipeline profile
 - `POST /token/release` → "release" pipeline profile
 
-If the profile does not exist or the pipeline doesn't match the profile's access rules, the request returns an error.
+If the profile does not exist or the pipeline doesn't match the profile's access
+rules, the request returns an error.
 
 ### Request body
 

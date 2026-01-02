@@ -19,7 +19,7 @@ Chinmina Bridge offers substantial security and flexibility benefits for any
 size organization, and scales easily as the size of your Buildkite stack grows.
 
 Zero PATs, zero deploy keys, central permissions declarations, strong auditing
-and a simple runtime model makes Chinmina ideal for scaling Buildkite
+and a simple runtime model make Chinmina Bridge ideal for scaling Buildkite
 deployments from a handful to hundreds of repositories.
 
 ### Security
@@ -72,10 +72,10 @@ deployments from a handful to hundreds of repositories.
    Given that it is a simple, containerized HTTP service with Open Telemetry
    support and easy scaling, this is thankfully relatively straightforward.
 
-3. The private key for the GitHub application is quite powerful, and needs to be
-   carefully protected. It has the superset of permissions that it can delegate.
-   Storing the key in AWS KMS and using careful resource and IAM policies on
-   access is therefore [strongly recommended](guides/kms).
+3. The private key for the GitHub application is extremely powerful, and needs
+   to be carefully protected. It has the superset of permissions that it can
+   delegate. Storing the key in AWS KMS and using careful resource and IAM
+   policies on access is therefore [strongly recommended](guides/kms).
 
 4. Adequate controls are required on Buildkite pipeline creation. At present,
    the bridge will allow access by the pipeline to the configured repository.
