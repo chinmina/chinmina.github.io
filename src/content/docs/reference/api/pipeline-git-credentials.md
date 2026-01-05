@@ -55,7 +55,7 @@ The optional `{profile}` path parameter specifies which pipeline profile to use:
 - `/git-credentials/{profile-name}`: Uses the named pipeline profile
 
 Profile names are used directly in the path. The API does not use prefixes
-(prefixes like `repo:` are part of the plugin interface only).
+(prefixes like `pipeline:` are part of the plugin interface only).
 
 Examples:
 

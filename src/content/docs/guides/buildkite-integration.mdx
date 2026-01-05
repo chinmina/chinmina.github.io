@@ -88,7 +88,7 @@ steps:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
-            - GITHUB_TOKEN=repo:default
+            - GITHUB_TOKEN=pipeline:default
 ```
 
 :::tip
@@ -116,11 +116,11 @@ steps:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
-            - GITHUB_TOKEN=repo:release        # pipeline profile
+            - GITHUB_TOKEN=pipeline:release        # pipeline profile
             - GITHUB_NPM_TOKEN=org:npm-packages # organization profile
 ```
 
-Profile prefixes (`repo:`, `org:`) identify the profile type for the plugin. Pipeline profiles (`repo:`) grant permissions to the pipeline's repository, while organization profiles (`org:`) grant access to specific repositories across the organization.
+Profile prefixes (`pipeline:`, `org:`) identify the profile type for the plugin. Pipeline profiles (`pipeline:`) grant permissions to the pipeline's repository, while organization profiles (`org:`) grant access to specific repositories across the organization.
 
 ### Library mode (dynamic)
 
@@ -147,10 +147,10 @@ else
 fi
 
 # Get a token for pipeline repository with elevated permissions
-export GITHUB_TOKEN=$(chinmina_token "repo:release")
+export GITHUB_TOKEN=$(chinmina_token "pipeline:release")
 
 # Or get a token with default pipeline permissions
-export GITHUB_TOKEN=$(chinmina_token "repo:default")
+export GITHUB_TOKEN=$(chinmina_token "pipeline:default")
 
 # Use with gh CLI
 gh release download --repo "${repo}" \
@@ -314,7 +314,7 @@ pipeline settings.
     plugins:
       - chinmina/chinmina-token#v1.2.0:
           environment:
-            - GITHUB_TOKEN=repo:default
+            - GITHUB_TOKEN=pipeline:default
     ```
 
     :::note

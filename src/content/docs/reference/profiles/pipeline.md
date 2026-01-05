@@ -96,12 +96,12 @@ The special profile name `default` accesses `pipeline.defaults` permissions.
 
 ### From Buildkite plugins
 
-The [Chinmina Token plugin][chinmina-token] and [Chinmina Git Credentials plugin][credentials-plugin] use the `repo:` prefix to identify pipeline profiles:
+The [Chinmina Token plugin][chinmina-token] and [Chinmina Git Credentials plugin][credentials-plugin] use the `pipeline:` prefix to identify pipeline profiles:
 
 ```yaml
 environment:
-  - GITHUB_TOKEN=repo:default       # pipeline defaults
-  - PR_TOKEN=repo:pr-commenter      # named pipeline profile
+  - GITHUB_TOKEN=pipeline:default       # pipeline defaults
+  - PR_TOKEN=pipeline:pr-commenter      # named pipeline profile
 ```
 
 The plugins translate these to appropriate API paths (`/token/default`, `/token/pr-commenter`).

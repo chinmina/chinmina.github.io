@@ -93,11 +93,11 @@ steps:
     plugins:
       - chinmina/chinmina-token#v1.2.0:
           environment:
-            - GITHUB_TOKEN=repo:pr-commenter
+            - GITHUB_TOKEN=pipeline:pr-commenter
 ```
 
 Profile prefixes:
-- `repo:profile-name` → pipeline profile
+- `pipeline:profile-name` → pipeline profile
 - `org:profile-name` → organization profile
 
 #### Library mode (dynamic)
@@ -109,9 +109,9 @@ steps:
   - command: |
       # Select profile based on branch
       if [[ "$BUILDKITE_BRANCH" == "main" ]]; then
-        export GITHUB_TOKEN=$(chinmina_token "repo:release")
+        export GITHUB_TOKEN=$(chinmina_token "pipeline:release")
       else
-        export GITHUB_TOKEN=$(chinmina_token "repo:default")
+        export GITHUB_TOKEN=$(chinmina_token "pipeline:default")
       fi
 
       gh release create "$TAG" --notes "Release $TAG"
