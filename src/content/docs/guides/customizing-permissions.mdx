@@ -91,13 +91,13 @@ steps:
   - label: "Comment on PR"
     command: gh pr comment $BUILDKITE_PULL_REQUEST --body "Tests passed!"
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           environment:
-            - GITHUB_TOKEN=repo:pr-commenter
+            - GITHUB_TOKEN=pipeline:pr-commenter
 ```
 
 Profile prefixes:
-- `repo:profile-name` → pipeline profile
+- `pipeline:profile-name` → pipeline profile
 - `org:profile-name` → organization profile
 
 #### Library mode (dynamic)
@@ -109,14 +109,14 @@ steps:
   - command: |
       # Select profile based on branch
       if [[ "$BUILDKITE_BRANCH" == "main" ]]; then
-        export GITHUB_TOKEN=$(chinmina_token "repo:release")
+        export GITHUB_TOKEN=$(chinmina_token "pipeline:release")
       else
-        export GITHUB_TOKEN=$(chinmina_token "repo:default")
+        export GITHUB_TOKEN=$(chinmina_token "pipeline:default")
       fi
 
       gh release create "$TAG" --notes "Release $TAG"
     plugins:
-      - chinmina/chinmina-token#v1.2.0: {}
+      - chinmina/chinmina-token#v1.3.0: {}
 ```
 
 ### With the Git Credentials plugin
@@ -127,7 +127,7 @@ The [Chinmina Git Credentials plugin][credentials-plugin] can use profiles for G
 steps:
   - command: git clone https://github.com/myorg/private-plugin.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.0.2:
+      - chinmina/chinmina-git-credentials#v1.4.0:
           profile: org:shared-plugins
 ```
 

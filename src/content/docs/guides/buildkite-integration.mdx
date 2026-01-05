@@ -84,11 +84,11 @@ steps:
       # GITHUB_TOKEN is automatically available
       gh release download --repo myorg/myrepo --pattern "*.zip"
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
-            - GITHUB_TOKEN=repo:default
+            - GITHUB_TOKEN=pipeline:default
 ```
 
 :::tip
@@ -112,15 +112,15 @@ steps:
       # Deploy using different token with elevated permissions
       gh release create --repo myorg/releases "$VERSION"
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
-            - GITHUB_TOKEN=repo:release        # pipeline profile
+            - GITHUB_TOKEN=pipeline:release        # pipeline profile
             - GITHUB_NPM_TOKEN=org:npm-packages # organization profile
 ```
 
-Profile prefixes (`repo:`, `org:`) identify the profile type for the plugin. Pipeline profiles (`repo:`) grant permissions to the pipeline's repository, while organization profiles (`org:`) grant access to specific repositories across the organization.
+Profile prefixes (`pipeline:`, `org:`) identify the profile type for the plugin. Pipeline profiles (`pipeline:`) grant permissions to the pipeline's repository, while organization profiles (`org:`) grant access to specific repositories across the organization.
 
 ### Library mode (dynamic)
 
@@ -131,7 +131,7 @@ an `environment` parameter, it adds the `chinmina_token` script to PATH.
 ```yml
 steps:
   - plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
 ```
@@ -147,10 +147,10 @@ else
 fi
 
 # Get a token for pipeline repository with elevated permissions
-export GITHUB_TOKEN=$(chinmina_token "repo:release")
+export GITHUB_TOKEN=$(chinmina_token "pipeline:release")
 
 # Or get a token with default pipeline permissions
-export GITHUB_TOKEN=$(chinmina_token "repo:default")
+export GITHUB_TOKEN=$(chinmina_token "pipeline:default")
 
 # Use with gh CLI
 gh release download --repo "${repo}" \
@@ -178,7 +178,7 @@ to authenticate with GitHub using tokens from Chinmina Bridge.
 steps:
   - command: git clone https://github.com/myorg/private-repo.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.0.2:
+      - chinmina/chinmina-git-credentials#v1.4.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
 ```
@@ -264,7 +264,7 @@ pipeline settings.
     ```bash
     # Chinmina Token plugin
     plugin_repo="https://github.com/chinmina/chinmina-token-buildkite-plugin.git"
-    plugin_version="v1.2.0"
+    plugin_version="v1.3.0"
     plugin_dir="/buildkite/plugins/chinmina-token-buildkite-plugin"
 
     [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
@@ -278,7 +278,7 @@ pipeline settings.
 
     # Chinmina Git Credentials plugin
     plugin_repo="https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin.git"
-    plugin_version="v1.0.2"
+    plugin_version="v1.4.0"
     plugin_dir="/buildkite/plugins/chinmina-git-credentials-buildkite-plugin"
 
     [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
@@ -312,9 +312,9 @@ pipeline settings.
 
     ```yml
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           environment:
-            - GITHUB_TOKEN=repo:default
+            - GITHUB_TOKEN=pipeline:default
     ```
 
     :::note
