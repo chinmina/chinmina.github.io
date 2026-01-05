@@ -84,7 +84,7 @@ steps:
       # GITHUB_TOKEN is automatically available
       gh release download --repo myorg/myrepo --pattern "*.zip"
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
@@ -112,7 +112,7 @@ steps:
       # Deploy using different token with elevated permissions
       gh release create --repo myorg/releases "$VERSION"
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
           environment:
@@ -131,7 +131,7 @@ an `environment` parameter, it adds the `chinmina_token` script to PATH.
 ```yml
 steps:
   - plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
 ```
@@ -178,7 +178,7 @@ to authenticate with GitHub using tokens from Chinmina Bridge.
 steps:
   - command: git clone https://github.com/myorg/private-repo.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.0.2:
+      - chinmina/chinmina-git-credentials#v1.4.0:
           chinmina-url: "https://chinmina-bridge-url"
           audience: "chinmina:your-github-organization"
 ```
@@ -264,7 +264,7 @@ pipeline settings.
     ```bash
     # Chinmina Token plugin
     plugin_repo="https://github.com/chinmina/chinmina-token-buildkite-plugin.git"
-    plugin_version="v1.2.0"
+    plugin_version="v1.3.0"
     plugin_dir="/buildkite/plugins/chinmina-token-buildkite-plugin"
 
     [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
@@ -278,7 +278,7 @@ pipeline settings.
 
     # Chinmina Git Credentials plugin
     plugin_repo="https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin.git"
-    plugin_version="v1.0.2"
+    plugin_version="v1.4.0"
     plugin_dir="/buildkite/plugins/chinmina-git-credentials-buildkite-plugin"
 
     [[ -d "${plugin_dir}" ]] && rm -rf "${plugin_dir}"
@@ -312,7 +312,7 @@ pipeline settings.
 
     ```yml
     plugins:
-      - chinmina/chinmina-token#v1.2.0:
+      - chinmina/chinmina-token#v1.3.0:
           environment:
             - GITHUB_TOKEN=pipeline:default
     ```
