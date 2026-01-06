@@ -80,7 +80,7 @@ When a token is successfully vended, the response is a JSON object:
   "profile": "org:default",
   "repositoryUrl": "https://github.com/owner/repository",
   "repositories": ["owner/repository"],
-  "permissions": ["contents:read"],
+  "permissions": ["metadata:read", "contents:read"],
   "token": "ghs_...",
   "expiry": "2025-12-21T10:00:00Z"
 }
@@ -92,7 +92,7 @@ When a token is successfully vended, the response is a JSON object:
 | `profile`          | string | Profile identifier that was used                                        |
 | `repositoryUrl`    | string | The requested repository URL: this will always be empty                 |
 | `repositories`     | array  | List of repository names the token has access to (format: `owner/repo`) |
-| `permissions`      | array  | Permissions granted (e.g., `["contents:read", "packages:write"]`)       |
+| `permissions`      | array  | Permissions granted. Always includes `metadata:read` plus configured permissions. |
 | `token`            | string | GitHub installation token (format: `ghs_...`)                           |
 | `expiry`           | string | ISO 8601 timestamp when token expires                                   |
 

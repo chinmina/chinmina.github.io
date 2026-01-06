@@ -71,7 +71,7 @@ A list of repositories that the profile has access to. This list includes only t
 
 ###### `permissions`
 
-A list of permissions granted to the profile. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
+A list of permissions granted to the profile. The `metadata:read` permission is [automatically included](../profiles#automatic-permissions) in all tokens. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
 
 ### Example
 

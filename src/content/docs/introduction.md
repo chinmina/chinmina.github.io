@@ -102,7 +102,8 @@ instead.
 Requests to `/token` and `/git-credentials` are authorized with the [Buildkite
 OIDC][buildkite-oidc] token, whose claims identify the executing pipeline. From
 the pipeline, the associated GitHub repository is looked up, and a token with
-`contents:read` permission is returned for that repository.
+`contents:read` permission is returned for that repository. All tokens also include
+`metadata:read` by default.
 
 ### Profiles
 

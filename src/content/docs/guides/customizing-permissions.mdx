@@ -5,7 +5,7 @@ description: Grant elevated permissions or access additional repositories from B
 
 import { Aside, Steps } from "@astrojs/starlight/components"
 
-By default, Chinmina Bridge vends GitHub tokens with read-only access to the pipeline's repository. Profiles extend this capability, allowing pipelines to request elevated permissions or access additional repositories.
+By default, Chinmina Bridge vends GitHub tokens with `contents:read` and `metadata:read` access to the pipeline's repository. Profiles extend this capability, allowing pipelines to request elevated permissions or access additional repositories.
 
 ## Why customize permissions?
 
@@ -52,6 +52,10 @@ Organization profiles provide controlled access to a static list of repositories
          permissions: ["contents:read"]
    ```
 
+   :::note
+   The `metadata:read` permission is [automatically included](../reference/profiles#automatic-permissions) in all tokens. You do not need to specify it in your configuration.
+   :::
+
 2. Configure Chinmina Bridge
 
    Set the `GITHUB_ORG_PROFILE` environment variable to the location of your configuration file:
@@ -91,7 +95,7 @@ steps:
   - label: "Comment on PR"
     command: gh pr comment $BUILDKITE_PULL_REQUEST --body "Tests passed!"
     plugins:
-      - chinmina/chinmina-token#v1.3.0:
+      - chinmina/chinmina-token#v1.3.1:
           environment:
             - GITHUB_TOKEN=pipeline:pr-commenter
 ```
@@ -116,7 +120,7 @@ steps:
 
       gh release create "$TAG" --notes "Release $TAG"
     plugins:
-      - chinmina/chinmina-token#v1.3.0: {}
+      - chinmina/chinmina-token#v1.3.1: {}
 ```
 
 ### With the Git Credentials plugin
@@ -127,7 +131,7 @@ The [Chinmina Git Credentials plugin][credentials-plugin] can use profiles for G
 steps:
   - command: git clone https://github.com/myorg/private-plugin.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.4.0:
+      - chinmina/chinmina-git-credentials#v1.4.1:
           profile: org:shared-plugins
 ```
 

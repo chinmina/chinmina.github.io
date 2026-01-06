@@ -31,7 +31,7 @@ Default permissions applied to all pipeline token requests when no profile is sp
 
 ###### `permissions`
 
-List of GitHub permissions. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
+List of GitHub permissions. The `metadata:read` permission is [automatically included](../profiles#automatic-permissions) in all tokens. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
 
 ##### `profiles`
 
@@ -55,7 +55,7 @@ See the [profile matching reference](matching) for complete details on:
 
 ###### `permissions`
 
-GitHub permissions granted by this profile.
+GitHub permissions granted by this profile. The `metadata:read` permission is [automatically included](../profiles#automatic-permissions) in all tokens.
 
 ### Example
 
