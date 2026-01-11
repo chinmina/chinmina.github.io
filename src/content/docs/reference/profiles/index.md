@@ -43,6 +43,12 @@ organization:
       permissions: ["contents:read"]
 ```
 
+## Automatic permissions
+
+All tokens include `metadata:read` permission regardless of configured permissions. This mirrors [GitHub's default behavior for fine-grained tokens][github-fgpat], where repository metadata access is always granted.
+
+Configured permissions are additive: specifying `["contents:read"]` results in a token with both `metadata:read` and `contents:read`.
+
 ## Access control
 
 Both profile types support [claim-based matching](matching) to restrict which pipelines can use a profile. Match rules evaluate JWT claims from the Buildkite OIDC token, enabling fine-grained authorization based on pipeline identity, branch, cluster, or agent tags.
@@ -60,3 +66,5 @@ The special name `default` accesses pipeline default permissions.
 
 - [Customizing token permissions guide](../../guides/customizing-permissions) - practical how-to for setting up and using profiles
 - [Profile matching reference](matching) - match rule syntax and available claims
+
+[github-fgpat]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens
