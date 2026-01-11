@@ -57,6 +57,17 @@ Collect the following information from your Chinmina Bridge instance:
 
 **If the audience doesn't match the value expected by Chinmina Bridge, all requests will fail.**
 
+### Organization-wide defaults
+
+Both plugins support `CHINMINA_DEFAULT_URL` and `CHINMINA_DEFAULT_AUDIENCE` environment variables. Set these at the agent level to provide defaults for all pipelines, eliminating repetitive configuration.
+
+Configuration precedence (highest to lowest):
+1. Plugin parameters in pipeline configuration
+2. `CHINMINA_DEFAULT_*` environment variables
+3. Built-in defaults (audience only)
+
+This allows setting defaults once while permitting per-pipeline overrides when needed.
+
 ### Prerequisites
 
 1. If `openssl` is present on the agent, both plugins will use it to encrypt a
@@ -66,10 +77,9 @@ Collect the following information from your Chinmina Bridge instance:
 
 ## Using tokens in pipelines
 
-The examples below show full plugin configuration including `chinmina-url` and
-`audience` parameters. When agent-level defaults are configured (see "Enabling
-on the agent" below), these parameters can be omitted from pipeline
-configuration.
+The examples below assume agent-level defaults are configured (see "[Enabling
+on the agent](#enabling-on-the-agent-for-all-pipelines)"). The `chinmina-url`
+and `audience` parameters can be included to override defaults when needed.
 
 ### Environment mode (declarative)
 
@@ -84,9 +94,8 @@ steps:
       # GITHUB_TOKEN is automatically available
       gh release download --repo myorg/myrepo --pattern "*.zip"
     plugins:
+      # Using default URL and audience from agent environment
       - chinmina/chinmina-token#v1.4.0:
-          chinmina-url: "https://chinmina-bridge-url"
-          audience: "chinmina:your-github-organization"
           environment:
             - GITHUB_TOKEN=pipeline:default
 ```
@@ -112,9 +121,8 @@ steps:
       # Deploy using different token with elevated permissions
       gh release create --repo myorg/releases "$VERSION"
     plugins:
+      # Using default URL and audience from agent environment
       - chinmina/chinmina-token#v1.4.0:
-          chinmina-url: "https://chinmina-bridge-url"
-          audience: "chinmina:your-github-organization"
           environment:
             - GITHUB_TOKEN=pipeline:release        # pipeline profile
             - GITHUB_NPM_TOKEN=org:npm-packages # organization profile
@@ -131,9 +139,8 @@ an `environment` parameter, it adds the `chinmina_token` script to PATH.
 ```yml
 steps:
   - plugins:
-      - chinmina/chinmina-token#v1.4.0:
-          chinmina-url: "https://chinmina-bridge-url"
-          audience: "chinmina:your-github-organization"
+      # Using default URL and audience from agent environment
+      - chinmina/chinmina-token#v1.4.0: {}
 ```
 
 Then in your scripts:
@@ -178,9 +185,8 @@ to authenticate with GitHub using tokens from Chinmina Bridge.
 steps:
   - command: git clone https://github.com/myorg/private-repo.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.6.0:
-          chinmina-url: "https://chinmina-bridge-url"
-          audience: "chinmina:your-github-organization"
+      # Using default URL and audience from agent environment
+      - chinmina/chinmina-git-credentials#v1.6.0: {}
 ```
 
 :::tip
@@ -194,6 +200,44 @@ Alternatively, the `BUILDKITE_REPO` value can be overridden in the agent
 **If SSH is configured, Git will ignore the credential helper.**
 
 :::
+
+### Using profiles with Git credentials
+
+The Git credentials plugin supports using profiles to access repositories with specific permissions or to access additional repositories beyond the pipeline's own repository:
+
+```yml
+steps:
+  - command: git clone https://github.com/myorg/shared-repo.git
+    plugins:
+      # Using default URL and audience from agent environment
+      - chinmina/chinmina-git-credentials#v1.6.0:
+          profile: org:shared-plugins
+```
+
+### Exclusive credential helper mode
+
+By default, the Git credentials plugin adds the Chinmina credential helper alongside any existing system or global Git credential helpers. The `exclusive` flag clears all previously configured credential helpers for GitHub, ensuring only Chinmina is used.
+
+```yml
+steps:
+  - command: git clone https://github.com/myorg/private-repo.git
+    plugins:
+      # Using default URL and audience from agent environment
+      - chinmina/chinmina-git-credentials#v1.6.0:
+          profile: org:shared-plugins
+          exclusive: true
+```
+
+:::caution
+
+When using `exclusive: true`, ensure the specified profile (or default profile if none specified) has `contents:read` permission. Without this permission, Git operations will fail because no other credential helpers will be available.
+
+:::
+
+Use `exclusive: true` when:
+- System-level credential helpers interfere with pipeline-specific authentication
+- You need to ensure only Chinmina-vended tokens are used for GitHub operations
+- Operating in shared CI environments where credential helper precedence is unclear
 
 ### How it works
 
@@ -291,20 +335,20 @@ pipeline settings.
         "${plugin_repo}" "${plugin_dir}"
     ```
 
-2.  Call the plugins' `environment` hooks directly from the agent's `environment`
-    hook, specifying the plugin parameters directly. These defaults will be used
+2.  Set default configuration values and call the plugins' `environment` hooks
+    directly from the agent's `environment` hook. These defaults will be used
     by all pipelines unless explicitly overridden.
 
     ```bash title="Execute plugin environment hooks directly"
-    # Configure Chinmina Token plugin
-    BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_CHINMINA_URL:-https://chinmina.url-to-instance.io}" \
-    BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE="${BUILDKITE_PLUGIN_CHINMINA_TOKEN_AUDIENCE:-chinmina:your-org}" \
-        source /buildkite/plugins/chinmina-token-buildkite-plugin/hooks/environment
+    # Set organization-wide defaults (both plugins use these)
+    export CHINMINA_DEFAULT_URL="https://chinmina.url-to-instance.io"
+    export CHINMINA_DEFAULT_AUDIENCE="chinmina:your-org"
 
-    # Configure Chinmina Git Credentials plugin
-    BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_CHINMINA_URL="${BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_CHINMINA_URL:-https://chinmina.url-to-instance.io}" \
-    BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_AUDIENCE="${BUILDKITE_PLUGIN_CHINMINA_GIT_CREDENTIALS_AUDIENCE:-chinmina:your-org}" \
-        source /buildkite/plugins/chinmina-git-credentials-buildkite-plugin/hooks/environment
+    # Activate Chinmina Token plugin
+    source /buildkite/plugins/chinmina-token-buildkite-plugin/hooks/environment
+
+    # Activate Chinmina Git Credentials plugin
+    source /buildkite/plugins/chinmina-git-credentials-buildkite-plugin/hooks/environment
     ```
 
     With this configuration, pipelines no longer need to specify `chinmina-url`
