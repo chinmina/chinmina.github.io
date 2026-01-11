@@ -95,7 +95,7 @@ steps:
   - label: "Comment on PR"
     command: gh pr comment $BUILDKITE_PULL_REQUEST --body "Tests passed!"
     plugins:
-      - chinmina/chinmina-token#v1.3.1:
+      - chinmina/chinmina-token#v1.4.0:
           environment:
             - GITHUB_TOKEN=pipeline:pr-commenter
 ```
@@ -120,7 +120,7 @@ steps:
 
       gh release create "$TAG" --notes "Release $TAG"
     plugins:
-      - chinmina/chinmina-token#v1.3.1: {}
+      - chinmina/chinmina-token#v1.4.0: {}
 ```
 
 ### With the Git Credentials plugin
@@ -131,7 +131,7 @@ The [Chinmina Git Credentials plugin][credentials-plugin] can use profiles for G
 steps:
   - command: git clone https://github.com/myorg/private-plugin.git
     plugins:
-      - chinmina/chinmina-git-credentials#v1.4.1:
+      - chinmina/chinmina-git-credentials#v1.6.0:
           profile: org:shared-plugins
 ```
 
