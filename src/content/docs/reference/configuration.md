@@ -38,6 +38,28 @@ For outgoing HTTPS requests, the maximum connections that may be made per host.
 Given that Chinmina mainly targets Buildkite and GitHub API endpoints, this
 number is somewhat higher than might otherwise be usual.
 
+## Cache
+
+###### `CACHE_TYPE`
+
+_(options: `memory | valkey` default: `memory`)_
+
+The cache backend to use for storing generated tokens. The `memory` backend uses an in-process cache suitable for single-instance deployments. The `valkey` backend enables distributed caching for horizontal scaling across multiple instances.
+
+See the [Valkey distributed caching](../../guides/valkey) guide for deployment details.
+
+###### `VALKEY_ADDRESS`
+
+The endpoint address for the Valkey server. Required when `CACHE_TYPE` is set to `valkey`.
+
+Format: `hostname:port` (for example, `cache.example.com:6379`)
+
+###### `VALKEY_TLS`
+
+_(default: `true`)_
+
+Enable TLS for connections to the Valkey server. Only disable in development environments.
+
 ## Buildkite OIDC
 
 ###### `JWT_BUILDKITE_ORGANIZATION_SLUG` :badge[required]
