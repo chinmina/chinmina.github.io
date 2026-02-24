@@ -43,6 +43,7 @@ export default defineConfig({
           label: "Reference",
           items: [
             "reference/configuration",
+            "reference/metrics",
             "reference/git-credentials-format",
             {
               label: "Profiles",

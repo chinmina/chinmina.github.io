@@ -155,7 +155,12 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 
 ## Open Telemetry
 
-This section is a stub. For now, refer to the
-[`.envrc`](https://github.com/chinmina/chinmina-bridge/blob/main/.envrc) file
-for details of all Open Telemetry related configuration that's currently
-possible.
+Chinmina produces traces and metrics via the Open Telemetry SDK when
+`OBSERVE_ENABLED` is `true`. Traces cover each request end-to-end, including
+outgoing calls to Buildkite and GitHub. Metrics track cache operations,
+encryption overhead, and token vending outcomes.
+
+For configuration options, see [Open Telemetry configuration](../reference/configuration#open-telemetry).
+
+For a complete list of all metrics and span attributes produced, see the
+[metrics and traces reference](../reference/metrics).
