@@ -23,18 +23,20 @@ Attributes are added automatically by the `otelhttp` package following OpenTelem
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `http.method` | string | HTTP method (GET, POST) |
-| `http.target` | string | Request path |
-| `http.scheme` | string | Protocol (http or https) |
-| `http.status_code` | int | HTTP response status code |
-| `http.flavor` | string | HTTP version (e.g., "1.1") |
-| `http.user_agent` | string | User-Agent header value |
-| `net.host.name` | string | Server hostname |
-| `net.host.port` | int | Server port |
+| `http.request.method` | string | HTTP method (GET, POST) |
+| `http.route` | string | Matched route pattern (e.g., `/token`) |
+| `url.path` | string | Request path |
+| `url.scheme` | string | Protocol (http or https) |
+| `http.response.status_code` | int | HTTP response status code |
+| `network.protocol.version` | string | HTTP version (e.g., "1.1") |
+| `user_agent.original` | string | User-Agent header value |
+| `server.address` | string | Server hostname |
+| `server.port` | int | Server port |
+| `client.address` | string | Client IP address |
 
 **Status:**
-- `Ok` for successful requests
-- `Error` for failed requests (HTTP 4xx/5xx)
+- `Unset` for 1xx, 2xx, 3xx, and 4xx responses
+- `Error` for 5xx responses
 
 ### Request identity attributes
 
@@ -75,12 +77,12 @@ Attributes are added by the `otelhttp` package. Common attributes include:
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `http.method` | string | HTTP method (GET, POST, etc.) |
-| `http.url` | string | Full request URL |
-| `http.status_code` | int | HTTP response status code |
-| `http.target` | string | Request path |
-| `net.peer.name` | string | Target hostname |
-| `net.peer.port` | int | Target port |
+| `http.request.method` | string | HTTP method (GET, POST, etc.) |
+| `url.full` | string | Full request URL |
+| `http.response.status_code` | int | HTTP response status code |
+| `url.path` | string | Request path |
+| `server.address` | string | Target hostname |
+| `server.port` | int | Target port |
 
 ### Connection trace attributes
 
