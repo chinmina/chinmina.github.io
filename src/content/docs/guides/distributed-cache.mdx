@@ -1,0 +1,369 @@
+---
+title: Distributed cache
+description: Configure a shared Valkey cache with IAM authentication and encrypted token storage using AWS KMS and Tink.
+---
+
+import { Aside, Badge, Steps } from "@astrojs/starlight/components"
+
+{/* Shorthand component for a badge that indicates a value to be collected. */}
+export function Later({ name }) {
+  return <Badge text={`📝 ${name}`} variant="tip" />;
+}
+
+Single-instance deployments cache GitHub access tokens in process memory. With multiple instances, each independently requests tokens from GitHub, increasing API usage and latency. A shared [Valkey][valkey] cache eliminates this redundancy by allowing all instances to read and write from the same token store.
+
+Chinmina supports Valkey (or any Redis-compatible server) as a distributed cache backend. When configured, Chinmina uses a multi-level caching strategy: a fast local in-memory cache backed by the shared Valkey instance.
+
+<Aside type="caution">
+
+Encryption is **strongly** recommended for any production distributed cache. Without it, GitHub access tokens are stored in plaintext in Valkey. A compromised cache instance would directly expose all cached credentials.
+
+</Aside>
+
+## As you go
+
+Values to save for configuration are marked in the instructions below like this: <Later name="ENV_VAR_NAME" />.
+
+Collect these values as you proceed through the infrastructure setup sections. They are used in the "Configure Chinmina" steps that follow each section.
+
+## Create the Valkey instance
+
+<Steps>
+
+1. Create an ElastiCache Serverless Valkey cache (or replication group) by
+   following the [ElastiCache getting started guide][elasticache-create]. Place
+   the cache in the same VPC as your Chinmina instances, or ensure network
+   connectivity via VPC peering or security group rules.
+
+   Save the cache endpoint as <Later name="VALKEY_ADDRESS" /> and cache name
+   (replication group ID or serverless cache name) as
+   <Later name="VALKEY_IAM_CACHE_NAME" />.
+
+2. Enable in-transit encryption (TLS) on the cache. TLS is required for IAM
+   authentication and is strongly recommended in all cases.
+
+3. Create an [ElastiCache IAM-enabled user][elasticache-iam-auth] for Chinmina
+   to authenticate with.
+
+   Save the user ID as <Later name="VALKEY_USERNAME" />.
+
+</Steps>
+
+## Configure Chinmina for the Valkey cache
+
+<Steps>
+
+1. Set `CACHE_TYPE=valkey` and `VALKEY_ADDRESS` to the cache endpoint in
+   `host:port` format:
+
+   ```bash
+   CACHE_TYPE=valkey
+   VALKEY_ADDRESS=chinmina-cache-abcdef.serverless.use1.cache.amazonaws.com:6379
+   ```
+
+2. Enable IAM authentication and identify the cache:
+
+   ```bash
+   VALKEY_IAM_ENABLED=true
+   VALKEY_IAM_CACHE_NAME=chinmina-cache
+   VALKEY_IAM_SERVERLESS=true
+   ```
+
+   Set `VALKEY_IAM_SERVERLESS=true` for ElastiCache Serverless caches, or `false` for replication groups.
+
+3. Set `VALKEY_USERNAME` to the IAM user ID created in the previous section:
+
+   ```bash
+   VALKEY_USERNAME=chinmina-cache-user
+   ```
+
+4. Grant the Chinmina execution role `elasticache:Connect` permission, scoped
+   to the cache and user:
+
+   ```json title="example-elasticache-iam-policy.json"
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": "elasticache:Connect",
+         "Resource": [
+           "arn:aws:elasticache:us-east-1:123456789012:serverlesscache:chinmina-cache",
+           "arn:aws:elasticache:us-east-1:123456789012:user:chinmina-cache-user"
+         ]
+       }
+     ]
+   }
+   ```
+
+</Steps>
+
+<Aside type="note">
+
+When IAM authentication is enabled, TLS is forced on regardless of the
+`VALKEY_TLS` setting. `VALKEY_PASSWORD` must be empty.
+
+</Aside>
+
+<Aside type="tip">
+
+Chinmina uses the standard AWS SDK credential chain for IAM authentication.
+Credentials are typically supplied via IMDS (instance metadata service) or the
+container credential provider, consistent with the approach described in the
+[KMS guide](../kms).
+
+</Aside>
+
+## Configure cache encryption
+
+Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Associated Data) with AES-256-GCM. An encrypted Tink keyset is stored in AWS Secrets Manager, protected by an AWS KMS envelope encryption key. At runtime, Chinmina decrypts the keyset and uses it to encrypt and decrypt cached tokens.
+
+### Create the KMS key and Secrets Manager secret
+
+<Steps>
+
+1. Create a symmetric encryption KMS key (AES-256). Enable automatic annual
+   rotation and set the deletion window to 30 days. Follow the
+   [KMS key creation guide][kms-create-key] for detailed instructions.
+
+   Save the key ARN as <Later name="CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI" />.
+
+2. Create an alias for the key, for example `alias/chinmina-cache-encryption`.
+   A key alias simplifies key rotation and policy management.
+
+3. Update the key policy to allow the Chinmina execution role to decrypt:
+
+   ```json title="example-kms-key-policy-statement.json" /arn:.*-role/
+   {
+     "Sid": "Allow Chinmina to decrypt the cache encryption keyset",
+     "Effect": "Allow",
+     "Principal": {
+       "AWS": ["arn:aws:iam::123456789012:role/chinmina-task-role"]
+     },
+     "Action": ["kms:Decrypt", "kms:DescribeKey"],
+     "Resource": "*"
+   }
+   ```
+
+4. Create a Secrets Manager secret to hold the encrypted Tink keyset. Use a
+   naming convention such as `/chinmina-bridge/{environment}/tink-keyset`:
+
+   ```bash title="Create the Secrets Manager secret"
+   aws secretsmanager create-secret \
+     --name /chinmina-bridge/production/tink-keyset \
+     --description "Encrypted Tink AEAD keyset for Chinmina cache encryption"
+   ```
+
+   Save the secret name as <Later name="CACHE_ENCRYPTION_KEYSET_URI" />.
+   The keyset content will be uploaded in the next section.
+
+5. Grant the Chinmina execution role access to read the secret:
+
+   ```json title="example-secrets-manager-iam-policy.json"
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": "secretsmanager:GetSecretValue",
+         "Resource": "arn:aws:secretsmanager:us-east-1:123456789012:secret:/chinmina-bridge/*/tink-keyset-*"
+       }
+     ]
+   }
+   ```
+
+   The trailing wildcard on the resource ARN accounts for the random suffix that
+   Secrets Manager appends to secret names.
+
+</Steps>
+
+### Create and upload the Tink keyset
+
+<Steps>
+
+1. Install the `tinkey` CLI by following the [Tink installation
+   instructions][tinkey-install].
+
+2. Generate an AEAD keyset:
+
+   ```bash title="Generate a new Tink keyset"
+   tinkey create-keyset \
+     --key-template AES256_GCM \
+     --out-format json \
+     --out plaintext-keyset.json
+   ```
+
+3. Encrypt the keyset with the KMS key:
+
+   ```bash title="Encrypt the keyset" /aws-kms/
+   tinkey encrypt-keyset \
+     --in plaintext-keyset.json \
+     --out encrypted-keyset.json \
+     --master-key-uri aws-kms://arn:aws:kms:us-east-1:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef
+   ```
+
+4. Delete the plaintext keyset:
+
+   ```bash title="Delete the plaintext keyset"
+   shred -u plaintext-keyset.json
+   ```
+
+5. Upload the encrypted keyset to the Secrets Manager secret:
+
+   ```bash title="Upload the encrypted keyset"
+   aws secretsmanager put-secret-value \
+     --secret-id /chinmina-bridge/production/tink-keyset \
+     --secret-string file://encrypted-keyset.json
+   ```
+
+   Delete the local encrypted keyset file after uploading.
+
+</Steps>
+
+<Aside type="caution">
+
+The plaintext keyset contains the raw AES-256-GCM encryption key. Delete it
+immediately after encrypting. Do not commit it to version control.
+
+</Aside>
+
+### Configure Chinmina to use the keyset
+
+<Steps>
+
+1. Enable cache encryption:
+
+   ```bash
+   CACHE_ENCRYPTION_ENABLED=true
+   ```
+
+2. Set the Secrets Manager URI for the keyset. Use the `aws-secretsmanager://`
+   scheme followed by the secret name:
+
+   ```bash
+   CACHE_ENCRYPTION_KEYSET_URI=aws-secretsmanager://chinmina-bridge/production/tink-keyset
+   ```
+
+3. Set the KMS key URI for envelope decryption. Use the `aws-kms://` scheme
+   followed by the full key ARN:
+
+   ```bash /aws-kms/
+   CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI=aws-kms://arn:aws:kms:us-east-1:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef
+   ```
+
+4. On startup, Chinmina performs a test encrypt/decrypt cycle. If the keyset or
+   KMS key is misconfigured, the service will fail to start with a clear error
+   message.
+
+</Steps>
+
+<Aside type="note">
+
+The keyset is automatically refreshed from Secrets Manager every 15 minutes. If a refresh fails, the service continues with the current in-memory keyset and logs the error. This enables zero-downtime key rotation.
+
+</Aside>
+
+## Key rotation
+
+Tink keysets hold multiple keys simultaneously. Only the _primary_ key encrypts, but all keys decrypt. This allows zero-downtime rotation: add a new key, wait for all instances to load it, then promote to primary.
+
+Chinmina refreshes its keyset from Secrets Manager every 15 minutes. The rotation procedure accounts for this interval and the cache TTL (tokens expire after 45 minutes).
+
+### Timeline
+
+```text
+T+0min    Stage 1 — Upload keyset with new key (non-primary)
+T+15min   All instances can decrypt with both keys
+T+75min   Stage 2 — Promote new key to primary
+T+90min   All instances encrypting with new key
+T+150min  Stage 3 (optional) — Disable old key
+```
+
+### Stage 1: Add a new key
+
+<Steps>
+
+1. Download the current encrypted keyset from Secrets Manager:
+
+   ```bash title="Download the current keyset"
+   aws secretsmanager get-secret-value \
+     --secret-id /chinmina-bridge/production/tink-keyset \
+     --query SecretString --output text > current-keyset.json
+   ```
+
+2. Add a new key to the keyset. The `add-key` command adds a new key without promoting it to primary — the existing primary key continues to be used for encryption:
+
+   ```bash title="Add a new key to the keyset" /aws-kms/
+   tinkey add-key \
+     --in current-keyset.json \
+     --out stage1-keyset.json \
+     --key-template AES256_GCM \
+     --master-key-uri aws-kms://arn:aws:kms:REGION:ACCOUNT:key/KEY-ID
+   ```
+
+3. Upload the updated keyset:
+
+   ```bash title="Upload the keyset with the new key"
+   aws secretsmanager update-secret \
+     --secret-id /chinmina-bridge/production/tink-keyset \
+     --secret-string file://stage1-keyset.json
+   ```
+
+4. Wait at least 15 minutes for all instances to refresh. After this point, all instances can decrypt with both keys.
+
+</Steps>
+
+### Stage 2: Promote the new key
+
+Wait an additional 60 minutes after stage 1 completes (75 minutes from the start). This ensures all tokens encrypted with the old primary key have expired from the cache.
+
+<Steps>
+
+1. Promote the new key to primary. Find the new key's ID from the keyset metadata:
+
+   ```bash title="Promote the new key to primary" /aws-kms/
+   tinkey promote-key \
+     --in stage1-keyset.json \
+     --out stage2-keyset.json \
+     --key-id <NEW_KEY_ID> \
+     --master-key-uri aws-kms://arn:aws:kms:REGION:ACCOUNT:key/KEY-ID
+   ```
+
+2. Upload the updated keyset:
+
+   ```bash title="Upload the keyset with the promoted key"
+   aws secretsmanager update-secret \
+     --secret-id /chinmina-bridge/production/tink-keyset \
+     --secret-string file://stage2-keyset.json
+   ```
+
+3. After another 15 minutes, all instances will encrypt new tokens with the new primary key.
+
+</Steps>
+
+### Stage 3: Disable the old key (optional)
+
+After another cache TTL cycle (at least 60 minutes after stage 2), all tokens encrypted with the old key have expired. The old key can be safely disabled.
+
+```bash title="Disable the old key" /aws-kms/
+tinkey disable-key \
+  --in stage2-keyset.json \
+  --out final-keyset.json \
+  --key-id <OLD_KEY_ID> \
+  --master-key-uri aws-kms://arn:aws:kms:REGION:ACCOUNT:key/KEY-ID
+```
+
+Upload the final keyset using the same `aws secretsmanager update-secret` command. Delete any local keyset files after uploading.
+
+<Aside type="caution">
+
+Do not disable the old key before the cache TTL has elapsed. Tokens encrypted with the old key will fail to decrypt, resulting in cache misses and increased GitHub API traffic.
+
+</Aside>
+
+[valkey]: https://valkey.io/
+[elasticache-create]: https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/GettingStarted.html
+[elasticache-iam-auth]: https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html
+[kms-create-key]: https://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html
+[tinkey-install]: https://developers.google.com/tink/install-tinkey
+[tink]: https://developers.google.com/tink

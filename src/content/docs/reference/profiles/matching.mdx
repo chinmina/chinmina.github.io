@@ -34,7 +34,7 @@ this can be harmful if misused.
 
 Establish clear rules for profile usage in your organization, and automate
 profile configuration checks to ensure compliance. For example, highlight
-addition or changes that broaden access, or those that affect profiles that are
+additions or changes that broaden access, or those that affect profiles that are
 globally available (have no match rules).
 
 </Aside>
@@ -172,9 +172,9 @@ match:
 Pipeline doesn't match profile conditions.
 
 The HTTP response returns a generic "Forbidden" message. Check [audit
-logs](../../guides/observability#audit-logs) for `attemptedPatterns` to see
-which condition failed and the `error` field for detailed information. Verify
-the pipeline's claim values match the configured patterns.
+logs](../auditing) for `token.attemptedPatterns` to see which condition failed
+and the `error` field for detailed information. Verify the pipeline's claim
+values match the configured patterns.
 
 ### Profile returns 404 (unavailable: validation failed)
 

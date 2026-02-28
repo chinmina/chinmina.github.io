@@ -44,14 +44,14 @@ any production implementation of Chinmina (running on AWS) uses this strategy.
    ```
 
 3. Convert the downloaded GitHub private key file from PEM format to DER format.
-   DER is required by AWS KMS when uploading key matter.
+   DER is required by AWS KMS when uploading key material.
 
    ```shell title="Convert from PEM to DER"
    openssl rsa -inform PEM -outform DER -in ./private-key.pem -out private-key.cer
    ```
 
 4. Follow the [AWS KMS key import instructions][aws-import-key-material] for importing the
-   application private key into GitHub.
+   application private key into KMS.
 
    The instructions include how to create an RSA 2048 key of type `EXTERNAL`,
    how to encrypt the key material so that it can be imported, and how to upload

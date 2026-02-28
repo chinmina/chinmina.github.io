@@ -35,7 +35,9 @@ export default defineConfig({
             "guides/buildkite-integration",
             "guides/customizing-permissions",
             "guides/kms",
+            "guides/distributed-cache",
             "guides/observability",
+            "guides/deployment-example",
             "guides/verifying-releases",
           ],
         },
@@ -44,6 +46,15 @@ export default defineConfig({
           items: [
             "reference/configuration",
             "reference/git-credentials-format",
+            "reference/auditing",
+            {
+              label: "Telemetry",
+              items: [
+                "reference/telemetry",
+                "reference/telemetry/traces",
+                "reference/telemetry/metrics",
+              ],
+            },
             {
               label: "Profiles",
               items: [
