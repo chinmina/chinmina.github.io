@@ -166,7 +166,7 @@ Where `{operation}` is `encrypt` or `decrypt`.
 
 Typical trace hierarchy for a token request:
 
-```
+```text
 Server span: POST /token
 ├── Client span: GET api.buildkite.com/v2/organizations/.../pipelines/...
 └── Client span: POST api.github.com/app/installations/.../access_tokens
@@ -176,7 +176,7 @@ Server span: POST /token
 
 Profile refresh creates a root span with child API call spans:
 
-```
+```text
 Internal span: refresh_organization_profile
 └── Client span: GET api.github.com/...
 ```

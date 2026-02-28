@@ -37,7 +37,7 @@ Size of the response body.
 
 Calculate p99 request latency:
 
-```
+```text
 histogram_quantile(0.99,
   sum(rate(http_server_request_duration_bucket)) by (le)
 )
@@ -45,7 +45,7 @@ histogram_quantile(0.99,
 
 Track 5xx error rate by route:
 
-```
+```text
 sum(rate(http_server_request_duration_count{http_response_status_code=~"5.."})) by (http_route) /
 sum(rate(http_server_request_duration_count)) by (http_route)
 ```
@@ -88,14 +88,14 @@ Counts cache operations performed.
 
 Calculate cache hit rate:
 
-```
+```text
 sum(rate(cache_operations{cache_operation="get",cache_status="hit"})) /
 sum(rate(cache_operations{cache_operation="get"}))
 ```
 
 Count failed cache operations:
 
-```
+```text
 sum(rate(cache_operations{cache_status="error"}))
 ```
 
@@ -124,7 +124,7 @@ Expected values for the in-memory token cache: `get` operations typically comple
 
 Calculate p95 cache operation latency:
 
-```
+```text
 histogram_quantile(0.95,
   sum(rate(cache_operation_duration_bucket{cache_operation="get"})) by (le)
 )
@@ -132,7 +132,7 @@ histogram_quantile(0.95,
 
 Compare set vs get operation durations:
 
-```
+```text
 sum(rate(cache_operation_duration_sum{cache_operation="set"})) /
 sum(rate(cache_operation_duration_count{cache_operation="set"}))
 ```
@@ -159,7 +159,7 @@ These metrics are only produced when the distributed cache is configured with en
 
 Calculate p95 encryption latency:
 
-```
+```text
 histogram_quantile(0.95,
   sum(rate(cache_encryption_duration_bucket)) by (le, encryption_operation)
 )
@@ -186,7 +186,7 @@ Counts encrypt and decrypt operations.
 
 Track encryption error rate:
 
-```
+```text
 sum(rate(cache_encryption_total{encryption_outcome="error"})) /
 sum(rate(cache_encryption_total))
 ```
@@ -221,7 +221,7 @@ High mismatch rates indicate pipelines that frequently switch between repositori
 
 The overall cache hit rate is:
 
-```
+```text
 hit_rate = hits / (hits + misses + mismatches)
 ```
 
@@ -229,14 +229,14 @@ hit_rate = hits / (hits + misses + mismatches)
 
 Calculate token cache hit rate:
 
-```
+```text
 sum(rate(token_cache_outcome{token_cache_result="hit"})) /
 sum(rate(token_cache_outcome))
 ```
 
 Track mismatch frequency:
 
-```
+```text
 sum(rate(token_cache_outcome{token_cache_result="mismatch"}))
 ```
 

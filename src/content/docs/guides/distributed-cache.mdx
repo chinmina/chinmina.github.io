@@ -291,10 +291,10 @@ T+150min  Stage 3 (optional) — Disable old key
      --query SecretString --output text > current-keyset.json
    ```
 
-2. Add a new key to the keyset. The `rotate-keyset` command adds a new key without promoting it to primary — the existing primary key continues to be used for encryption:
+2. Add a new key to the keyset. The `add-key` command adds a new key without promoting it to primary — the existing primary key continues to be used for encryption:
 
    ```bash title="Add a new key to the keyset" /aws-kms/
-   tinkey rotate-keyset \
+   tinkey add-key \
      --in current-keyset.json \
      --out stage1-keyset.json \
      --key-template AES256_GCM \

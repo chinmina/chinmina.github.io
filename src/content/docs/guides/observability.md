@@ -45,7 +45,7 @@ Generates a GitHub token for the pipeline's repository. This is the primary oper
 **Endpoint:** `POST /token`
 
 **Trace structure:**
-```
+```text
 Server span: POST /token
 ├── Client span: GET api.buildkite.com/v2/.../pipelines/...
 └── Client span: POST api.github.com/app/installations/.../access_tokens
@@ -82,7 +82,7 @@ Identical trace structure to token generation (same underlying implementation). 
 Generates tokens scoped to repositories defined in an organization profile rather than the pipeline's own repository.
 
 **Trace structure:**
-```
+```text
 Server span: POST /organization/token/{profile}
 └── Client span: POST api.github.com/app/installations/.../access_tokens
 ```
@@ -100,7 +100,7 @@ No Buildkite API call occurs because the repository is determined by the profile
 Periodically fetches organization profile configurations from the configuration source.
 
 **Trace structure:**
-```
+```text
 Internal span: refresh_organization_profile
 └── Client span: GET api.github.com/...
 ```
