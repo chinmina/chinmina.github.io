@@ -103,6 +103,37 @@ Use parentheses for brief inline clarifications or examples.
 - "(for example, an ECS service)"
 - "(see highlight below)"
 
+## "As You Go" Collection Pattern
+
+Multi-step guides that require collecting values (API keys, IDs, configuration parameters) across steps should use a collection convention:
+
+1. **Introduce the convention early.** Add a short section near the top of the guide explaining that values will be marked for collection as the reader proceeds.
+2. **Use a visual marker** at the point where each value is produced, so the reader knows to save it.
+3. **Name markers after the configuration parameter** the value maps to, connecting the setup step directly to the deployment configuration.
+
+**Example introduction:**
+
+```mdx
+## As you go
+
+Values to save for required configuration are marked in the instructions below
+like this: <Later name="ENV_VAR_NAME" />.
+
+Collect these values as you proceed so they can be provided for your
+installation's configuration.
+```
+
+**Example usage in a step:**
+
+```mdx
+Create an API key with access to the REST API **only** with access to the
+`read_pipelines` scope. Save as <Later name="BUILDKITE_API_TOKEN" />.
+```
+
+The `Later` component itself is defined as a custom inline component (see [MDX conventions](./mdx-conventions.md#custom-components-for-repetition)).
+
+This pattern keeps procedural guides self-contained: the reader finishes the guide with all the values they need, without backtracking.
+
 ## Formatting Conventions
 
 ### Bold for Emphasis
