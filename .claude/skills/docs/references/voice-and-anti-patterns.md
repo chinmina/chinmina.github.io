@@ -52,7 +52,7 @@ State facts and instructions plainly. Avoid hedging and softening language.
 
 - "This private key is an extremely sensitive credential."
 - "Container distribution is recommended."
-- "Chinmina needs to be self-hosted alongside the Buildkite agent infrastructure. It is a single point of failure in the system also."
+- "Chinmina needs to be self-hosted alongside the Buildkite agent infrastructure. It is also a single point of failure in the system."
 
 **Bad:**
 
@@ -75,7 +75,7 @@ Include dedicated sections for limitations when relevant:
 
 > ## Drawbacks
 >
-> Chinmina needs to be self-hosted alongside the Buildkite agent infrastructure. It is a single point of failure in the system also, and critical to keep up.
+> Chinmina needs to be self-hosted alongside the Buildkite agent infrastructure. It is also a single point of failure in the system, and critical to keep up.
 >
 > The private key for the GitHub application is quite powerful, and needs to be carefully protected.
 

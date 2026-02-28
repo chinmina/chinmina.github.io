@@ -310,7 +310,7 @@ interval may be desirable in testing, or when higher precision is required.
 _(default: `true`)_
 
 If `OBSERVE_ENABLED` is also true, enable sub-traces for all outgoing HTTP
-requests. This allows tracing of Builkite and GitHub API traffic. This is very
+requests. This allows tracing of Buildkite and GitHub API traffic. This is very
 useful, but for some providers who charge by the number of spans, this may be
 a costly operation.
 

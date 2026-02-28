@@ -68,7 +68,7 @@ deployments from a handful to hundreds of repositories.
 1. Chinmina is not available as a cloud offering: it needs to be self-hosted and
    reachable by the Buildkite agent infrastructure.
 
-2. It is a single point of failure in the system also, and critical to keep up.
+2. It is also a single point of failure in the system, and critical to keep up.
    Given that it is a simple, containerized HTTP service with Open Telemetry
    support and easy scaling, this is thankfully relatively straightforward.
 

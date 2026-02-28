@@ -53,7 +53,7 @@ Releases are signed with `cosign`, with transparency records published to the [p
 
 ## Testing the release process
 
-It is possible to run GoReleaser locally to test some of the release proceses.
+It is possible to run GoReleaser locally to test some of the release processes.
 (`goreleaser` must be available.)
 
 ```shell

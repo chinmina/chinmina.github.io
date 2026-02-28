@@ -44,6 +44,7 @@ The content type determines voice, structure, and level of detail. When classify
 - **No rhetorical questions:** State information directly instead of asking "But what does this mean?"
 - **No apologetic language:** Never use "This might seem complicated, but..." or "Don't worry..."
 - **Sentences:** Aim for under 20 words. Single-sentence paragraphs are acceptable.
+- **Spelling:** Use British/Australian English spellings (e.g., "favour", "organise", "colour", "licence" as noun).
 
 ## Summary Checklist
 
