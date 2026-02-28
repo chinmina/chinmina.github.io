@@ -164,4 +164,23 @@ Internal span: refresh_organization_profile
 - Consider organizational endpoint usage
 - Enable the [distributed cache](./distributed-cache) to share tokens across replicas
 
+### Cache encryption errors
+
+**Symptoms:** The `cache.encryption.total` counter increases with `encryption.outcome="error"`, or trace spans show `cache.encrypt.outcome="error"` or `cache.decrypt.outcome="error"`. Decrypt failures surface as cache misses (the service falls back to API calls). Encrypt failures prevent caching of new tokens.
+
+**Investigation:**
+1. Check error rate by operation type (encrypt vs decrypt) using `cache.encryption.total`
+2. Filter trace spans for `cache.decrypt.outcome="error"` or `cache.encrypt.outcome="error"` to correlate errors with specific requests
+3. Review service logs for specific error messages — decrypt errors fall into three categories:
+   - Missing `cb-enc:` prefix: the cached value is unencrypted, common during encryption rollout
+   - Base64 decode failure: corrupted data in Valkey
+   - Decryption failure: wrong key, incomplete key rotation, or corrupted ciphertext
+4. Check logs for keyset refresh warnings (`"failed to refresh encryption keyset"`)
+
+**Remediation:**
+- Prefix errors during encryption rollout are expected — unencrypted entries resolve as cached tokens expire (within 15 minutes)
+- Decryption failures after key rotation: verify the rotation procedure in the [distributed cache guide](./distributed-cache) and confirm the old primary key was not disabled before cached tokens expired
+- Keyset refresh warnings: verify IAM permissions for Secrets Manager and KMS, then check service health
+- Persistent errors with no configuration changes: check Valkey connectivity and data integrity
+
 [zerolog]: https://github.com/rs/zerolog/
