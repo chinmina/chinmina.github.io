@@ -190,22 +190,33 @@ Example audit log entry:
 ```json
 {
   "level": "audit",
-  "method": "POST",
-  "path": "/token/default",
-  "status": 200,
-  "sourceIP": "10.0.1.42:34340",
-  "userAgent": "curl/8.3.0",
-  "requestedProfile": "",
-  "authorized": true,
-  "authSubject": "organization:example-org:pipeline:example-service:ref:refs/heads/main:commit:abc123def:step:deploy",
-  "authIssuer": "https://agent.buildkite.com",
-  "authExpiry": "2026-01-12T23:35:42Z",
-  "authExpiryRemaining": 299,
-  "expiry": "2026-01-12T23:45:42Z",
-  "expiryRemaining": 599,
-  "authAudience": ["chinmina:example-org"],
-  "repositories": ["https://github.com/example-org/example-service.git"],
-  "permissions": ["contents:read", "metadata:read"],
+  "request": {
+    "method": "POST",
+    "path": "/token",
+    "status": 200,
+    "sourceIP": "10.0.1.42:34340",
+    "userAgent": "curl/8.3.0"
+  },
+  "pipeline": {
+    "organizationSlug": "example-org",
+    "pipelineSlug": "example-service",
+    "buildNumber": 42,
+    "buildBranch": "main"
+  },
+  "authorization": {
+    "authorized": true,
+    "subject": "organization:example-org:pipeline:example-service:ref:refs/heads/main:commit:abc123def:step:deploy",
+    "issuer": "https://agent.buildkite.com",
+    "audience": ["chinmina:example-org"],
+    "expiry": "2026-01-12T23:35:42Z",
+    "expiryRemaining": 299
+  },
+  "token": {
+    "repositories": ["https://github.com/example-org/example-service.git"],
+    "permissions": ["contents:read", "metadata:read"],
+    "expiry": "2026-01-12T23:45:42Z",
+    "expiryRemaining": 599
+  },
   "type": "audit",
   "time": "2026-01-12T22:35:42Z",
   "message": "audit_event"
