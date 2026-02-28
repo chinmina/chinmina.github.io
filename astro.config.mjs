@@ -37,6 +37,7 @@ export default defineConfig({
             "guides/kms",
             "guides/distributed-cache",
             "guides/observability",
+            "guides/deployment-example",
             "guides/verifying-releases",
           ],
         },
@@ -44,8 +45,16 @@ export default defineConfig({
           label: "Reference",
           items: [
             "reference/configuration",
-            "reference/metrics",
             "reference/git-credentials-format",
+            "reference/auditing",
+            {
+              label: "Telemetry",
+              items: [
+                "reference/telemetry",
+                "reference/telemetry/traces",
+                "reference/telemetry/metrics",
+              ],
+            },
             {
               label: "Profiles",
               items: [

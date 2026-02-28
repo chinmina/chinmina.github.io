@@ -46,7 +46,7 @@ deployments from a handful to hundreds of repositories.
    configured [as described in our guide](guides/kms), the Chinmina service uses
    KMS to sign the GitHub JWT, and never has access to the raw key material.
 
-6. [Audit-friendly logs are written](guides/observability) for each token
+6. [Audit-friendly logs are written](reference/auditing) for each token
    request, whether successful or unsuccessful. These can be readily connected
    to your SIEM system, adding transparency and traceability to the system.
 

@@ -1,166 +1,167 @@
 ---
 title: Observability
-description: Using Open Telemetry and logging to understand and diagnose Chinmina
+description: Using OpenTelemetry and logging to understand and diagnose Chinmina.
 ---
 
-The system produces traces and metrics via Open Telemetry, and logs to stdout
-via [zerolog](https://github.com/rs/zerolog/). There are minimal informational
-logs, as well as per-request audit logs that are written to the process's
-`stdout`.
+Chinmina produces traces and metrics via OpenTelemetry, and logs to stdout via [zerolog][zerolog].
 
-## Audit logs
+For audit log details, see the [auditing reference](../reference/auditing). For complete telemetry technical details, see the [telemetry reference](../reference/telemetry).
 
-Audit logs provide a level of non-repudiation for the system. These logs are
-written to the container's stdout, and cannot be disabled.
+## Enabling OpenTelemetry
 
-:::tip
+Set `OBSERVE_ENABLED=true` to enable telemetry collection.
 
-Requests to non-existent routes do not form part of the audit log. Access logs
-or firewall logs are better sources for this information.
+Choose an exporter type with `OBSERVE_TYPE`:
+- `"grpc"` (default): Send to an OpenTelemetry collector via gRPC
+- `"stdout"`: Write to standard output (development only)
 
-:::
+### Minimal configuration
 
-Each authenticated endpoint (both `/token` and `/git-credentials`) will record
-details about the request, the authorization process, and the GitHub token
-created. If an error occurs, this is also written out.
+For gRPC export to a collector:
 
-At a technical level, logs are written to stdout using zerolog at the "audit"
-log level. Initial data is collected by request middleware and the partial entry
-is then accessible via the context. The context entry is further enriched with
-details by other components, including both the JWT middleware and the vendor.
-such that the log is fully completed by the end of the request.
-
-:::note[Important]
-
-A panic in the request chain will still result in the audit log being written,
-and the panic details will also be included.
-
-:::
-
-### Audit log fields
-
-All audit logs are in single-line JSON format, using the `level` of `audit`.
-
-1. Identifying data
-   - `level`: this is always `audit`
-   - `message`: this is always `audit_event`
-2. Request data
-   - `method`: the request method. This will currently be `GET` for all standard requests.
-   - `path`: the requested path.
-   - `status` is the HTTP response status of the request
-   - `sourceIP` is the client IP of the requestor
-   - `userAgent` is the user agent reported by the client
-   - `error` is the error produced by the request. This may come from internal
-     errors or panics, as well as the JWT validation and token creation
-     components.
-3. Authorization data
-   - `authorized` is a boolean that is `true` when the request JWT is
-     successfully authorized by the service.
-   - `authSubject` is the contents of the `sub` field from the JWT
-   - `authIssuer` is the JWT `iss` field
-   - `authAudience` is the (possibly multiple) reported `aud` field values from
-     the JWT
-   - `authExpiry` is the JWT expiry time represented as an
-     [RFC-3339](https://pkg.go.dev/time#RFC3339) date time string.
-   - `authExpiryRemaining` is the number of seconds that the JWT will be valid
-     for at the time of logging.
-4. Token data
-   - `repositories` is the set of repositories that the token allows access to
-   - `permissions` is the set of GitHub token permissions assigned to the token
-   - `expiry` is the GitHub token expiry time represented as an
-     [RFC-3339](https://pkg.go.dev/time#RFC3339) date time string
-   - `expiryRemaining` is the number of seconds that the created GitHub token
-     will be valid for at the time of logging.
-5. Profile data
-   - `requestedProfile` is the profile name requested (empty for pipeline-based requests)
-   - `matches` is an array of matched claim/value pairs on successful profile access
-   - `attemptedPatterns` is an array showing which condition failed on denied access
-6. Repository data
-   - `requestedRepository` contains the repository URL supplied by the client (present when using `/git-credentials` endpoints)
-   - `vendedRepository` contains the repository URL the token was vended for (only present on successful token issuance)
-
-:::note[Error message security]
-
-HTTP error responses return generic messages like "Forbidden" to avoid leaking policy details to clients. Detailed error information is only available in audit logs. This prevents unauthorized users from learning about profile configurations or match conditions.
-
-:::
-
-```json title="JSON audit log example: pipeline-based token request"
-{
-  "level": "audit",
-  "method": "POST",
-  "path": "/git-credentials",
-  "status": 200,
-  "sourceIP": "1.2.3.4:34340",
-  "userAgent": "curl/8.3.0",
-  "requestedProfile": "",
-  "authorized": true,
-  "authSubject": "organization:example-org:pipeline:example-repo:ref:refs/heads/feature-branch:commit:40631gitcommithash8b3:step:step-name-from-pipeline",
-  "authIssuer": "https://agent.buildkite.com",
-  "error": "",
-  "authExpiry": "2025-01-20T04:52:58Z",
-  "authExpiryRemaining": 299372,
-  "expiry": "2025-01-20T05:09:45Z",
-  "expiryRemaining": 1306372,
-  "authAudience": ["github-app-auth:example-org"],
-  "repositories": ["https://github.com/example-org/example-repo.git"],
-  "permissions": ["contents:read"],
-  "type": "audit",
-  "time": "2025-01-20T04:47:00Z",
-  "message": "audit_event"
-}
+```bash
+OBSERVE_ENABLED=true
+OBSERVE_TYPE=grpc
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
 ```
 
-```json title="JSON audit log example: successful organization profile access"
-{
-  "level": "audit",
-  "method": "POST",
-  "path": "/organization/token/release-publisher",
-  "status": 200,
-  "sourceIP": "1.2.3.4:34340",
-  "userAgent": "curl/8.3.0",
-  "requestedProfile": "release-publisher",
-  "authorized": true,
-  "matches": [
-    {"claim": "pipeline_slug", "value": "silk-release"},
-    {"claim": "build_branch", "value": "main"}
-  ],
-  "repositories": ["https://github.com/example-org/release-tools.git"],
-  "permissions": ["contents:write", "packages:write"],
-  "type": "audit",
-  "time": "2025-01-20T04:47:00Z",
-  "message": "audit_event"
-}
+For stdout export during development:
+
+```bash
+OBSERVE_ENABLED=true
+OBSERVE_TYPE=stdout
 ```
 
-```json title="JSON audit log example: denied profile access (match failed)"
-{
-  "level": "audit",
-  "method": "POST",
-  "path": "/organization/token/release-publisher",
-  "status": 403,
-  "sourceIP": "1.2.3.4:34340",
-  "userAgent": "curl/8.3.0",
-  "requestedProfile": "release-publisher",
-  "authorized": true,
-  "attemptedPatterns": [
-    {"claim": "pipeline_slug", "pattern": ".*-release", "value": "silk-staging"}
-  ],
-  "error": "profile match conditions not met",
-  "type": "audit",
-  "time": "2025-01-20T04:47:00Z",
-  "message": "audit_event"
-}
+See the [configuration reference](../reference/configuration) for all `OBSERVE_*` variables, including collector settings, batch timeouts, and metric read intervals.
+
+## Critical user journeys
+
+Critical user journeys (CUJs) define the key operations that affect users of the system. Each CUJ maps to a trace structure and a set of service level indicators (SLIs) to monitor.
+
+### Token generation
+
+Generates a GitHub token for the pipeline's repository. This is the primary operation and the critical path for pipeline execution.
+
+**Endpoint:** `POST /token`
+
+**Trace structure:**
+```
+Server span: POST /token
+├── Client span: GET api.buildkite.com/v2/.../pipelines/...
+└── Client span: POST api.github.com/app/installations/.../access_tokens
 ```
 
-## Open Telemetry
+The server span captures total request duration and HTTP status. The Buildkite API span shows pipeline lookup performance, and the GitHub API span shows token creation performance.
 
-Chinmina produces traces and metrics via the Open Telemetry SDK when
-`OBSERVE_ENABLED` is `true`. Traces cover each request end-to-end, including
-outgoing calls to Buildkite and GitHub. Metrics track cache operations,
-encryption overhead, and token vending outcomes.
+**SLIs to monitor:**
+- p95/p99 server span duration
+- HTTP 5xx error rate
+- Cache hit rate (cached requests skip both API calls)
 
-For configuration options, see [Open Telemetry configuration](../reference/configuration#open-telemetry).
+**Suggested SLO targets:**
 
-For a complete list of all metrics and span attributes produced, see the
-[metrics and traces reference](../reference/metrics).
+| Metric | Objective | Rationale |
+|--------|-----------|-----------|
+| Success rate | 99.9% | Critical path for pipeline execution |
+| p99 latency | < 2s | Minimize delay in clone operations |
+| p95 latency | < 1s | Typical case performance |
+| Cache hit rate | > 70% | Reduce API load and latency |
+| GitHub API p95 latency | < 500ms | Monitor external dependency health |
+| Buildkite API p95 latency | < 300ms | Monitor external dependency health |
+
+### Git credentials
+
+**Endpoint:** `POST /git-credentials`
+
+Identical trace structure to token generation (same underlying implementation). Git retries failed requests automatically, so slow responses directly delay clone operations. Monitor the same SLIs and SLO targets as token generation.
+
+### Organization endpoints
+
+**Endpoints:** `POST /organization/token/{profile}`, `POST /organization/git-credentials/{profile}`
+
+Generates tokens scoped to repositories defined in an organization profile rather than the pipeline's own repository.
+
+**Trace structure:**
+```
+Server span: POST /organization/token/{profile}
+└── Client span: POST api.github.com/app/installations/.../access_tokens
+```
+
+No Buildkite API call occurs because the repository is determined by the profile configuration. Monitor the same SLIs as token generation, but expect lower latency on uncached requests due to the single API call.
+
+**Suggested SLO targets:** Same as token endpoints. External API targets differ — only GitHub API applies:
+
+| Metric | Objective | Rationale |
+|--------|-----------|-----------|
+| GitHub API p95 latency | < 500ms | Monitor external dependency health |
+
+### Background profile refresh
+
+Periodically fetches organization profile configurations from the configuration source.
+
+**Trace structure:**
+```
+Internal span: refresh_organization_profile
+└── Client span: GET api.github.com/...
+```
+
+**Attributes:**
+- `profile.digest_current`: Previous configuration hash
+- `profile.digest_updated`: New configuration hash
+- `profile.digest_changed`: Whether content changed
+
+**SLIs to monitor:**
+- Span error rate (fetch failures affect profile availability)
+- `profile.digest_changed` frequency (unexpected changes may indicate configuration issues)
+
+## Diagnostics
+
+### High latency
+
+**Symptoms:** p95/p99 latency exceeds objectives
+
+**Investigation:**
+1. Check external API span durations
+2. Verify cache hit rate meets objectives
+3. Review connection timing attributes
+4. Check for network issues between service and APIs
+
+**Remediation:**
+- Increase token TTL to improve cache hit rate
+- Review network path to external APIs
+- Consider connection pooling configuration
+
+### High error rate
+
+**Symptoms:** HTTP 5xx error rate above threshold
+
+**Investigation:**
+1. Filter traces by error status
+2. Examine error messages in span events
+3. Check audit logs for detailed error information
+4. Verify external API availability
+
+**Remediation:**
+- Review GitHub App permissions
+- Verify Buildkite API token scopes
+- Check profile match conditions
+- Investigate panic recovery patterns
+
+### Cache inefficiency
+
+**Symptoms:** Cache hit rate below 70%
+
+**Investigation:**
+1. Calculate hit/miss/mismatch ratio using `token.cache.outcome`
+2. Check token expiry times in audit logs
+3. Review repository access patterns
+4. Examine profile configurations
+
+**Remediation:**
+- Increase token expiry duration (if GitHub App allows)
+- Consolidate repository access patterns
+- Review profile match conditions
+- Consider organizational endpoint usage
+- Enable the [distributed cache](./distributed-cache) to share tokens across replicas
+
+[zerolog]: https://github.com/rs/zerolog/
