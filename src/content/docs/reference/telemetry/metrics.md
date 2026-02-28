@@ -33,23 +33,6 @@ Size of the request body.
 
 Size of the response body.
 
-### Example queries
-
-Calculate p99 request latency:
-
-```text
-histogram_quantile(0.99,
-  sum(rate(http_server_request_duration_bucket)) by (le)
-)
-```
-
-Track 5xx error rate by route:
-
-```text
-sum(rate(http_server_request_duration_count{http_response_status_code=~"5.."})) by (http_route) /
-sum(rate(http_server_request_duration_count)) by (http_route)
-```
-
 ## HTTP client metrics
 
 When `OBSERVE_HTTP_TRANSPORT_ENABLED=true`, outgoing requests to Buildkite and GitHub APIs are wrapped with `otelhttp.NewTransport()`, producing client-side HTTP semantic convention metrics. These mirror the server metrics above with a `http.client.*` prefix.
@@ -84,21 +67,6 @@ Counts cache operations performed.
 
 **Note:** For `get` operations, `"hit"` indicates a cached value was found, `"miss"` indicates no cached value exists, and `"error"` indicates the cache operation failed.
 
-### Example queries
-
-Calculate cache hit rate:
-
-```text
-sum(rate(cache_operations{cache_operation="get",cache_status="hit"})) /
-sum(rate(cache_operations{cache_operation="get"}))
-```
-
-Count failed cache operations:
-
-```text
-sum(rate(cache_operations{cache_status="error"}))
-```
-
 ## cache.operation.duration
 
 Measures duration of cache operations.
@@ -120,23 +88,6 @@ Duration is measured from operation start to completion. The metric is recorded 
 
 Expected values for the in-memory token cache: `get` operations typically complete in under 10ms, `set` operations in under 20ms. Sustained values above these thresholds may indicate memory pressure or garbage collection pauses.
 
-### Example queries
-
-Calculate p95 cache operation latency:
-
-```text
-histogram_quantile(0.95,
-  sum(rate(cache_operation_duration_bucket{cache_operation="get"})) by (le)
-)
-```
-
-Compare average operation durations by type:
-
-```text
-sum(rate(cache_operation_duration_sum)) by (cache_operation) /
-sum(rate(cache_operation_duration_count)) by (cache_operation)
-```
-
 ## cache.encryption.duration
 
 Measures duration of encrypt and decrypt operations on cached values.
@@ -155,16 +106,6 @@ These metrics are only produced when the distributed cache is configured with en
 |-----------|------|--------|
 | `encryption.operation` | string | `"encrypt"`, `"decrypt"` |
 
-### Example queries
-
-Calculate p95 encryption latency:
-
-```text
-histogram_quantile(0.95,
-  sum(rate(cache_encryption_duration_bucket)) by (le, encryption_operation)
-)
-```
-
 ## cache.encryption.total
 
 Counts encrypt and decrypt operations.
@@ -181,15 +122,6 @@ Counts encrypt and decrypt operations.
 |-----------|------|--------|
 | `encryption.operation` | string | `"encrypt"`, `"decrypt"` |
 | `encryption.outcome` | string | `"success"`, `"error"` |
-
-### Example queries
-
-Track encryption error rate:
-
-```text
-sum(rate(cache_encryption_total{encryption_outcome="error"})) /
-sum(rate(cache_encryption_total))
-```
 
 ## token.cache.outcome
 
@@ -223,21 +155,6 @@ The overall cache hit rate is:
 
 ```text
 hit_rate = hits / (hits + misses + mismatches)
-```
-
-### Example queries
-
-Calculate token cache hit rate:
-
-```text
-sum(rate(token_cache_outcome{token_cache_result="hit"})) /
-sum(rate(token_cache_outcome))
-```
-
-Track mismatch frequency:
-
-```text
-sum(rate(token_cache_outcome{token_cache_result="mismatch"}))
 ```
 
 ## Cache type identifiers
