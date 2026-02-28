@@ -268,7 +268,7 @@ configured transport type (see `OBSERVE_TYPE`).
 _(default: `true`)_
 
 If the Open Telemetry target does not support metrics (e.g. Jaeger), set this to
-`false`. Only relevent when when `OBSERVE_ENABLED` is true.
+`false`. Only relevant when `OBSERVE_ENABLED` is true.
 
 ###### `OBSERVE_TYPE`
 
