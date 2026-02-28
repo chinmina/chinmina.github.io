@@ -35,6 +35,7 @@ export default defineConfig({
             "guides/buildkite-integration",
             "guides/customizing-permissions",
             "guides/kms",
+            "guides/distributed-cache",
             "guides/observability",
             "guides/verifying-releases",
           ],

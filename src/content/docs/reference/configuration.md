@@ -38,6 +38,129 @@ For outgoing HTTPS requests, the maximum connections that may be made per host.
 Given that Chinmina mainly targets Buildkite and GitHub API endpoints, this
 number is somewhat higher than might otherwise be usual.
 
+## Cache
+
+Chinmina caches GitHub access tokens to reduce API calls. By default, tokens are
+cached in-process memory. For multi-instance deployments, a shared
+[Valkey](https://valkey.io/) cache can be used instead, with optional encryption
+for tokens at rest.
+
+When using Valkey, Chinmina uses a multi-level cache combining a fast local
+in-memory cache with the distributed second level cache.
+
+###### `CACHE_TYPE`
+
+_(options: `memory | valkey` default: `memory`)_
+
+The cache backend to use. `memory` uses an in-process LRU cache. `valkey` uses a
+multi-level strategy combining an in-memory cache with the Valkey (or
+Redis-compatible) server, allowing cached tokens to be shared across multiple
+instances.
+
+### Valkey
+
+These settings apply only when `CACHE_TYPE` is `valkey`.
+
+:::note[Important]
+
+When using distributed caching, cache encryption should be enabled. This reduces
+the risk of a compromised Valkey instance leaking credentials, as the encryption
+keys would also need to be compromised.
+
+:::
+
+###### `VALKEY_ADDRESS` :badge[required]
+
+The Valkey server address in `host:port` format. Required when `CACHE_TYPE` is
+`valkey`.
+
+###### `VALKEY_TLS`
+
+_(default: `true`)_
+
+Enable TLS for the Valkey connection (minimum TLS 1.2). Disable only for local
+development.
+
+###### `VALKEY_USERNAME`
+
+Username for Valkey authentication. Leave unset if the server does not require
+authentication. When IAM authentication is enabled, this is required as the IAM
+user ID.
+
+###### `VALKEY_PASSWORD`
+
+Password for Valkey authentication. Must be empty when IAM authentication is
+enabled.
+
+### IAM authentication
+
+For AWS ElastiCache deployments, IAM-based authentication can replace static
+credentials. When IAM is enabled, TLS is forced on regardless of the
+`VALKEY_TLS` setting.
+
+###### `VALKEY_IAM_ENABLED`
+
+_(default: `false`)_
+
+Enable IAM-based authentication for AWS ElastiCache. Requires `VALKEY_USERNAME`
+to be set (as the IAM user ID) and `VALKEY_PASSWORD` to be empty.
+
+###### `VALKEY_IAM_CACHE_NAME`
+
+The ElastiCache replication group ID or serverless cache name. Required when
+`VALKEY_IAM_ENABLED` is `true`.
+
+###### `VALKEY_IAM_SERVERLESS`
+
+_(default: `false`)_
+
+Mark the target as an ElastiCache serverless cache. Only relevant when
+`VALKEY_IAM_ENABLED` is `true`.
+
+### Cache encryption
+
+Optional encryption for cached tokens stored in Valkey. Only applicable when
+`CACHE_TYPE` is `valkey`. Uses [Tink](https://developers.google.com/tink) for
+AEAD (Authenticated Encryption with Associated Data), binding each cached value
+to its cache key to prevent ciphertext substitution.
+
+Encryption keys are automatically refreshed every 15 minutes. If a refresh fails,
+the service continues with the current key.
+
+Two keyset sources are available. Use **either** the AWS configuration (recommended
+for production) **or** the file-based configuration (local development only), not
+both.
+
+###### `CACHE_ENCRYPTION_ENABLED`
+
+_(default: `false`)_
+
+Enable encryption of cached tokens. Requires `CACHE_TYPE` to be `valkey`.
+
+#### AWS keyset
+
+For production use. The keyset is stored in AWS Secrets Manager and protected by
+an AWS KMS key for envelope encryption. Both variables must be set together.
+
+###### `CACHE_ENCRYPTION_KEYSET_URI`
+
+The Secrets Manager URI for the Tink keyset, in the format
+`aws-secretsmanager://secret-name`.
+
+###### `CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI`
+
+The KMS key URI used for envelope encryption, in the format
+`aws-kms://arn:aws:kms:region:account:key/key-id`.
+
+#### File keyset
+
+For local development only. The keyset is stored as a cleartext JSON file.
+
+###### `CACHE_ENCRYPTION_KEYSET_FILE`
+
+Path to a cleartext Tink keyset JSON file. Mutually exclusive with
+`CACHE_ENCRYPTION_KEYSET_URI` and `CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI`.
+
 ## Buildkite OIDC
 
 ###### `JWT_BUILDKITE_ORGANIZATION_SLUG` :badge[required]
@@ -170,7 +293,7 @@ The identifying service name reported in traces and metrics.
 
 ###### `OBSERVE_TRACE_BATCH_TIMEOUT_SECS`
 
-_(default: `5`)_
+_(default: `20`)_
 
 The number of seconds to wait for a batch of spans before sending to the
 collector.
