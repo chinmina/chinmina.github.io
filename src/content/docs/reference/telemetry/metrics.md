@@ -130,11 +130,11 @@ histogram_quantile(0.95,
 )
 ```
 
-Compare set vs get operation durations:
+Compare average operation durations by type:
 
 ```text
-sum(rate(cache_operation_duration_sum{cache_operation="set"})) /
-sum(rate(cache_operation_duration_count{cache_operation="set"}))
+sum(rate(cache_operation_duration_sum)) by (cache_operation) /
+sum(rate(cache_operation_duration_count)) by (cache_operation)
 ```
 
 ## cache.encryption.duration

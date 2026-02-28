@@ -55,9 +55,10 @@ The JWT validation middleware extracts Buildkite identity fields from the authen
 All authenticated endpoints create server spans:
 - `POST /token`
 - `POST /git-credentials`
-- `GET /healthcheck`
 - `POST /organization/token/{profile}`
 - `POST /organization/git-credentials/{profile}`
+
+The `GET /healthcheck` endpoint is unauthenticated and excluded from telemetry instrumentation.
 
 ## HTTP client spans
 
