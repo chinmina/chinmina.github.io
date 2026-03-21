@@ -95,7 +95,8 @@ export default defineConfig({
     markdownPages({
       sidebar,
       siteTitle: "Chinmina",
-      siteDescription: "GitHub App token vending machine for Buildkite pipelines.",
+      siteDescription:
+        "GitHub App token vending machine for Buildkite pipelines.",
     }),
   ],
 })
