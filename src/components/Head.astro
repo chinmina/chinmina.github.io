@@ -1,11 +1,15 @@
 ---
 import Default from "@astrojs/starlight/components/Head.astro"
 
-const route = Astro.locals.starlightRoute
-const mdUrl =
-  route?.entry?.id != null && Astro.site
-    ? new URL(`/${route.entry.id}.md`, Astro.site).href
-    : null
+const entry = Astro.locals.starlightRoute?.entry
+let mdUrl: string | null = null
+if (entry != null && Astro.site) {
+  const isIndex = entry.filePath?.endsWith("/index.md") || entry.filePath?.endsWith("/index.mdx")
+  const mdPath = isIndex
+    ? (entry.id ? `/${entry.id}/index.md` : `/index.md`)
+    : `/${entry.id}.md`
+  mdUrl = new URL(mdPath, Astro.site).href
+}
 ---
 
 <Default {...Astro.props} />

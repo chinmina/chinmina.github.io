@@ -2,8 +2,14 @@
 import Default from "@astrojs/starlight/components/SocialIcons.astro"
 import { Icon } from "@astrojs/starlight/components"
 
-const route = Astro.locals.starlightRoute
-const mdPath = route?.entry?.id != null ? `/${route.entry.id}.md` : null
+const entry = Astro.locals.starlightRoute?.entry
+let mdPath: string | null = null
+if (entry != null) {
+  const isIndex = entry.filePath?.endsWith("/index.md") || entry.filePath?.endsWith("/index.mdx")
+  mdPath = isIndex
+    ? (entry.id ? `/${entry.id}/index.md` : `/index.md`)
+    : `/${entry.id}.md`
+}
 ---
 
 <Default {...Astro.props} />
