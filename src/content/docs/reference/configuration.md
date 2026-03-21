@@ -272,11 +272,9 @@ If the Open Telemetry target does not support metrics (e.g. Jaeger), set this to
 
 ###### `OBSERVE_TYPE`
 
-_(options: `grpc | stdout` default: `grpc`)_
+_(options: `grpc | http | stdout` default: `grpc`)_
 
-Set the outgoing transport to use for telemetry. GRPC is the default; `stdout`
-is only really useful for development situations where a telemetry server is not
-available.
+Set the outgoing transport to use for telemetry. `grpc` (port 4317) is the default. `http` uses HTTP/protobuf OTLP (port 4318) and is useful in environments where gRPC is blocked by HTTP proxies or load balancers. `stdout` writes telemetry to standard output and is only useful during development.
 
 ###### `OBSERVE_OTEL_LOG_LEVEL`
 
@@ -322,6 +320,34 @@ When true, outgoing HTTP requests will be annotated with details of the
 connection process, e.g. DNS lookup time. Only effective when HTTP transport
 tracing is enabled.
 
+### Pyroscope continuous profiling
+
+Optional continuous profiling via [Grafana Pyroscope][pyroscope]. When enabled, CPU, allocation, goroutine, mutex, and block profiles are sent to the configured Pyroscope server. Each active OTel span is linked to its corresponding Pyroscope profile, enabling navigation from a trace to the profile recorded during that span.
+
+Startup validation fails immediately if `OBSERVE_PYROSCOPE_ENABLED=true` is set without a server address.
+
+###### `OBSERVE_PYROSCOPE_ENABLED`
+
+_(default: `false`)_
+
+Enable continuous profiling. Requires `OBSERVE_PYROSCOPE_SERVER_ADDRESS`.
+
+###### `OBSERVE_PYROSCOPE_SERVER_ADDRESS`
+
+The Pyroscope server URL (e.g., `http://pyroscope:4040` or a Grafana Cloud endpoint). Required when `OBSERVE_PYROSCOPE_ENABLED` is `true`.
+
+###### `OBSERVE_PYROSCOPE_BASIC_AUTH_USER`
+
+HTTP Basic Auth username for authenticated Pyroscope targets (e.g., Grafana Cloud). Leave unset for unauthenticated local servers.
+
+###### `OBSERVE_PYROSCOPE_BASIC_AUTH_PASSWORD`
+
+HTTP Basic Auth password for authenticated Pyroscope targets.
+
+###### `OBSERVE_PYROSCOPE_EXPERIMENT`
+
+An optional label attached to profiling data as an `experiment` tag. Useful for A/B comparisons at runtime without requiring a redeploy. Overrides any compile-time experiment tag.
+
 ###### `OTEL_EXPORTER_OTLP_ENDPOINT`
 
 _(default: `http://localhost:4317`)_
@@ -340,3 +366,4 @@ variables available.
 [profiles-config]: profiles/
 [pipeline-profile-config]: profiles/pipeline
 [org-profile-config]: profiles/organization
+[pyroscope]: https://grafana.com/oss/pyroscope/

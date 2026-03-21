@@ -3,7 +3,7 @@ title: Observability
 description: Using OpenTelemetry and logging to understand and diagnose Chinmina.
 ---
 
-Chinmina produces traces and metrics via OpenTelemetry, and logs to stdout via [zerolog][zerolog].
+Chinmina produces traces and metrics via OpenTelemetry, and logs to stdout in JSON format.
 
 For audit log details, see the [auditing reference](../reference/auditing). For complete telemetry technical details, see the [telemetry reference](../reference/telemetry).
 
@@ -12,7 +12,8 @@ For audit log details, see the [auditing reference](../reference/auditing). For 
 Set `OBSERVE_ENABLED=true` to enable telemetry collection.
 
 Choose an exporter type with `OBSERVE_TYPE`:
-- `"grpc"` (default): Send to an OpenTelemetry collector via gRPC
+- `"grpc"` (default): Send to an OpenTelemetry collector via gRPC (port 4317)
+- `"http"`: Send via HTTP/protobuf OTLP (port 4318). Use this in environments where gRPC is blocked by HTTP proxies or load balancers.
 - `"stdout"`: Write to standard output (development only)
 
 ### Minimal configuration
@@ -23,6 +24,14 @@ For gRPC export to a collector:
 OBSERVE_ENABLED=true
 OBSERVE_TYPE=grpc
 OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
+```
+
+For HTTP export:
+
+```bash
+OBSERVE_ENABLED=true
+OBSERVE_TYPE=http
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
 ```
 
 For stdout export during development:
@@ -183,4 +192,28 @@ Internal span: refresh_organization_profile
 - Keyset refresh warnings: verify IAM permissions for Secrets Manager and KMS, then check service health
 - Persistent errors with no configuration changes: check Valkey connectivity and data integrity
 
-[zerolog]: https://github.com/rs/zerolog/
+## Continuous profiling
+
+[Grafana Pyroscope][pyroscope] provides continuous profiling: CPU time, memory allocations, goroutine counts, mutex contention, and block profiles sampled in production. Where OTel traces show that a request was slow, profiling shows which code path consumed the time.
+
+When enabled, each active OTel span is linked to its corresponding Pyroscope profile. In the Pyroscope UI, you can navigate directly from a slow trace to the profile recorded during that span.
+
+Profiling is disabled by default. Enable it with:
+
+```bash
+OBSERVE_PYROSCOPE_ENABLED=true
+OBSERVE_PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
+```
+
+For authenticated targets such as Grafana Cloud:
+
+```bash
+OBSERVE_PYROSCOPE_ENABLED=true
+OBSERVE_PYROSCOPE_SERVER_ADDRESS=https://profiles-prod-001.grafana.net
+OBSERVE_PYROSCOPE_BASIC_AUTH_USER=123456
+OBSERVE_PYROSCOPE_BASIC_AUTH_PASSWORD=glc_...
+```
+
+See the [configuration reference](../reference/configuration#pyroscope-continuous-profiling) for all `OBSERVE_PYROSCOPE_*` variables.
+
+[pyroscope]: https://grafana.com/oss/pyroscope/

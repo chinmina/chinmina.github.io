@@ -183,13 +183,13 @@ Chinmina runs in a Chainguard static container containing only the executable an
 
 ### Audit logging
 
-All token requests are logged to stdout at the `audit` log level with success or failure status. These audit logs provide non-repudiation for the system and cannot be disabled. Logs are forwarded to the organization's log aggregation platform for centralized monitoring and analysis.
+All token requests are logged to stdout at `INFO` level with success or failure status. These audit logs provide non-repudiation for the system and cannot be disabled — they are written unconditionally regardless of log level configuration. Use `type=audit` to identify audit entries in queries and alerts. Logs are forwarded to the organization's log aggregation platform for centralized monitoring and analysis.
 
 Example audit log entry:
 
 ```json
 {
-  "level": "audit",
+  "level": "INFO",
   "request": {
     "method": "POST",
     "path": "/token",
