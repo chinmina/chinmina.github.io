@@ -73,7 +73,7 @@ async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, d
       const dir = section.autogenerate.directory
       const found = []
       for await (const file of glob(`${dir}/**/*.{md,mdx}`, { cwd: docsDir })) {
-        found.push(file.replace(/\.(md|mdx)$/, ""))
+        found.push(file.replace(/\/index\.(md|mdx)$/, "").replace(/\.(md|mdx)$/, ""))
       }
       found.sort()
       slugs = found
@@ -83,7 +83,9 @@ async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, d
       const meta = pageCache.get(slug)
       const title = meta?.title ?? slug
       const description = meta?.description
-      const url = `${siteUrl}/${slug}.md`
+      // Index pages live at [slug]/index.md, not [slug].md
+      const mdFile = meta?._isIndex ? `${slug}/index.md` : `${slug}.md`
+      const url = `${siteUrl}/${mdFile}`
       lines.push(description ? `- [${title}](${url}): ${description}` : `- [${title}](${url})`)
     }
     lines.push("")
@@ -163,8 +165,9 @@ export default function markdownPages({ sidebar, siteTitle, siteDescription } = 
           const frontmatterBlock = extractFrontmatterBlock(content)
           if (frontmatterBlock) {
             // Normalize slug: strip /index suffix so it matches sidebar entries
-            const slug = file.replace(/\/index\.(md|mdx)$/, "").replace(/\.(md|mdx)$/, "")
-            pageCache.set(slug, parseFrontmatterFields(frontmatterBlock))
+            const isIndex = /\/index\.(md|mdx)$/.test(file)
+            const slug = isIndex ? file.replace(/\/index\.(md|mdx)$/, "") : file.replace(/\.(md|mdx)$/, "")
+            pageCache.set(slug, { ...parseFrontmatterFields(frontmatterBlock), _isIndex: isIndex })
           }
 
           const transformed = await transformMarkdown(content, { isMdx })
