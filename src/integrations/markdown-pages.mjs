@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
-import { resolve, dirname, join } from "node:path"
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { glob } from "node:fs/promises"
+import { dirname, join, resolve } from "node:path"
 import { transformMarkdown } from "./transform.mjs"
 
 /**
@@ -11,16 +11,22 @@ function parseFrontmatterFields(frontmatter) {
   const result = {}
   for (const line of frontmatter.split("\n")) {
     const m = line.match(/^(title|description):\s*(.+)$/)
-    if (m) result[m[1]] = m[2].trim().replace(/^["']|["']$/g, "")
+    if (m) {
+      result[m[1]] = m[2].trim().replace(/^["']|["']$/g, "")
+    }
   }
   return result
 }
 
 /** Extract raw frontmatter block (including --- delimiters) from file content. */
 function extractFrontmatterBlock(content) {
-  if (!content.startsWith("---")) return null
+  if (!content.startsWith("---")) {
+    return null
+  }
   const end = content.indexOf("\n---", 3)
-  if (end === -1) return null
+  if (end === -1) {
+    return null
+  }
   return content.slice(0, end + 4)
 }
 
@@ -54,7 +60,14 @@ function flattenSlugs(items) {
  * @param {string} opts.docsDir  absolute path to src/content/docs
  * @param {Map<string, {title?: string, description?: string}>} pageCache  slug → metadata
  */
-async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, docsDir, pageCache }) {
+async function generateLlmsTxt({
+  siteTitle,
+  siteDescription,
+  sidebar,
+  siteUrl,
+  docsDir,
+  pageCache,
+}) {
   const lines = []
   lines.push(`# ${siteTitle}`, "")
   if (siteDescription) {
@@ -73,7 +86,9 @@ async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, d
       const dir = section.autogenerate.directory
       const found = []
       for await (const file of glob(`${dir}/**/*.{md,mdx}`, { cwd: docsDir })) {
-        found.push(file.replace(/\/index\.(md|mdx)$/, "").replace(/\.(md|mdx)$/, ""))
+        found.push(
+          file.replace(/\/index\.(md|mdx)$/, "").replace(/\.(md|mdx)$/, ""),
+        )
       }
       found.sort()
       slugs = found
@@ -86,7 +101,11 @@ async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, d
       // Index pages live at [slug]/index.md, not [slug].md
       const mdFile = meta?._isIndex ? `${slug}/index.md` : `${slug}.md`
       const url = `${siteUrl}/${mdFile}`
-      lines.push(description ? `- [${title}](${url}): ${description}` : `- [${title}](${url})`)
+      lines.push(
+        description
+          ? `- [${title}](${url}): ${description}`
+          : `- [${title}](${url})`,
+      )
     }
     lines.push("")
   }
@@ -106,7 +125,11 @@ async function generateLlmsTxt({ siteTitle, siteDescription, sidebar, siteUrl, d
  * - Build: writes transformed `.md` files alongside HTML output in `dist/`,
  *          and generates `llms.txt` at the root if sidebar config is provided
  */
-export default function markdownPages({ sidebar, siteTitle, siteDescription } = {}) {
+export default function markdownPages({
+  sidebar,
+  siteTitle,
+  siteDescription,
+} = {}) {
   let siteUrl = ""
 
   return {
@@ -121,22 +144,26 @@ export default function markdownPages({ sidebar, siteTitle, siteDescription } = 
         const devDocsDir = resolve("src/content/docs")
         server.middlewares.use(async (req, res, next) => {
           const url = req.url ?? ""
-          if (!url.endsWith(".md")) return next()
+          if (!url.endsWith(".md")) {
+            return next()
+          }
 
           // Map URL path to source file: strip leading `/` and `.md` suffix
           const urlPath = url.replace(/\.md$/, "").replace(/^\//, "")
           const srcBase = resolve(devDocsDir, urlPath)
 
           // Reject paths that escape the docs root
-          if (!srcBase.startsWith(devDocsDir + "/") && srcBase !== devDocsDir) return next()
+          if (!srcBase.startsWith(`${devDocsDir}/`) && srcBase !== devDocsDir) {
+            return next()
+          }
 
           let content, isMdx
           try {
             try {
-              content = readFileSync(srcBase + ".mdx", "utf8")
+              content = readFileSync(`${srcBase}.mdx`, "utf8")
               isMdx = true
             } catch {
-              content = readFileSync(srcBase + ".md", "utf8")
+              content = readFileSync(`${srcBase}.md`, "utf8")
               isMdx = false
             }
           } catch {
@@ -168,9 +195,13 @@ export default function markdownPages({ sidebar, siteTitle, siteDescription } = 
 
           // Normalize slug: strip /index suffix so it matches sidebar entries
           const isIndex = /\/index\.(md|mdx)$/.test(file)
-          const slug = isIndex ? file.replace(/\/index\.(md|mdx)$/, "") : file.replace(/\.(md|mdx)$/, "")
+          const slug = isIndex
+            ? file.replace(/\/index\.(md|mdx)$/, "")
+            : file.replace(/\.(md|mdx)$/, "")
           const frontmatterBlock = extractFrontmatterBlock(content)
-          const fields = frontmatterBlock ? parseFrontmatterFields(frontmatterBlock) : {}
+          const fields = frontmatterBlock
+            ? parseFrontmatterFields(frontmatterBlock)
+            : {}
           pageCache.set(slug, { ...fields, _isIndex: isIndex })
 
           const transformed = await transformMarkdown(content, { isMdx })

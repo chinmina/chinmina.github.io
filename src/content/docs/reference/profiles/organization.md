@@ -60,6 +60,7 @@ _(optional)_
 Claim matching rules that restrict which pipelines can use this profile. Omit this field entirely to make the profile available to all pipelines.
 
 See the [profile matching reference](matching) for complete details on:
+
 - Match rule syntax (exact vs regex matching)
 - Available claims
 - Pattern examples
@@ -110,6 +111,7 @@ pipeline:
 ## Accessing organization profiles
 
 Organization profiles are requested via:
+
 - `/organization/token/{profile}` for JSON token responses
 - `/organization/git-credentials/{profile}` for Git credential helper format
 

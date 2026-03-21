@@ -7,7 +7,7 @@ import { Aside, Badge, Steps } from "@astrojs/starlight/components"
 
 {/* Shorthand component for a badge that indicates a value to be collected. */}
 export function Later({ name }) {
-  return <Badge text={`📝 ${name}`} variant="tip" />;
+return <Badge text={`📝 ${name}`} variant="tip" />;
 }
 
 Chinmina itself is a simple service, but it sits in the middle of an ecosystem.
@@ -139,7 +139,8 @@ configuration.
     and provide the ARN of the key here. This will allow Chinmina to sign tokens
     but protects the key from extraction and misuse.
 
-  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not available.**
+  - <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not
+    available.**
 
     The PEM formatted private key of the created GitHub app. **Store securely and
     provide to the container securely.** This is a highly sensitive credential.

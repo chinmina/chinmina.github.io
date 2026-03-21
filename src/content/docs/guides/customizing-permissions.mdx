@@ -12,6 +12,7 @@ By default, Chinmina Bridge vends GitHub tokens with `contents:read` and `metada
 ### Elevated permissions for your repository
 
 Use pipeline profiles when your pipeline needs to:
+
 - Write comments on pull requests during automated code review
 - Publish releases directly from the pipeline
 - Manage deployment status
@@ -21,6 +22,7 @@ Pipeline profiles grant additional permissions while keeping access scoped to th
 ### Access to other repositories
 
 Use organization profiles when your pipeline needs to access repositories beyond its own:
+
 - Publishing to organization-wide Homebrew taps or package registries
 - Loading Buildkite plugins from private repositories
 - Reading shared configuration or tooling repositories
@@ -101,6 +103,7 @@ steps:
 ```
 
 Profile prefixes:
+
 - `pipeline:profile-name` → pipeline profile
 - `org:profile-name` → organization profile
 
@@ -136,7 +139,8 @@ steps:
 ```
 
 <Aside type="note">
-Git credentials plugin support for profiles requires plugin version 1.1.0 or later.
+  Git credentials plugin support for profiles requires plugin version 1.1.0 or
+  later.
 </Aside>
 
 ## Restricting profile access
@@ -160,6 +164,7 @@ Pipelines on other branches will receive a 403 error when requesting this profil
 ## Next steps
 
 See the [profile reference](../reference/profiles) for:
+
 - Complete field definitions
 - Match rule syntax and patterns
 - Available claims for authorization

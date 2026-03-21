@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { transformMarkdown } from "./transform.mjs"
 
 describe("transformMarkdown — .md files", () => {
@@ -161,7 +161,9 @@ describe("transformMarkdown — .mdx files", () => {
 
 Content here.
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Content here.
@@ -176,7 +178,9 @@ Content here.
 
 Content here.
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Content here.
@@ -184,14 +188,16 @@ Content here.
     `)
   })
 
-  it("renders <Aside type=\"note\"> as GitHub blockquote admonition", async () => {
+  it('renders <Aside type="note"> as GitHub blockquote admonition', async () => {
     const input = `# Page
 
 <Aside type="note">
 This is important.
 </Aside>
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       > \\[!NOTE]
@@ -201,14 +207,16 @@ This is important.
     `)
   })
 
-  it("renders <Aside type=\"tip\"> as [!TIP] blockquote", async () => {
+  it('renders <Aside type="tip"> as [!TIP] blockquote', async () => {
     const input = `# Page
 
 <Aside type="tip">
 A helpful tip.
 </Aside>
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       > \\[!TIP]
@@ -218,14 +226,16 @@ A helpful tip.
     `)
   })
 
-  it("renders <Aside type=\"caution\"> as [!CAUTION] blockquote", async () => {
+  it('renders <Aside type="caution"> as [!CAUTION] blockquote', async () => {
     const input = `# Page
 
 <Aside type="caution">
 Be careful here.
 </Aside>
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       > \\[!CAUTION]
@@ -235,12 +245,14 @@ Be careful here.
     `)
   })
 
-  it("renders <ConfigRef name=\"X\" /> as a linked inline code reference", async () => {
+  it('renders <ConfigRef name="X" /> as a linked inline code reference', async () => {
     const input = `# Page
 
 Set <ConfigRef name="JWT_BUILDKITE_ORGANIZATION_SLUG" /> to your org slug.
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Set [\`JWT_BUILDKITE_ORGANIZATION_SLUG\`](../reference/configuration.md#jwt_buildkite_organization_slug) to your org slug.
@@ -248,12 +260,14 @@ Set <ConfigRef name="JWT_BUILDKITE_ORGANIZATION_SLUG" /> to your org slug.
     `)
   })
 
-  it("renders inline <Later name=\"X\" /> as backtick placeholder", async () => {
+  it('renders inline <Later name="X" /> as backtick placeholder', async () => {
     const input = `# Page
 
 Save the token as <Later name="BUILDKITE_API_TOKEN" />.
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Save the token as \`📝 BUILDKITE_API_TOKEN\`.
@@ -268,7 +282,9 @@ Save the token as <Later name="BUILDKITE_API_TOKEN" />.
 Some content.
 </Card>
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Some content.
@@ -283,7 +299,9 @@ Some content.
 
 Content here.
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Content here.
@@ -296,7 +314,9 @@ Content here.
 
 Some text with <em>emphasis</em> and a line break.<br />
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       Some text with <em>emphasis</em> and a line break.<br />
@@ -313,7 +333,9 @@ Some text with <em>emphasis</em> and a line break.<br />
 See [getting started](../guides/getting-started#setup).
 </Card>
 `
-    expect(await transformMarkdown(input, { isMdx: true })).toMatchInlineSnapshot(`
+    expect(
+      await transformMarkdown(input, { isMdx: true }),
+    ).toMatchInlineSnapshot(`
       "# Page
 
       See [getting started](../guides/getting-started.md#setup).

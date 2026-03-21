@@ -48,6 +48,7 @@ _(optional)_
 Claim matching rules that restrict which pipelines can use this profile. Omit this field entirely to make the profile available to all pipelines.
 
 See the [profile matching reference](matching) for complete details on:
+
 - Match rule syntax (exact vs regex matching)
 - Available claims
 - Pattern examples
@@ -89,6 +90,7 @@ pipeline:
 ## Accessing pipeline profiles
 
 Pipeline profiles are requested via:
+
 - `/token/{profile}` for JSON token responses
 - `/git-credentials/{profile}` for Git credential helper format
 
@@ -100,8 +102,8 @@ The [Chinmina Token plugin][chinmina-token] and [Chinmina Git Credentials plugin
 
 ```yaml
 environment:
-  - GITHUB_TOKEN=pipeline:default       # pipeline defaults
-  - PR_TOKEN=pipeline:pr-commenter      # named pipeline profile
+  - GITHUB_TOKEN=pipeline:default # pipeline defaults
+  - PR_TOKEN=pipeline:pr-commenter # named pipeline profile
 ```
 
 The plugins translate these to appropriate API paths (`/token/default`, `/token/pr-commenter`).

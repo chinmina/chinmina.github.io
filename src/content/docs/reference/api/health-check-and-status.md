@@ -25,9 +25,9 @@ This endpoint is not authenticated and takes no parameters.
 
 The endpoint returns an HTTP status code with no response body:
 
-| Status Code           | Meaning                                                  |
-| --------------------- | -------------------------------------------------------- |
-| `200 OK`              | Service is running and accepting requests                |
+| Status Code               | Meaning                                                  |
+| ------------------------- | -------------------------------------------------------- |
+| `200 OK`                  | Service is running and accepting requests                |
 | `503 Service Unavailable` | Service is not ready (typically during startup/shutdown) |
 
 ### Example request
