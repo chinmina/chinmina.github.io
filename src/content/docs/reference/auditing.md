@@ -17,7 +17,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 
 ## Log format
 
-Logs are written to stdout using zerolog at the "audit" log level. All audit logs are in single-line JSON format.
+Logs are written to stdout at `INFO` level. All audit logs are in single-line JSON format.
 
 Related fields are grouped into nested JSON objects by concern: `request`, `pipeline`, `authorization`, and `token`. The `request` and `authorization` sections are always present. The `pipeline` and `token` sections are omitted when all their fields are empty — for example, when a request fails before JWT validation completes or before a token operation begins.
 
@@ -27,7 +27,11 @@ Related fields are grouped into nested JSON objects by concern: `request`, `pipe
 
 ###### `level`
 
-Always `"audit"`.
+Always `"INFO"`. Audit log entries are written unconditionally and are not subject to log level configuration.
+
+###### `type`
+
+Always `"audit"`. Use this field to identify audit log entries in queries and alerts.
 
 ###### `message`
 
@@ -141,6 +145,10 @@ The GitHub token expiry time as an [RFC-3339][rfc-3339] date-time string. Only p
 
 The time the GitHub token will remain valid at the time of logging, in milliseconds. Only present on successful token issuance.
 
+###### `hash`
+
+SHA-256 hash of the issued token, base64-encoded (`base64(SHA-256(token))`). Only present on successful token issuance. Use this to correlate Chinmina audit events with [GitHub organisation audit log events][gh-audit-token] for the same token.
+
 ###### `matches`
 
 Array of matched claim/value pairs on successful profile access. Each element contains `claim` and `value` fields.
@@ -161,7 +169,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 
 ```json
 {
-  "level": "audit",
+  "level": "INFO",
   "request": {
     "method": "POST",
     "path": "/git-credentials",
@@ -188,7 +196,8 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     "repositories": ["https://github.com/example-org/example-repo.git"],
     "permissions": ["contents:read"],
     "expiry": "2025-01-20T05:09:45Z",
-    "expiryRemaining": 1306372
+    "expiryRemaining": 1306372,
+    "hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
   },
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
@@ -200,7 +209,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 
 ```json
 {
-  "level": "audit",
+  "level": "INFO",
   "request": {
     "method": "POST",
     "path": "/organization/token/release-publisher",
@@ -230,7 +239,8 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     "repositories": ["https://github.com/example-org/release-tools.git"],
     "permissions": ["contents:write", "packages:write"],
     "expiry": "2025-01-20T05:09:45Z",
-    "expiryRemaining": 1306372
+    "expiryRemaining": 1306372,
+    "hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
   },
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
@@ -242,7 +252,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 
 ```json
 {
-  "level": "audit",
+  "level": "INFO",
   "request": {
     "method": "POST",
     "path": "/organization/token/release-publisher",
@@ -281,3 +291,4 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
 ```
 
 [rfc-3339]: https://pkg.go.dev/time#RFC3339
+[gh-audit-token]: https://docs.github.com/en/enterprise-cloud@latest/admin/monitoring-activity-in-your-enterprise/reviewing-audit-logs-for-your-enterprise/identifying-audit-log-events-performed-by-an-access-token
