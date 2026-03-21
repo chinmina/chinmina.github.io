@@ -6,7 +6,7 @@ import remarkStringify from "remark-stringify"
 
 /**
  * Walk all nodes in a unist tree, calling visitor(node, index, parent) for each.
- * The visitor may mutate parent.children; return false to skip node's children.
+ * Return false from visitor to skip node's children.
  */
 function walk(tree, visitor) {
   function traverse(node, index, parent) {
@@ -15,8 +15,6 @@ function walk(tree, visitor) {
     if (node.children) {
       for (let i = 0; i < node.children.length; i++) {
         traverse(node.children[i], i, node)
-        // Re-check index in case children were spliced
-        if (node.children[i] !== undefined && node.children[i] !== node.children[i]) i--
       }
     }
   }
