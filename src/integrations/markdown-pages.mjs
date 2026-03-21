@@ -118,13 +118,17 @@ export default function markdownPages({ sidebar, siteTitle, siteDescription } = 
       },
 
       "astro:server:setup": ({ server }) => {
+        const devDocsDir = resolve("src/content/docs")
         server.middlewares.use(async (req, res, next) => {
           const url = req.url ?? ""
           if (!url.endsWith(".md")) return next()
 
           // Map URL path to source file: strip leading `/` and `.md` suffix
           const urlPath = url.replace(/\.md$/, "").replace(/^\//, "")
-          const srcBase = resolve("src/content/docs", urlPath)
+          const srcBase = resolve(devDocsDir, urlPath)
+
+          // Reject paths that escape the docs root
+          if (!srcBase.startsWith(devDocsDir + "/") && srcBase !== devDocsDir) return next()
 
           let content, isMdx
           try {
@@ -162,13 +166,12 @@ export default function markdownPages({ sidebar, siteTitle, siteDescription } = 
           const isMdx = file.endsWith(".mdx")
           const content = readFileSync(srcPath, "utf8")
 
+          // Normalize slug: strip /index suffix so it matches sidebar entries
+          const isIndex = /\/index\.(md|mdx)$/.test(file)
+          const slug = isIndex ? file.replace(/\/index\.(md|mdx)$/, "") : file.replace(/\.(md|mdx)$/, "")
           const frontmatterBlock = extractFrontmatterBlock(content)
-          if (frontmatterBlock) {
-            // Normalize slug: strip /index suffix so it matches sidebar entries
-            const isIndex = /\/index\.(md|mdx)$/.test(file)
-            const slug = isIndex ? file.replace(/\/index\.(md|mdx)$/, "") : file.replace(/\.(md|mdx)$/, "")
-            pageCache.set(slug, { ...parseFrontmatterFields(frontmatterBlock), _isIndex: isIndex })
-          }
+          const fields = frontmatterBlock ? parseFrontmatterFields(frontmatterBlock) : {}
+          pageCache.set(slug, { ...fields, _isIndex: isIndex })
 
           const transformed = await transformMarkdown(content, { isMdx })
           const outRelative = isMdx ? file.replace(/\.mdx$/, ".md") : file
