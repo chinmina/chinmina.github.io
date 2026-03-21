@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight"
 import starlightHeadingBadges from "starlight-heading-badges"
 
 import d2 from "astro-d2"
+import markdownPages from "./src/integrations/markdown-pages.mjs"
 
 // https://astro.build/config
 export default defineConfig({
@@ -85,5 +86,6 @@ export default defineConfig({
     d2({
       layout: "elk",
     }),
+    markdownPages(),
   ],
 })
