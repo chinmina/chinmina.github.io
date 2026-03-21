@@ -1,0 +1,35 @@
+---
+import Default from "@astrojs/starlight/components/SocialIcons.astro"
+import { Icon } from "@astrojs/starlight/components"
+
+const route = Astro.locals.starlightRoute
+const mdPath = route?.entry?.id != null ? `/${route.entry.id}.md` : null
+---
+
+<Default {...Astro.props} />
+{
+  mdPath && (
+    <a href={mdPath} class="sl-flex md-link" title="Markdown version for LLMs">
+      <Icon name="seti:markdown" size="1em" />
+      <span>MD</span>
+    </a>
+  )
+}
+
+<style>
+  @layer starlight.components {
+    .md-link {
+      align-items: center;
+      gap: 0.25em;
+      color: var(--sl-color-text-accent);
+      text-decoration: none;
+      font-size: var(--sl-text-sm);
+      font-weight: 600;
+      padding: 0.5em;
+      margin: -0.5em;
+    }
+    .md-link:hover {
+      opacity: 0.66;
+    }
+  }
+</style>
