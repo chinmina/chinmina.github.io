@@ -33,7 +33,7 @@ Always `"INFO"`. Audit log entries are written unconditionally and are not subje
 
 Always `"audit"`. Use this field to identify audit log entries in queries and alerts.
 
-###### `message`
+###### `msg`
 
 Always `"audit_event"`.
 
@@ -135,7 +135,7 @@ Array of repository URLs the token allows access to. Only present on successful 
 
 ###### `permissions`
 
-Object containing GitHub token permissions assigned to the token. Only present on successful token issuance.
+Array of strings describing the GitHub token permissions assigned to the token. Only present on successful token issuance.
 
 ###### `expiry`
 
@@ -145,7 +145,7 @@ The GitHub token expiry time as an [RFC-3339][rfc-3339] date-time string. Only p
 
 The time the GitHub token will remain valid at the time of logging, in milliseconds. Only present on successful token issuance.
 
-###### `hash`
+###### `hashedToken`
 
 SHA-256 hash of the issued token, base64-encoded (`base64(SHA-256(token))`). Only present on successful token issuance. Use this to correlate Chinmina audit events with [GitHub organisation audit log events][gh-audit-token] for the same token.
 
@@ -197,7 +197,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     "permissions": ["contents:read"],
     "expiry": "2025-01-20T05:09:45Z",
     "expiryRemaining": 1306372,
-    "hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+    "hashedToken": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
   },
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
@@ -240,7 +240,7 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     "permissions": ["contents:write", "packages:write"],
     "expiry": "2025-01-20T05:09:45Z",
     "expiryRemaining": 1306372,
-    "hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+    "hashedToken": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
   },
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
