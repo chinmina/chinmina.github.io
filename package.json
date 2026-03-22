@@ -1,23 +1,19 @@
 {
   "name": "docs",
-  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
-  "type": "module",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "remark-directive": "^3.0.0",
-    "remark-mdx": "^3.1.0",
-    "remark-parse": "^11.0.0",
-    "remark-stringify": "^11.0.0",
-    "unified": "^11.0.5",
-    "vitest": "^3.0.0"
+    "agent": "biome check --write --unsafe && vitest run && pnpm run build",
+    "test": "vitest run",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write --unsafe",
+    "fmt": "biome format --write",
+    "fmt:check": "biome format"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
@@ -27,5 +23,15 @@
     "sharp": "^0.34.5",
     "starlight-heading-badges": "^0.6.1",
     "typescript": "^5.9.3"
-  }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
+    "remark-directive": "^3.0.0",
+    "remark-mdx": "^3.1.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "vitest": "^3.0.0"
+  },
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
 }

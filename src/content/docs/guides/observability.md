@@ -12,6 +12,7 @@ For audit log details, see the [auditing reference](../reference/auditing). For 
 Set `OBSERVE_ENABLED=true` to enable telemetry collection.
 
 Choose an exporter type with `OBSERVE_TYPE`:
+
 - `"grpc"` (default): Send to an OpenTelemetry collector via gRPC (port 4317)
 - `"http"`: Send via HTTP/protobuf OTLP (port 4318). Use this in environments where gRPC is blocked by HTTP proxies or load balancers.
 - `"stdout"`: Write to standard output (development only)
@@ -54,6 +55,7 @@ Generates a GitHub token for the pipeline's repository. This is the primary oper
 **Endpoint:** `POST /token`
 
 **Trace structure:**
+
 ```text
 Server span: POST /token
 ├── Client span: GET api.buildkite.com/v2/.../pipelines/...
@@ -63,20 +65,21 @@ Server span: POST /token
 The server span captures total request duration and HTTP status. The Buildkite API span shows pipeline lookup performance, and the GitHub API span shows token creation performance.
 
 **SLIs to monitor:**
+
 - p95/p99 server span duration
 - HTTP 5xx error rate
 - Cache hit rate (cached requests skip both API calls)
 
 **Suggested SLO targets:**
 
-| Metric | Objective | Rationale |
-|--------|-----------|-----------|
-| Success rate | 99.9% | Critical path for pipeline execution |
-| p99 latency | < 2s | Minimize delay in clone operations |
-| p95 latency | < 1s | Typical case performance |
-| Cache hit rate | > 70% | Reduce API load and latency |
-| GitHub API p95 latency | < 500ms | Monitor external dependency health |
-| Buildkite API p95 latency | < 300ms | Monitor external dependency health |
+| Metric                    | Objective | Rationale                            |
+| ------------------------- | --------- | ------------------------------------ |
+| Success rate              | 99.9%     | Critical path for pipeline execution |
+| p99 latency               | < 2s      | Minimize delay in clone operations   |
+| p95 latency               | < 1s      | Typical case performance             |
+| Cache hit rate            | > 70%     | Reduce API load and latency          |
+| GitHub API p95 latency    | < 500ms   | Monitor external dependency health   |
+| Buildkite API p95 latency | < 300ms   | Monitor external dependency health   |
 
 ### Git credentials
 
@@ -91,6 +94,7 @@ Identical trace structure to token generation (same underlying implementation). 
 Generates tokens scoped to repositories defined in an organization profile rather than the pipeline's own repository.
 
 **Trace structure:**
+
 ```text
 Server span: POST /organization/token/{profile}
 └── Client span: POST api.github.com/app/installations/.../access_tokens
@@ -100,26 +104,29 @@ No Buildkite API call occurs because the repository is determined by the profile
 
 **Suggested SLO targets:** Same as token endpoints. External API targets differ — only GitHub API applies:
 
-| Metric | Objective | Rationale |
-|--------|-----------|-----------|
-| GitHub API p95 latency | < 500ms | Monitor external dependency health |
+| Metric                 | Objective | Rationale                          |
+| ---------------------- | --------- | ---------------------------------- |
+| GitHub API p95 latency | < 500ms   | Monitor external dependency health |
 
 ### Background profile refresh
 
 Periodically fetches organization profile configurations from the configuration source.
 
 **Trace structure:**
+
 ```text
 Internal span: refresh_organization_profile
 └── Client span: GET api.github.com/...
 ```
 
 **Attributes:**
+
 - `profile.digest_current`: Previous configuration hash
 - `profile.digest_updated`: New configuration hash
 - `profile.digest_changed`: Whether content changed
 
 **SLIs to monitor:**
+
 - Span error rate (fetch failures affect profile availability)
 - `profile.digest_changed` frequency (unexpected changes may indicate configuration issues)
 
@@ -130,12 +137,14 @@ Internal span: refresh_organization_profile
 **Symptoms:** p95/p99 latency exceeds objectives
 
 **Investigation:**
+
 1. Check external API span durations
 2. Verify cache hit rate meets objectives
 3. Review connection timing attributes
 4. Check for network issues between service and APIs
 
 **Remediation:**
+
 - Increase token TTL to improve cache hit rate
 - Review network path to external APIs
 - Consider connection pooling configuration
@@ -145,12 +154,14 @@ Internal span: refresh_organization_profile
 **Symptoms:** HTTP 5xx error rate above threshold
 
 **Investigation:**
+
 1. Filter traces by error status
 2. Examine error messages in span events
 3. Check audit logs for detailed error information
 4. Verify external API availability
 
 **Remediation:**
+
 - Review GitHub App permissions
 - Verify Buildkite API token scopes
 - Check profile match conditions
@@ -161,12 +172,14 @@ Internal span: refresh_organization_profile
 **Symptoms:** Cache hit rate below 70%
 
 **Investigation:**
+
 1. Calculate hit/miss/mismatch ratio using `token.cache.outcome`
 2. Check token expiry times in audit logs
 3. Review repository access patterns
 4. Examine profile configurations
 
 **Remediation:**
+
 - Increase token expiry duration (if GitHub App allows)
 - Consolidate repository access patterns
 - Review profile match conditions
@@ -178,6 +191,7 @@ Internal span: refresh_organization_profile
 **Symptoms:** The `cache.encryption.total` counter increases with `encryption.outcome="error"`, or trace spans show `cache.encrypt.outcome="error"` or `cache.decrypt.outcome="error"`. Decrypt failures surface as cache misses (the service falls back to API calls). Encrypt failures prevent caching of new tokens.
 
 **Investigation:**
+
 1. Check error rate by operation type (encrypt vs decrypt) using `cache.encryption.total`
 2. Filter trace spans for `cache.decrypt.outcome="error"` or `cache.encrypt.outcome="error"` to correlate errors with specific requests
 3. Review service logs for specific error messages — decrypt errors fall into three categories:
@@ -187,6 +201,7 @@ Internal span: refresh_organization_profile
 4. Check logs for keyset refresh warnings (`"failed to refresh encryption keyset"`)
 
 **Remediation:**
+
 - Prefix errors during encryption rollout are expected — unencrypted entries resolve as cached tokens expire (within 15 minutes)
 - Decryption failures after key rotation: verify the rotation procedure in the [distributed cache guide](./distributed-cache) and confirm the old primary key was not disabled before cached tokens expired
 - Keyset refresh warnings: verify IAM permissions for Secrets Manager and KMS, then check service health

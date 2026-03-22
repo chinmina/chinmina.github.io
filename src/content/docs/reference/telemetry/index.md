@@ -40,6 +40,7 @@ Two exporter types are available:
 The gRPC exporter sends telemetry to an OpenTelemetry collector via gRPC protocol. This is the default and recommended exporter for production use.
 
 Configuration uses standard OpenTelemetry environment variables:
+
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `OTEL_EXPORTER_OTLP_HEADERS`
 - `OTEL_EXPORTER_OTLP_TIMEOUT`

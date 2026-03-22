@@ -51,19 +51,19 @@ Counts cache operations performed.
 
 ### Attributes
 
-| Attribute | Type | Values |
-|-----------|------|--------|
-| `cache.type` | string | Cache implementation type (e.g., `"token"`) |
-| `cache.operation` | string | `"get"`, `"set"`, `"invalidate"` |
-| `cache.status` | string | `"hit"`, `"miss"`, `"error"`, `"success"` |
+| Attribute         | Type   | Values                                      |
+| ----------------- | ------ | ------------------------------------------- |
+| `cache.type`      | string | Cache implementation type (e.g., `"token"`) |
+| `cache.operation` | string | `"get"`, `"set"`, `"invalidate"`            |
+| `cache.status`    | string | `"hit"`, `"miss"`, `"error"`, `"success"`   |
 
 ### Status semantics
 
-| Operation | Success Status | Failure Status |
-|-----------|----------------|----------------|
-| `get` | `"hit"` or `"miss"` | `"error"` |
-| `set` | `"success"` | `"error"` |
-| `invalidate` | `"success"` | `"error"` |
+| Operation    | Success Status      | Failure Status |
+| ------------ | ------------------- | -------------- |
+| `get`        | `"hit"` or `"miss"` | `"error"`      |
+| `set`        | `"success"`         | `"error"`      |
+| `invalidate` | `"success"`         | `"error"`      |
 
 **Note:** For `get` operations, `"hit"` indicates a cached value was found, `"miss"` indicates no cached value exists, and `"error"` indicates the cache operation failed.
 
@@ -79,10 +79,10 @@ Measures duration of cache operations.
 
 ### Attributes
 
-| Attribute | Type | Values |
-|-----------|------|--------|
-| `cache.type` | string | Cache implementation type (e.g., `"token"`) |
-| `cache.operation` | string | `"get"`, `"set"`, `"invalidate"` |
+| Attribute         | Type   | Values                                      |
+| ----------------- | ------ | ------------------------------------------- |
+| `cache.type`      | string | Cache implementation type (e.g., `"token"`) |
+| `cache.operation` | string | `"get"`, `"set"`, `"invalidate"`            |
 
 Duration is measured from operation start to completion. The metric is recorded before the operation status is determined, so duration histograms include both successful and failed operations.
 
@@ -102,8 +102,8 @@ These metrics are only produced when the distributed cache is configured with en
 
 ### Attributes
 
-| Attribute | Type | Values |
-|-----------|------|--------|
+| Attribute              | Type   | Values                   |
+| ---------------------- | ------ | ------------------------ |
 | `encryption.operation` | string | `"encrypt"`, `"decrypt"` |
 
 ## cache.encryption.total
@@ -118,10 +118,10 @@ Counts encrypt and decrypt operations.
 
 ### Attributes
 
-| Attribute | Type | Values |
-|-----------|------|--------|
+| Attribute              | Type   | Values                   |
+| ---------------------- | ------ | ------------------------ |
 | `encryption.operation` | string | `"encrypt"`, `"decrypt"` |
-| `encryption.outcome` | string | `"success"`, `"error"` |
+| `encryption.outcome`   | string | `"success"`, `"error"`   |
 
 ## token.cache.outcome
 
@@ -135,16 +135,16 @@ Counts token cache lookup outcomes in the vendor layer.
 
 ### Attributes
 
-| Attribute | Type | Values | Description |
-|-----------|------|--------|-------------|
+| Attribute            | Type   | Values                          | Description    |
+| -------------------- | ------ | ------------------------------- | -------------- |
 | `token.cache.result` | string | `"hit"`, `"miss"`, `"mismatch"` | Lookup outcome |
 
 ### Result semantics
 
-| Result | Meaning |
-|--------|---------|
-| `"hit"` | Cached token found and repository matches request |
-| `"miss"` | No cached token found or cache error occurred |
+| Result       | Meaning                                                                      |
+| ------------ | ---------------------------------------------------------------------------- |
+| `"hit"`      | Cached token found and repository matches request                            |
+| `"miss"`     | No cached token found or cache error occurred                                |
 | `"mismatch"` | Cached token found but repository does not match request (cache invalidated) |
 
 A `"mismatch"` result occurs when a cached token exists but was vended for a different repository than the current request. In this case, the cache is invalidated and a new token is generated.
@@ -161,13 +161,14 @@ hit_rate = hits / (hits + misses + mismatches)
 
 The `cache.type` attribute distinguishes between different cache instances. Current values:
 
-| Cache Type | Value |
-|------------|-------|
+| Cache Type         | Value     |
+| ------------------ | --------- |
 | Token vendor cache | `"token"` |
 
 ## Configuration
 
 For metric configuration details, see:
+
 - [Configuration reference](../configuration) for `OBSERVE_METRICS_*` variables
 - [Observability guide](../../guides/observability) for setup instructions
 

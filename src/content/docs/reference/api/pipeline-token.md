@@ -79,7 +79,7 @@ When a token is successfully vended, the response is a JSON object:
   "organizationSlug": "my-org",
   "profile": "org:default",
   "repositoryUrl": "https://github.com/owner/repository",
-  "repositories": {"names": ["owner/repository"]},
+  "repositories": { "names": ["owner/repository"] },
   "permissions": ["metadata:read", "contents:read"],
   "token": "ghs_...",
   "hashedToken": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
@@ -87,16 +87,16 @@ When a token is successfully vended, the response is a JSON object:
 }
 ```
 
-| Field              | Type   | Description                                                             |
-| ------------------ | ------ | ----------------------------------------------------------------------- |
-| `organizationSlug` | string | Buildkite organization from JWT claims                                  |
-| `profile`          | string | Profile identifier that was used                                        |
-| `repositoryUrl`    | string | The requested repository URL: this will always be empty                 |
+| Field              | Type   | Description                                                                                                                                                                                       |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `organizationSlug` | string | Buildkite organization from JWT claims                                                                                                                                                            |
+| `profile`          | string | Profile identifier that was used                                                                                                                                                                  |
+| `repositoryUrl`    | string | The requested repository URL: this will always be empty                                                                                                                                           |
 | `repositories`     | object | Repositories the token has access to. Either `{"wildcard": true}` (all repositories accessible to the GitHub App installation) or `{"names": ["owner/repo", ...]}` (specific named repositories). |
-| `permissions`      | array  | Permissions granted. Always includes `metadata:read` plus configured permissions. |
-| `token`            | string | GitHub installation token (format: `ghs_...`)                           |
-| `hashedToken`      | string | SHA-256 hash of the token, base64-encoded (`base64(SHA-256(token))`). Use to correlate with [GitHub organisation audit log events][gh-audit-token] for the same token. |
-| `expiry`           | string | ISO 8601 timestamp when token expires                                   |
+| `permissions`      | array  | Permissions granted. Always includes `metadata:read` plus configured permissions.                                                                                                                 |
+| `token`            | string | GitHub installation token (format: `ghs_...`)                                                                                                                                                     |
+| `hashedToken`      | string | SHA-256 hash of the token, base64-encoded (`base64(SHA-256(token))`). Use to correlate with [GitHub organisation audit log events][gh-audit-token] for the same token.                            |
+| `expiry`           | string | ISO 8601 timestamp when token expires                                                                                                                                                             |
 
 ### Error responses
 

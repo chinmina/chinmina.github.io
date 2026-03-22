@@ -49,7 +49,7 @@ Use `value` for known strings. This is the fastest match type.
 ```yaml
 match:
   - claim: pipeline_slug
-    value: "silk-prod"  # Matches only "silk-prod"
+    value: "silk-prod" # Matches only "silk-prod"
 ```
 
 ### Regex matching
@@ -59,7 +59,7 @@ Use `valuePattern` for flexible patterns. Supports [RE2 regex syntax](https://gi
 ```yaml
 match:
   - claim: pipeline_slug
-    valuePattern: ".*-release"  # Matches any pipeline ending in "-release"
+    valuePattern: ".*-release" # Matches any pipeline ending in "-release"
 ```
 
 #### Anchoring
@@ -74,7 +74,8 @@ For example:
 2. For partial matches: `.*-prod` matches "silk-prod" and "cotton-prod".
 
 <Aside type="tip">
-While pattern matching allows flexibility, prefer exact matches when possible for simplicity.
+  While pattern matching allows flexibility, prefer exact matches when possible
+  for simplicity.
 </Aside>
 
 ### Multiple conditions
@@ -94,17 +95,17 @@ match:
 
 Match rules can evaluate the following JWT claims from the Buildkite OIDC token:
 
-| Claim | Description |
-|-------|-------------|
-| `pipeline_slug` | Pipeline's slug |
-| `pipeline_id` | Pipeline UUID |
-| `build_number` | Build number (as string) |
-| `build_branch` | Git branch name |
-| `build_tag` | Git tag (if present) |
-| `build_commit` | Git commit SHA |
-| `cluster_id`, `cluster_name` | Cluster identifiers |
-| `queue_id`, `queue_key` | Queue identifiers |
-| `agent_tag:NAME` | Dynamic agent tags (e.g., `agent_tag:queue`) |
+| Claim                        | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `pipeline_slug`              | Pipeline's slug                              |
+| `pipeline_id`                | Pipeline UUID                                |
+| `build_number`               | Build number (as string)                     |
+| `build_branch`               | Git branch name                              |
+| `build_tag`                  | Git tag (if present)                         |
+| `build_commit`               | Git commit SHA                               |
+| `cluster_id`, `cluster_name` | Cluster identifiers                          |
+| `queue_id`, `queue_key`      | Queue identifiers                            |
+| `agent_tag:NAME`             | Dynamic agent tags (e.g., `agent_tag:queue`) |
 
 <Aside type="tip">
 
@@ -162,7 +163,7 @@ match:
 ```yaml
 match:
   - claim: build_tag
-    valuePattern: "v[0-9]+\\.[0-9]+\\.[0-9]+"  # v1.2.3 format
+    valuePattern: "v[0-9]+\\.[0-9]+\\.[0-9]+" # v1.2.3 format
 ```
 
 ## Troubleshooting
@@ -196,6 +197,7 @@ Replace `.*` with more specific patterns when possible.
 Invalid RE2 regex syntax.
 
 Consult the [RE2 syntax guide](https://github.com/google/re2/wiki/Syntax) for supported patterns. Common issues:
+
 - Backreferences are not supported
 - Some Perl regex features are unavailable
 - Escape special characters with backslash

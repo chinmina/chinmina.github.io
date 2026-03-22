@@ -9,7 +9,7 @@ This is an Astro Starlight documentation repository that uses PNPM to run JS tas
 - `pnpm run build`: check and build the site to `dist/`
 - `pnpm run dev`: runs a local dev server that can be accessed via a browser
 
-Run `pnpm run build` before committing or pushing any changes.
+Run `pnpm run agent` before committing or pushing any changes. This formats, lint-fixes, and builds in one step.
 
 ## Writing documentation
 

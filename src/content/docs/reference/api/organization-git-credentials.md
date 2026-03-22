@@ -52,6 +52,7 @@ handling.
 The `{profile}` path parameter specifies which organization profile to use. Profile names are used directly without prefixes.
 
 Examples:
+
 - `POST /organization/git-credentials/deploy`
 - `POST /organization/git-credentials/package-registry`
 - `POST /organization/git-credentials/buildkite-plugin`

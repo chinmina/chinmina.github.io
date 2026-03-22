@@ -1,9 +1,9 @@
 // @ts-check
-import { defineConfig } from "astro/config"
-import starlight from "@astrojs/starlight"
-import starlightHeadingBadges from "starlight-heading-badges"
 
+import starlight from "@astrojs/starlight"
+import { defineConfig } from "astro/config"
 import d2 from "astro-d2"
+import starlightHeadingBadges from "starlight-heading-badges"
 import markdownPages from "./src/integrations/markdown-pages.mjs"
 
 const sidebar = [
@@ -95,7 +95,8 @@ export default defineConfig({
     markdownPages({
       sidebar,
       siteTitle: "Chinmina",
-      siteDescription: "GitHub App token vending machine for Buildkite pipelines.",
+      siteDescription:
+        "GitHub App token vending machine for Buildkite pipelines.",
     }),
   ],
 })

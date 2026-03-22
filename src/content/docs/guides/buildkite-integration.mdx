@@ -9,13 +9,13 @@ There are two broad ways that Chinmina Bridge can be integrated with
 Buildkite pipelines:
 
 1. **Git authentication**: This allows Buildkite pipelines to authenticate with
-  GitHub using a token that is scoped to the pipeline, and can be used to
-  access private repositories.
+   GitHub using a token that is scoped to the pipeline, and can be used to
+   access private repositories.
 
 2. **Token generation**: This allows Buildkite pipelines to generate a GitHub
-  token that can be used to access private repositories, such as downloading
-  private release assets. Tokens can be exported automatically as environment
-  variables or retrieved programmatically via a helper script.
+   token that can be used to access private repositories, such as downloading
+   private release assets. Tokens can be exported automatically as environment
+   variables or retrieved programmatically via a helper script.
 
 Git authentication integration removes the need to configure SSH deploy keys for
 each repository, and token generation is a replacement for long-lived GitHub
@@ -31,7 +31,7 @@ Each use case is integrated using a Buildkite plugin:
 
 :::caution[Recommended setup]
 
-The plugins *can* be configured in individual pipeline steps, but production
+The plugins _can_ be configured in individual pipeline steps, but production
 installations should load the plugins in the Buildkite agent `bootstrap` and
 `environment` hooks.
 
@@ -47,8 +47,9 @@ particular.
 ## Configuration
 
 Full documentation for each plugin:
-  - [Chinmina Git Credentials][credentials-plugin]
-  - [Chinmina Token][chinmina-token]
+
+- [Chinmina Git Credentials][credentials-plugin]
+- [Chinmina Token][chinmina-token]
 
 Collect the following information from your Chinmina Bridge instance:
 
@@ -62,6 +63,7 @@ Collect the following information from your Chinmina Bridge instance:
 Both plugins support `CHINMINA_DEFAULT_URL` and `CHINMINA_DEFAULT_AUDIENCE` environment variables. Set these at the agent level to provide defaults for all pipelines, eliminating repetitive configuration.
 
 Configuration precedence (highest to lowest):
+
 1. Plugin parameters in pipeline configuration
 2. `CHINMINA_DEFAULT_*` environment variables
 3. Built-in defaults (audience only)
@@ -124,7 +126,7 @@ steps:
       # Using default URL and audience from agent environment
       - chinmina/chinmina-token#v1.4.0:
           environment:
-            - GITHUB_TOKEN=pipeline:release        # pipeline profile
+            - GITHUB_TOKEN=pipeline:release # pipeline profile
             - GITHUB_NPM_TOKEN=org:npm-packages # organization profile
 ```
 
@@ -168,13 +170,13 @@ gh release download --repo "${repo}" \
 
 #### When to use each approach
 
-| Use Case | Recommended Approach |
-|----------|---------------------|
-| Static token needs known upfront | `environment` array (declarative) |
-| Multiple tokens for different services | `environment` array |
-| Dynamic profile selection | `chinmina_token` script |
-| Conditional token logic | `chinmina_token` script |
-| Token needed only in specific conditions | `chinmina_token` script |
+| Use Case                                 | Recommended Approach              |
+| ---------------------------------------- | --------------------------------- |
+| Static token needs known upfront         | `environment` array (declarative) |
+| Multiple tokens for different services   | `environment` array               |
+| Dynamic profile selection                | `chinmina_token` script           |
+| Conditional token logic                  | `chinmina_token` script           |
+| Token needed only in specific conditions | `chinmina_token` script           |
 
 ## Using Git credentials for authentication
 
@@ -235,6 +237,7 @@ When using `exclusive: true`, ensure the specified profile (or default profile i
 :::
 
 Use `exclusive: true` when:
+
 - System-level credential helpers interfere with pipeline-specific authentication
 - You need to ensure only Chinmina-vended tokens are used for GitHub operations
 - Operating in shared CI environments where credential helper precedence is unclear
