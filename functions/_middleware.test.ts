@@ -55,7 +55,7 @@ describe("markdown content negotiation middleware", () => {
       headers: { Accept: "text/markdown" },
     })
 
-    const _response = await onRequest(context)
+    await onRequest(context)
 
     expect(context.next).toHaveBeenCalled()
   })
@@ -65,7 +65,7 @@ describe("markdown content negotiation middleware", () => {
       headers: { Accept: "text/markdown" },
     })
 
-    const _response = await onRequest(context)
+    await onRequest(context)
 
     expect(context.next).toHaveBeenCalled()
   })
@@ -110,7 +110,7 @@ describe("markdown content negotiation middleware", () => {
   it("passes through when no Accept header is present", async () => {
     const context = createContext("https://example.com/contributing")
 
-    const _response = await onRequest(context)
+    await onRequest(context)
 
     expect(context.next).toHaveBeenCalled()
   })
