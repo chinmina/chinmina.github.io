@@ -107,6 +107,27 @@ describe("markdown content negotiation middleware", () => {
     expect(response.headers.get("Location")).toBe("/contributing.md?ref=footer")
   })
 
+  it("strips trailing slash before redirecting", async () => {
+    const context = createContext("https://example.com/contributing/", {
+      headers: { Accept: "text/markdown" },
+    })
+
+    const response = await onRequest(context)
+
+    expect(response.status).toBe(302)
+    expect(response.headers.get("Location")).toBe("/contributing.md")
+  })
+
+  it("passes through when URL with trailing slash has a file extension", async () => {
+    const context = createContext("https://example.com/styles/main.css/", {
+      headers: { Accept: "text/markdown" },
+    })
+
+    await onRequest(context)
+
+    expect(context.next).toHaveBeenCalled()
+  })
+
   it("passes through when no Accept header is present", async () => {
     const context = createContext("https://example.com/contributing")
 
