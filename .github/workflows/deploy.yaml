@@ -47,7 +47,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment:
-      name: cloudflare-pages
+      name: cloudflare
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
