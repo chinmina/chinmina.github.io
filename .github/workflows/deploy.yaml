@@ -76,7 +76,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_OUTPUT_FILE_DIRECTORY: .wrangler-output
-        run: pnpm wrangler pages deploy dist --project-name=chinmina
+        run: pnpm wrangler pages deploy dist --project-name=chinmina --branch=${{ github.head_ref || github.ref_name }}
 
       - name: Extract deployment URL
         id: cf-url
