@@ -67,7 +67,7 @@ const sidebar = [
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://chinmina.github.io",
+  site: "https://docs.chinmina.dev",
   trailingSlash: "never",
 
   integrations: [
