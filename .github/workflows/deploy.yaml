@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: cloudflare
+      url: ${{ steps.cf-url.outputs.value }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -77,6 +78,17 @@ jobs:
           WRANGLER_OUTPUT_FILE_DIRECTORY: .wrangler-output
         run: pnpm wrangler pages deploy dist --project-name=chinmina
 
+      - name: Extract deployment URL
+        id: cf-url
+        if: always() && steps.deploy.outcome == 'success'
+        run: |
+          url=$(cat .wrangler-output/wrangler-output-*.json 2>/dev/null \
+            | jq -r 'select(.type == "pages-deploy-detailed") | .url // empty' \
+            | head -1)
+          echo "value=${url}" >> "$GITHUB_OUTPUT"
+          echo "### Cloudflare Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "**URL:** ${url}" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Post PR comment
         if: github.event_name == 'pull_request'
         env:
@@ -84,14 +96,6 @@ jobs:
           WRANGLER_OUTPUT_FILE_DIRECTORY: .wrangler-output
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: .github/scripts/cloudflare-deploy.sh comment
-
-      - name: Create GitHub deployment
-        if: always() && steps.deploy.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WRANGLER_OUTPUT_FILE_DIRECTORY: .wrangler-output
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: .github/scripts/cloudflare-deploy.sh deployment
 
   deploy:
     needs: build
