@@ -101,7 +101,7 @@ cmd_comment() {
 
   alias_url=$(jq -r '.alias // empty' <<< "${entry}" 2>/dev/null)
 
-  body="
+  body="<!-- cf-branch-preview -->
 ### Branch preview
 
 🔗 [${alias_url}](${alias_url}) ([direct commit link](${url}))
@@ -111,7 +111,7 @@ cmd_comment() {
   local existing_comment
   existing_comment=$(
     gh api "repos/${GITHUB_REPOSITORY}/issues/${pr}/comments" \
-      --jq '.[] | select(.body | contains("### Branch preview")) | .id' \
+      --jq '.[] | select(.body | contains("<!-- cf-branch-preview -->")) | .id' \
       2>/dev/null | head -n1
   ) || true
 
