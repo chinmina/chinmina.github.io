@@ -98,13 +98,13 @@ cmd_comment() {
   [[ -z "${url}" ]] && die "could not extract deployment URL from wrangler output"
 
   local body
-  body="**Cloudflare Preview**"$'\n\n'"🔗 ${url}"
+  body="**Cloudflare Preview**"$'\n\n'"🔗 <a href=\"${url}\" target=\"_blank\">${url}</a>"
 
   # Include alias URL for Pages deployments.
   local alias_url
   alias_url=$(jq -r '.alias // empty' <<< "${entry}" 2>/dev/null)
   if [[ -n "${alias_url}" ]]; then
-    body+=$'\n'"🔀 ${alias_url} (branch alias)"
+    body+=$'\n'"🔀 <a href=\"${alias_url}\" target=\"_blank\">${alias_url}</a> (branch alias)"
   fi
 
   # Look for an existing comment to update (avoids spamming on repeated pushes).
