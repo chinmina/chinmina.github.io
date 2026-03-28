@@ -50,6 +50,15 @@ function flattenSlugs(items) {
 }
 
 /**
+ * Compute the output path for a source file, flattening index pages.
+ * `contributing/index.mdx` → `contributing.md`, `index.mdx` → `index.md`,
+ * `getting-started.mdx` → `getting-started.md`.
+ */
+export function buildOutputPath(file) {
+  return file.replace(/(?:\/index)?\.(mdx|md)$/, ".md")
+}
+
+/**
  * Generate llms.txt content from the sidebar config and page frontmatter cache.
  *
  * @param {object} opts
@@ -60,7 +69,7 @@ function flattenSlugs(items) {
  * @param {string} opts.docsDir  absolute path to src/content/docs
  * @param {Map<string, {title?: string, description?: string}>} pageCache  slug → metadata
  */
-async function generateLlmsTxt({
+export async function generateLlmsTxt({
   siteTitle,
   siteDescription,
   sidebar,
@@ -98,8 +107,7 @@ async function generateLlmsTxt({
       const meta = pageCache.get(slug)
       const title = meta?.title ?? slug
       const description = meta?.description
-      // Index pages live at [slug]/index.md, not [slug].md
-      const mdFile = meta?._isIndex ? `${slug}/index.md` : `${slug}.md`
+      const mdFile = `${slug}.md`
       const url = `${siteUrl}/${mdFile}`
       lines.push(
         description
@@ -202,11 +210,10 @@ export default function markdownPages({
           const fields = frontmatterBlock
             ? parseFrontmatterFields(frontmatterBlock)
             : {}
-          pageCache.set(slug, { ...fields, _isIndex: isIndex })
+          pageCache.set(slug, fields)
 
           const transformed = await transformMarkdown(content, { isMdx })
-          const outRelative = isMdx ? file.replace(/\.mdx$/, ".md") : file
-          const outPath = join(distDir, outRelative)
+          const outPath = join(distDir, buildOutputPath(file))
 
           mkdirSync(dirname(outPath), { recursive: true })
           writeFileSync(outPath, transformed, "utf8")
