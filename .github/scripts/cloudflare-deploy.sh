@@ -91,27 +91,27 @@ cmd_comment() {
   local pr="${PR_NUMBER:?PR_NUMBER must be set}"
 
   local entry
-  entry=$(read_deploy_output)
-
   local url
+  local alias_url
+  local body
+
+  entry=$(read_deploy_output)
   url=$(extract_url "${entry}")
   [[ -z "${url}" ]] && die "could not extract deployment URL from wrangler output"
 
-  local body
-  body="**Cloudflare Preview**"$'\n\n'"🔗 <a href=\"${url}\" target=\"_blank\">${url}</a>"
-
-  # Include alias URL for Pages deployments.
-  local alias_url
   alias_url=$(jq -r '.alias // empty' <<< "${entry}" 2>/dev/null)
-  if [[ -n "${alias_url}" ]]; then
-    body+=$'\n'"🔀 <a href=\"${alias_url}\" target=\"_blank\">${alias_url}</a> (branch alias)"
-  fi
+
+  body="
+### Branch preview
+
+🔗 [${alias_url}](${alias_url}) ([direct commit link](${url}))
+"
 
   # Look for an existing comment to update (avoids spamming on repeated pushes).
   local existing_comment
   existing_comment=$(
     gh api "repos/${GITHUB_REPOSITORY}/issues/${pr}/comments" \
-      --jq '.[] | select(.body | startswith("**Cloudflare Preview**")) | .id' \
+      --jq '.[] | select(.body | contains("### Branch preview")) | .id' \
       2>/dev/null | head -n1
   ) || true
 
