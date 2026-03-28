@@ -5,10 +5,7 @@ import Default from "@astrojs/starlight/components/SocialIcons.astro"
 const entry = Astro.locals.starlightRoute?.entry
 let mdPath: string | null = null
 if (entry != null) {
-  const isIndex = entry.filePath?.endsWith("/index.md") || entry.filePath?.endsWith("/index.mdx")
-  mdPath = isIndex
-    ? (entry.id ? `/${entry.id}/index.md` : `/index.md`)
-    : `/${entry.id}.md`
+  mdPath = entry.id ? `/${entry.id}.md` : `/index.md`
 }
 ---
 
