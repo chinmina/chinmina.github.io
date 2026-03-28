@@ -50,6 +50,29 @@ function flattenSlugs(items) {
 }
 
 /**
+ * Try to read a source file for the given base path. Tries {base}.mdx,
+ * {base}.md, {base}/index.mdx, {base}/index.md in order.
+ * Returns { content, isMdx } or null if nothing found.
+ */
+export function resolveSourceFile(srcBase) {
+  const candidates = [
+    { path: `${srcBase}.mdx`, isMdx: true },
+    { path: `${srcBase}.md`, isMdx: false },
+    { path: `${srcBase}/index.mdx`, isMdx: true },
+    { path: `${srcBase}/index.md`, isMdx: false },
+  ]
+  for (const { path, isMdx } of candidates) {
+    try {
+      const content = readFileSync(path, "utf8")
+      return { content, isMdx }
+    } catch {
+      // try next candidate
+    }
+  }
+  return null
+}
+
+/**
  * Compute the output path for a source file, flattening index pages.
  * `contributing/index.mdx` → `contributing.md`, `index.mdx` → `index.md`,
  * `getting-started.mdx` → `getting-started.md`.
@@ -165,20 +188,14 @@ export default function markdownPages({
             return next()
           }
 
-          let content, isMdx
-          try {
-            try {
-              content = readFileSync(`${srcBase}.mdx`, "utf8")
-              isMdx = true
-            } catch {
-              content = readFileSync(`${srcBase}.md`, "utf8")
-              isMdx = false
-            }
-          } catch {
+          const resolved = resolveSourceFile(srcBase)
+          if (!resolved) {
             return next()
           }
 
-          const transformed = await transformMarkdown(content, { isMdx })
+          const transformed = await transformMarkdown(resolved.content, {
+            isMdx: resolved.isMdx,
+          })
           res.setHeader("Content-Type", "text/markdown; charset=utf-8")
           res.end(transformed)
         })
