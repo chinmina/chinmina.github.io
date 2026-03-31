@@ -192,7 +192,7 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
    keyset with the KMS key during creation — no plaintext keyset is written to
    disk. The URI can reference a key alias or a full key ARN:
 
-   ```bash title="Generate an encrypted Tink keyset" /aws-kms/
+   ```bash title="Generate an encrypted Tink keyset" /aws-kms:\S+/
    tinkey create-keyset \
      --key-template AES256_GCM \
      --out-format json \
@@ -243,7 +243,7 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
 3. Set the KMS key URI for envelope decryption. Use the `aws-kms://` scheme
    followed by the key ARN or alias ARN:
 
-   ```bash /aws-kms/
+   ```bash /aws-kms:\S+/
    CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI=aws-kms://arn:aws:kms:us-east-1:123456789012:alias/chinmina-cache-encryption
    ```
 
@@ -289,7 +289,7 @@ T+150min  Stage 3 (optional) — Disable old key
 
 2. Add a new key to the keyset. The `add-key` command adds a new key without promoting it to primary — the existing primary key continues to be used for encryption:
 
-   ```bash title="Add a new key to the keyset" /aws-kms/
+   ```bash title="Add a new key to the keyset" /aws-kms:\S+/
    tinkey add-key \
      --in current-keyset.json \
      --out stage1-keyset.json \
@@ -317,7 +317,7 @@ Wait an additional 60 minutes after stage 1 completes (75 minutes from the start
 
 1. Promote the new key to primary. Find the new key's ID from the keyset metadata:
 
-   ```bash title="Promote the new key to primary" /aws-kms/
+   ```bash title="Promote the new key to primary" /aws-kms:\S+/
    tinkey promote-key \
      --in stage1-keyset.json \
      --out stage2-keyset.json \
@@ -341,7 +341,7 @@ Wait an additional 60 minutes after stage 1 completes (75 minutes from the start
 
 After another cache TTL cycle (at least 60 minutes after stage 2), all tokens encrypted with the old key have expired. The old key can be safely disabled.
 
-```bash title="Disable the old key" /aws-kms/
+```bash title="Disable the old key" /aws-kms:\S+/
 tinkey disable-key \
   --in stage2-keyset.json \
   --out final-keyset.json \
