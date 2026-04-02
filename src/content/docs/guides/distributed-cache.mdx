@@ -127,10 +127,11 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
    rotation and set the deletion window to 30 days. Follow the
    [KMS key creation guide][kms-create-key] for detailed instructions.
 
-   Save the key ARN as <Later name="CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI" />.
+   Save the key ARN or alias ARN as <Later name="CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI" />.
 
 2. Create an alias for the key, for example `alias/chinmina-cache-encryption`.
-   A key alias simplifies key rotation and policy management.
+   A key alias simplifies key rotation and policy management. The alias ARN
+   can be used anywhere a key ARN is accepted in the Chinmina configuration.
 
 3. Update the key policy to allow the Chinmina execution role to decrypt:
 
@@ -146,8 +147,10 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
    }
    ```
 
-4. Create a Secrets Manager secret to hold the encrypted Tink keyset. Use a
-   naming convention such as `/chinmina-bridge/{environment}/tink-keyset`:
+4. Create a Secrets Manager secret to hold the encrypted Tink keyset. Choose an
+   encryption key for the secret value itself (this is separate from the KMS key
+   used for the Tink keyset envelope encryption). Use a naming convention such
+   as `/chinmina-bridge/{environment}/tink-keyset`:
 
    ```bash title="Create the Secrets Manager secret"
    aws secretsmanager create-secret \
@@ -155,7 +158,7 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
      --description "Encrypted Tink AEAD keyset for Chinmina cache encryption"
    ```
 
-   Save the secret name as <Later name="CACHE_ENCRYPTION_KEYSET_URI" />.
+   Save the secret name or ARN as <Later name="CACHE_ENCRYPTION_KEYSET_URI" />.
    The keyset content will be uploaded in the next section.
 
 5. Grant the Chinmina execution role access to read the secret:
@@ -185,31 +188,21 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
 1. Install the `tinkey` CLI by following the [Tink installation
    instructions][tinkey-install].
 
-2. Generate an AEAD keyset:
+2. Generate an encrypted AEAD keyset. The `--master-key-uri` flag encrypts the
+   keyset with the KMS key during creation — no plaintext keyset is written to
+   disk. The URI can reference a key alias or a full key ARN:
 
-   ```bash title="Generate a new Tink keyset"
+   ```bash title="Generate an encrypted Tink keyset" /aws-kms:\S+/
    tinkey create-keyset \
      --key-template AES256_GCM \
      --out-format json \
-     --out plaintext-keyset.json
-   ```
-
-3. Encrypt the keyset with the KMS key:
-
-   ```bash title="Encrypt the keyset" /aws-kms/
-   tinkey encrypt-keyset \
-     --in plaintext-keyset.json \
      --out encrypted-keyset.json \
-     --master-key-uri aws-kms://arn:aws:kms:us-east-1:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef
+     --master-key-uri aws-kms://arn:aws:kms:us-east-1:123456789012:alias/chinmina-cache-encryption
    ```
 
-4. Delete the plaintext keyset:
-
-   ```bash title="Delete the plaintext keyset"
-   shred -u plaintext-keyset.json
-   ```
-
-5. Upload the encrypted keyset to the Secrets Manager secret:
+3. Upload the encrypted keyset to the Secrets Manager secret created in the
+   previous section. The secret must already exist — `put-secret-value` sets the
+   value of an existing secret, it does not create one:
 
    ```bash title="Upload the encrypted keyset"
    aws secretsmanager put-secret-value \
@@ -221,13 +214,6 @@ Cache encryption uses [Tink][tink] for AEAD (Authenticated Encryption with Assoc
 
 </Steps>
 
-<Aside type="caution">
-
-The plaintext keyset contains the raw AES-256-GCM encryption key. Delete it
-immediately after encrypting. Do not commit it to version control.
-
-</Aside>
-
 ### Configure Chinmina to use the keyset
 
 <Steps>
@@ -238,18 +224,27 @@ immediately after encrypting. Do not commit it to version control.
    CACHE_ENCRYPTION_ENABLED=true
    ```
 
-2. Set the Secrets Manager URI for the keyset. Use the `aws-secretsmanager://`
-   scheme followed by the secret name:
+2. Set the Secrets Manager URI for the keyset. The `aws-secretsmanager://`
+   prefix is stripped, and the remainder is passed directly as the `SecretId` to
+   the GetSecretValue API. Since that API accepts either a secret name or a full
+   ARN, both formats work:
 
-   ```bash
-   CACHE_ENCRYPTION_KEYSET_URI=aws-secretsmanager://chinmina-bridge/production/tink-keyset
+   ```bash title="Using the secret name"
+   CACHE_ENCRYPTION_KEYSET_URI=aws-secretsmanager:///chinmina-bridge/production/tink-keyset
    ```
 
-3. Set the KMS key URI for envelope decryption. Use the `aws-kms://` scheme
-   followed by the full key ARN:
+   ```bash title="Using the full ARN"
+   CACHE_ENCRYPTION_KEYSET_URI=aws-secretsmanager://arn:aws:secretsmanager:us-east-1:123456789012:secret:/chinmina-bridge/production/tink-keyset-Ab1CdE
+   ```
 
-   ```bash /aws-kms/
-   CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI=aws-kms://arn:aws:kms:us-east-1:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef
+   The name form is simpler and sufficient unless you need to reference a secret
+   in a different account or region.
+
+3. Set the KMS key URI for envelope decryption. Use the `aws-kms://` scheme
+   followed by the key ARN or alias ARN:
+
+   ```bash /aws-kms:\S+/
+   CACHE_ENCRYPTION_KMS_ENVELOPE_KEY_URI=aws-kms://arn:aws:kms:us-east-1:123456789012:alias/chinmina-cache-encryption
    ```
 
 4. On startup, Chinmina performs a test encrypt/decrypt cycle. If the keyset or
@@ -294,7 +289,7 @@ T+150min  Stage 3 (optional) — Disable old key
 
 2. Add a new key to the keyset. The `add-key` command adds a new key without promoting it to primary — the existing primary key continues to be used for encryption:
 
-   ```bash title="Add a new key to the keyset" /aws-kms/
+   ```bash title="Add a new key to the keyset" /aws-kms:\S+/
    tinkey add-key \
      --in current-keyset.json \
      --out stage1-keyset.json \
@@ -322,7 +317,7 @@ Wait an additional 60 minutes after stage 1 completes (75 minutes from the start
 
 1. Promote the new key to primary. Find the new key's ID from the keyset metadata:
 
-   ```bash title="Promote the new key to primary" /aws-kms/
+   ```bash title="Promote the new key to primary" /aws-kms:\S+/
    tinkey promote-key \
      --in stage1-keyset.json \
      --out stage2-keyset.json \
@@ -346,7 +341,7 @@ Wait an additional 60 minutes after stage 1 completes (75 minutes from the start
 
 After another cache TTL cycle (at least 60 minutes after stage 2), all tokens encrypted with the old key have expired. The old key can be safely disabled.
 
-```bash title="Disable the old key" /aws-kms/
+```bash title="Disable the old key" /aws-kms:\S+/
 tinkey disable-key \
   --in stage2-keyset.json \
   --out final-keyset.json \
