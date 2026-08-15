@@ -14,14 +14,22 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "useBlockStatements": "error"
       }
     }
   },
   "files": {
-    "includes": ["**", "!.astro", "!.claude", "!.github", "!.vscode", "!dist"]
+    "includes": [
+      "**",
+      "!.astro",
+      "!.claude",
+      "!.github",
+      "!.vscode",
+      "!dist",
+      "!public"
+    ]
   },
   "overrides": [
     {
