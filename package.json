@@ -16,23 +16,24 @@
     "fmt:check": "biome format"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.8",
-    "@astrojs/starlight": "^0.38.2",
-    "astro": "^6.0.8",
-    "astro-d2": "^0.10.0",
-    "sharp": "^0.34.5",
-    "starlight-heading-badges": "^0.7.0",
-    "typescript": "^5.9.3"
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-remark": "^7.2.2",
+    "@astrojs/starlight": "^0.41.7",
+    "astro": "^7.2.2",
+    "astro-d2": "^0.13.1",
+    "sharp": "^0.35.3",
+    "starlight-heading-badges": "^0.8.0",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.8",
-    "remark-directive": "^3.0.0",
+    "@biomejs/biome": "^2.5.8",
+    "remark-directive": "^4.0.0",
     "remark-mdx": "^3.1.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
-    "vitest": "^3.0.0",
-    "wrangler": "^4.77.0"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.123.0"
   },
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
 }

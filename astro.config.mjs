@@ -1,5 +1,6 @@
 // @ts-check
 
+import { unified } from "@astrojs/markdown-remark"
 import starlight from "@astrojs/starlight"
 import { defineConfig } from "astro/config"
 import d2 from "astro-d2"
@@ -61,7 +62,7 @@ const sidebar = [
   },
   {
     label: "Contributing",
-    autogenerate: { directory: "contributing" },
+    items: [{ autogenerate: { directory: "contributing" } }],
   },
 ]
 
@@ -69,6 +70,10 @@ const sidebar = [
 export default defineConfig({
   site: "https://docs.chinmina.dev",
   trailingSlash: "never",
+
+  markdown: {
+    processor: unified(),
+  },
 
   integrations: [
     starlight({
