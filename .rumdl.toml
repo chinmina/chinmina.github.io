@@ -18,10 +18,9 @@ respect-gitignore = true
 # Ratchet candidates: currently violated by a handful of files, not yet
 # fixed. Re-enable one rule at a time, fix its violations, and remove it
 # from this list in its own commit.
-# - MD033, MD036
+# - MD033
 disable = [
   "MD013",
   "MD001",
   "MD033",
-  "MD036",
 ]
