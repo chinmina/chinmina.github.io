@@ -17,7 +17,7 @@ Distributed traces track request execution through the system. Chinmina creates 
 
 Traces show parent-child relationships between operations, timing information, and error details.
 
-See [traces reference](traces) for complete span documentation.
+See [traces reference](/reference/telemetry/traces) for complete span documentation.
 
 ### Metrics
 
@@ -29,7 +29,7 @@ Metrics provide quantitative measurements of system behavior. Chinmina collects 
 
 Metrics include dimensional attributes for filtering and aggregation.
 
-See [metrics reference](metrics) for complete metric documentation.
+See [metrics reference](/reference/telemetry/metrics) for complete metric documentation.
 
 ## Exporters
 
@@ -60,6 +60,6 @@ Context propagation enables distributed tracing across service boundaries. Incom
 
 ## Configuration
 
-For configuration instructions, see the [observability guide](../../guides/observability).
+For configuration instructions, see the [observability guide](/guides/observability).
 
-For complete configuration reference, see the [configuration reference](../configuration).
+For complete configuration reference, see the [configuration reference](/reference/configuration).

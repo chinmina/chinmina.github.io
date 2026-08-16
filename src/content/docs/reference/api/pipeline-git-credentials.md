@@ -9,12 +9,12 @@ Buildkite OIDC tokens.
 
 The profile parameter selects the pipeline profile that will be used when
 creating the token using permissions defined by the specified [pipeline
-profile](../profiles/pipeline).
+profile](/reference/profiles/pipeline).
 
 The reserved profile name `default` is always available. The default profile can
 be requested via `POST /git-credentials/default` or `POST /git-credentials`.
 Permissions for the `default` profile [can be
-changed](../profiles/pipeline#default) but `match` rules cannot be added.
+changed](/reference/profiles/pipeline#defaults) but `match` rules cannot be added.
 
 ## Purpose
 
@@ -25,7 +25,7 @@ act as a Git credential helper, enabling transparent authentication for Git
 operations without requiring separate credential extraction and configuration
 steps.
 
-See the [Buildkite integration guide](../../guides/buildkite-integration) for
+See the [Buildkite integration guide](/guides/buildkite-integration) for
 details on how this endpoint is used in practice.
 
 :::note
@@ -95,7 +95,7 @@ parses this and uses the credentials for the requested operation.
 
 When the requested repository does not match the pipeline's repository, the
 endpoint returns a successful but empty response. See [Git credentials
-format](../../reference/git-credentials-format#empty-response) for details on
+format](/reference/git-credentials-format#empty-response) for details on
 empty response behavior.
 
 ### Error responses
@@ -111,4 +111,4 @@ Error responses are returned in plain text. Any response that Git does not
 recognize as valid for the format is regarded as an error and discarded. Note
 that the server will never return client content as part of an error message.
 
-[helper-protocol]: ../git-credentials-format
+[helper-protocol]: /reference/git-credentials-format

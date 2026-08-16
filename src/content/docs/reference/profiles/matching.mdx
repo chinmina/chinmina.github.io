@@ -7,7 +7,7 @@ import { Aside } from "@astrojs/starlight/components"
 
 Profile matching restricts access to specific Buildkite pipelines using claim-based rules. Match rules evaluate JWT claims from the Buildkite OIDC token against configured patterns, providing fine-grained access control.
 
-Both [pipeline profiles](pipeline) and [organization profiles](organization) support the same matching syntax.
+Both [pipeline profiles](/reference/profiles/pipeline) and [organization profiles](/reference/profiles/organization) support the same matching syntax.
 
 ## Match rule syntax
 
@@ -173,7 +173,7 @@ match:
 Pipeline doesn't match profile conditions.
 
 The HTTP response returns a generic "Forbidden" message. Check [audit
-logs](../auditing) for `token.attemptedPatterns` to see which condition failed
+logs](/reference/auditing) for `token.attemptedPatterns` to see which condition failed
 and the `error` field for detailed information. Verify the pipeline's claim
 values match the configured patterns.
 
