@@ -42,9 +42,13 @@ number is somewhat higher than might otherwise be usual.
 
 An optional path prefix (e.g. `/api/v1`) to serve all routes under, for
 deployments that sit behind a reverse proxy which forwards the full
-original path rather than rewriting it. Must start with `/`, must not end
-with `/`, and must not contain `//`; the server fails to start on an
-invalid value.
+original path rather than rewriting it.
+
+The value is normalised on startup. Surrounding whitespace is trimmed, a
+leading `/` is added when missing, and trailing slashes are removed. A value
+that normalises to empty, such as `/` or `///`, means no prefix is applied.
+The server fails to start only when `//` remains after normalisation, as in
+`//api` or `/api//v1`.
 
 A request path that does not start with the configured prefix (matched on a
 segment boundary, so `SERVER_BASE_PATH=/api` does not match `/apiary`)
