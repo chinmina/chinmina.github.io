@@ -29,7 +29,7 @@ deployments from a handful to hundreds of repositories.
    store and refresh: it's entirely automatic.
 
 2. Tokens with wider permissions can be supplied using
-   [profiles](guides/customizing-permissions), with the same lifetime and
+   [profiles](/guides/customizing-permissions), with the same lifetime and
    protections as the default access tokens.
 
 3. Issuing [deploy keys per
@@ -43,10 +43,10 @@ deployments from a handful to hundreds of repositories.
    GitHub.
 
 5. With KMS, the highly sensitive private key cannot be extracted. When
-   configured [as described in our guide](guides/kms), the Chinmina service uses
+   configured [as described in our guide](/guides/kms), the Chinmina service uses
    KMS to sign the GitHub JWT, and never has access to the raw key material.
 
-6. [Audit-friendly logs are written](reference/auditing) for each token
+6. [Audit-friendly logs are written](/reference/auditing) for each token
    request, whether successful or unsuccessful. These can be readily connected
    to your SIEM system, adding transparency and traceability to the system.
 
@@ -55,8 +55,8 @@ deployments from a handful to hundreds of repositories.
 1. Pipelines are automatically given access to the repository they're configured
    for.
 
-2. Via [profiles](guides/customizing-permissions) with their flexible [matching
-   rules](reference/profiles/matching), additional sets of permissions can be
+2. Via [profiles](/guides/customizing-permissions) with their flexible [matching
+   rules](/reference/profiles/matching), additional sets of permissions can be
    declared centrally and accessed as required.
 
 3. Chinmina is a straightforward Go application in a minimal container with
@@ -75,7 +75,7 @@ deployments from a handful to hundreds of repositories.
 3. The private key for the GitHub application is extremely powerful, and needs
    to be carefully protected. It has the superset of permissions that it can
    delegate. Storing the key in AWS KMS and using careful resource and IAM
-   policies on access is therefore [strongly recommended](guides/kms).
+   policies on access is therefore [strongly recommended](/guides/kms).
 
 4. Adequate controls are required on Buildkite pipeline creation. At present,
    the bridge will allow access by the pipeline to the configured repository.
@@ -119,7 +119,7 @@ their own, useful for shared resources like private Buildkite plugins or
 Homebrew taps. Organization profiles use the `/organization/token/{profile}` and
 `/organization/git-credentials/{profile}` routes.
 
-Both profile types can optionally [restrict access](reference/profiles/matching)
+Both profile types can optionally [restrict access](/reference/profiles/matching)
 to specific pipelines via claim matching.
 
 ## Endpoints

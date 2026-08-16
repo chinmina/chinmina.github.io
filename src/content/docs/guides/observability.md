@@ -5,7 +5,7 @@ description: Using OpenTelemetry and logging to understand and diagnose Chinmina
 
 Chinmina produces traces and metrics via OpenTelemetry, and logs to stdout in JSON format.
 
-For audit log details, see the [auditing reference](../reference/auditing). For complete telemetry technical details, see the [telemetry reference](../reference/telemetry).
+For audit log details, see the [auditing reference](/reference/auditing). For complete telemetry technical details, see the [telemetry reference](/reference/telemetry).
 
 ## Enabling OpenTelemetry
 
@@ -42,7 +42,7 @@ OBSERVE_ENABLED=true
 OBSERVE_TYPE=stdout
 ```
 
-See the [configuration reference](../reference/configuration) for all `OBSERVE_*` variables, including collector settings, batch timeouts, and metric read intervals.
+See the [configuration reference](/reference/configuration) for all `OBSERVE_*` variables, including collector settings, batch timeouts, and metric read intervals.
 
 ## Critical user journeys
 
@@ -184,7 +184,7 @@ Internal span: refresh_organization_profile
 - Consolidate repository access patterns
 - Review profile match conditions
 - Consider organizational endpoint usage
-- Enable the [distributed cache](./distributed-cache) to share tokens across replicas
+- Enable the [distributed cache](/guides/distributed-cache) to share tokens across replicas
 
 ### Cache encryption errors
 
@@ -203,7 +203,7 @@ Internal span: refresh_organization_profile
 **Remediation:**
 
 - Prefix errors during encryption rollout are expected — unencrypted entries resolve as cached tokens expire (within 15 minutes)
-- Decryption failures after key rotation: verify the rotation procedure in the [distributed cache guide](./distributed-cache) and confirm the old primary key was not disabled before cached tokens expired
+- Decryption failures after key rotation: verify the rotation procedure in the [distributed cache guide](/guides/distributed-cache) and confirm the old primary key was not disabled before cached tokens expired
 - Keyset refresh warnings: verify IAM permissions for Secrets Manager and KMS, then check service health
 - Persistent errors with no configuration changes: check Valkey connectivity and data integrity
 
@@ -229,6 +229,6 @@ OBSERVE_PYROSCOPE_BASIC_AUTH_USER=123456
 OBSERVE_PYROSCOPE_BASIC_AUTH_PASSWORD=glc_...
 ```
 
-See the [configuration reference](../reference/configuration#pyroscope-continuous-profiling) for all `OBSERVE_PYROSCOPE_*` variables.
+See the [configuration reference](/reference/configuration#pyroscope-continuous-profiling) for all `OBSERVE_PYROSCOPE_*` variables.
 
 [pyroscope]: https://grafana.com/oss/pyroscope/
