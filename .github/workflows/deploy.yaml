@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      deployments: write
       pull-requests: write
     environment:
       name: cloudflare
@@ -81,8 +82,14 @@ jobs:
             | jq -r 'select(.type == "pages-deploy-detailed") | .url // empty' \
             | head -1)
           echo "value=${url}" >> "$GITHUB_OUTPUT"
-          echo "### Cloudflare Pages" >> "$GITHUB_STEP_SUMMARY"
-          echo "**URL:** ${url}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create deployment record
+        if: always() && steps.deploy.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WRANGLER_OUTPUT_FILE_DIRECTORY: .wrangler-output
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: .github/scripts/cloudflare-deploy.sh deployment
 
       - name: Post PR comment
         if: github.event_name == 'pull_request'
