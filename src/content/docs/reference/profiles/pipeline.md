@@ -43,9 +43,9 @@ Profile identifier used in API requests. The name `default` is reserved and cann
 
 ###### `match`
 
-_(optional)_
-
-Claim matching rules that restrict which pipelines can use this profile. Omit this field entirely to make the profile available to all pipelines.
+Optional claim matching rules that restrict which pipelines can use this
+profile. Omit this field entirely to make the profile available to all
+pipelines.
 
 See the [profile matching reference](/reference/profiles/matching) for complete details on:
 
