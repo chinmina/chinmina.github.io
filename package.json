@@ -8,7 +8,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "agent": "biome check --write --unsafe && rumdl fmt && vitest run && pnpm run build",
+    "agent": "biome check --write --unsafe && rumdl check --fix && vitest run && pnpm run build",
     "test": "vitest run",
     "lint": "biome lint",
     "lint:fix": "biome lint --write --unsafe",
