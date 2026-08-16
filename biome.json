@@ -26,6 +26,7 @@
       "!.astro",
       "!.claude",
       "!.github",
+      "!.rumdl_cache",
       "!.vscode",
       "!dist",
       "!public"
