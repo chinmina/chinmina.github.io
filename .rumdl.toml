@@ -1,0 +1,32 @@
+[global]
+respect-gitignore = true
+
+# Disabled rules, split into two groups. Re-enabling any of these is a
+# separate, deliberate commit — see docs/prd-cloudflare-pages-migration.md
+# sibling notes or the PR description for the current ratchet plan.
+#
+# Permanent: conflicts with a documented convention in this repository.
+# - MD013 (line-length): prose is written one sentence/paragraph per line,
+#   not hard-wrapped at a column width. Wrapping would produce noisy diffs
+#   for a formatting rule this repo has never followed.
+# - MD001 (heading-increment): reference pages intentionally jump from H3
+#   to H6 for parameter documentation (see
+#   .claude/skills/docs/references/mdx-conventions.md, "Configuration
+#   Parameter Documentation"). Enforcing sequential levels would fight a
+#   deliberate pattern used across every reference page.
+#
+# All previously identified ratchet candidates (MD012, MD030, MD031,
+# MD032, MD033, MD034, MD036, MD039, MD040, MD053) have been re-enabled
+# and fixed, except for one MD033 exception below.
+disable = [
+  "MD013",
+  "MD001",
+]
+
+# getting-started.mdx defines a JSX component (`ConfigRef`) inline; its
+# <code>/<em> are JSX elements, not Markdown inline HTML. rumdl's inline
+# rumdl-disable comment can't be used here: MDX doesn't support raw HTML
+# comments at all (`<!-- -->` fails to parse), only MDX's `{/* */}` form,
+# which rumdl's inline configuration doesn't recognise.
+[per-file-ignores]
+"src/content/docs/guides/getting-started.mdx" = ["MD033"]
