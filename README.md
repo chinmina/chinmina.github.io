@@ -12,8 +12,9 @@ Contributions are welcome! Fork the repo and create a PR for review.
 
 ### Tooling
 
-1. [Node and D2](https://mise.jdx.dev/): `mise install`
-2. PNPM: `corepack enable && corepack install`
+1. [Mise](https://mise.jdx.dev/getting-started.html), which manages Node and D2: install the `mise` CLI, then activate it in your shell (`eval "$(mise activate bash)"`, or the equivalent for your shell) so its installed tools are put on your `PATH`.
+2. Run `mise install` to install Node and D2.
+3. PNPM: `corepack enable && corepack install`
 
 ### Run the dev server
 
