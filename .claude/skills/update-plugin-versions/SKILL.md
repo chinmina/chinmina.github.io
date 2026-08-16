@@ -26,6 +26,7 @@ First, fetch the latest versions from GitHub:
 ```
 
 **Output:** JSON with plugin names and versions
+
 ```json
 {
   "chinmina-token": "v1.3.1",
@@ -62,6 +63,7 @@ This shows bootstrap hooks, variable assignments, or other non-standard formats 
 ### 4. Manual Updates (LLM)
 
 For any references found in step 3:
+
 - Read the file to understand the format
 - Use Edit tool to update the version in context
 - The LLM adapts to whatever format is used (bash variables, etc.)
@@ -69,11 +71,13 @@ For any references found in step 3:
 ## Design Philosophy
 
 **Scripts encode deterministic actions:**
+
 - Fetching versions from GitHub
 - Replacing standard plugin#version format
 - Finding references with context
 
 **LLM handles contextual understanding:**
+
 - Understanding non-standard formats (bootstrap hooks, etc.)
 - Making targeted edits in appropriate context
 - Adapting to new patterns without script changes

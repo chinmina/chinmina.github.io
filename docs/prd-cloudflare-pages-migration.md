@@ -61,6 +61,7 @@ Deploy the site to Cloudflare Pages (project: `chinmina`) via the existing GitHu
 **GitHub Pages remains live**: GitHub Pages is not disabled as part of this work. It continues to receive deployments from `main` and serves the site at `chinmina.github.io` with canonical links pointing to `docs.chinmina.dev`. Decommissioning GitHub Pages is deferred to a future redirect-strategy workstream.
 
 **GitHub Actions secrets needed**:
+
 - `CLOUDFLARE_API_TOKEN` — scoped to Cloudflare Pages edit permissions
 - `CLOUDFLARE_ACCOUNT_ID` — the Cloudflare account hosting the `chinmina` project
 
