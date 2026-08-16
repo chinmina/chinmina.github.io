@@ -12,9 +12,8 @@ Contributions are welcome! Fork the repo and create a PR for review.
 
 ### Tooling
 
-1. Node: `mise install`
+1. [Node and D2](https://mise.jdx.dev/): `mise install`
 2. PNPM: `corepack enable && corepack install`
-3. [D2](https://d2lang.com/tour/install): `curl -fsSL https://d2lang.com/install.sh | sh -s --` (Check out [the install instructions](https://d2lang.com/tour/install) for more options.)
 
 ### Run the dev server
 

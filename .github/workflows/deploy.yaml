@@ -18,13 +18,8 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v6
-      - name: Install D2 diagramming tool
-        run: |
-          curl -fsSL https://d2lang.com/install.sh | sh -s --
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .tool-versions
+      - name: Install tools with mise
+        uses: jdx/mise-action@v3
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
@@ -48,10 +43,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .tool-versions
+      - name: Install tools with mise
+        uses: jdx/mise-action@v3
 
       - name: Enable corepack
         run: corepack enable
