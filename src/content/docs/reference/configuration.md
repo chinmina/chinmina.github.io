@@ -38,6 +38,18 @@ For outgoing HTTPS requests, the maximum connections that may be made per host.
 Given that Chinmina mainly targets Buildkite and GitHub API endpoints, this
 number is somewhat higher than might otherwise be usual.
 
+###### `SERVER_BASE_PATH`
+
+An optional path prefix (e.g. `/api/v1`) to serve all routes under, for
+deployments that sit behind a reverse proxy which forwards the full
+original path rather than rewriting it. Must start with `/`, must not end
+with `/`, and must not contain `//`; the server fails to start on an
+invalid value.
+
+A request path that does not start with the configured prefix (matched on a
+segment boundary, so `SERVER_BASE_PATH=/api` does not match `/apiary`)
+returns `404 Not Found`.
+
 ## Cache
 
 Chinmina caches GitHub access tokens to reduce API calls. By default, tokens are
@@ -220,7 +232,7 @@ supplied the `read_pipelines` scope.
 
 Either `GITHUB_APP_PRIVATE_KEY` or `GITHUB_APP_PRIVATE_KEY_ARN` is required.
 
-`GITHUB_APP_PRIVATE_KEY_ARN` is strongly recommended where possible (see [KMS configuration](../../guides/kms)).
+`GITHUB_APP_PRIVATE_KEY_ARN` is strongly recommended where possible (see [KMS configuration](/guides/kms)).
 
 :::
 
@@ -232,7 +244,7 @@ The GitHub Application private key in PEM format, supplied as text (not a file p
 
 The AWS KMS key (or alias) resource ARN that has been configured for use by Chinmina.
 
-See the [AWS KMS setup and configuration](../../guides/kms) guide for more details.
+See the [AWS KMS setup and configuration](/guides/kms) guide for more details.
 
 ###### `GITHUB_APP_ID` :badge[required]
 
@@ -363,7 +375,7 @@ variables available.
 :::
 
 [otel-exporter-config]: https://opentelemetry.io/docs/specs/otel/protocol/exporter/#configuration-options
-[profiles-config]: profiles/
-[pipeline-profile-config]: profiles/pipeline
-[org-profile-config]: profiles/organization
+[profiles-config]: /reference/profiles
+[pipeline-profile-config]: /reference/profiles/pipeline
+[org-profile-config]: /reference/profiles/organization
 [pyroscope]: https://grafana.com/oss/pyroscope/
