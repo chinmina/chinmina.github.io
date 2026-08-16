@@ -1,0 +1,14 @@
+# zizmor configuration
+#
+# https://docs.zizmor.sh/configuration/
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # The org's shared reusable workflows are trusted via the
+        # `verified-actions` branch, which is protected and reviewed.
+        # Pin to that branch rather than a hash so updates land
+        # automatically when the branch is fast-forwarded.
+        "chinmina/.github/*": ref-pin
+        "*": hash-pin
