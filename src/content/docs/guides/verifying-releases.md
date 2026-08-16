@@ -64,7 +64,7 @@ cosign verify "chinmina/chinmina-bridge:$TAG" \
 
 The path `.[].optional.Bundle.Payload.logIndex` is the index entry in the public
 transparency log, recording the details of the signing event. The details of the
-event can be found at: https://search.sigstore.dev/.
+event can be found at: <https://search.sigstore.dev/>.
 
 For a concrete example, check out the [log entry for
 v0.7.0](https://search.sigstore.dev/?logIndex=137373725).
