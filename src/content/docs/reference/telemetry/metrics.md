@@ -37,7 +37,7 @@ Size of the response body.
 
 When `OBSERVE_HTTP_TRANSPORT_ENABLED=true`, outgoing requests to Buildkite and GitHub APIs are wrapped with `otelhttp.NewTransport()`, producing client-side HTTP semantic convention metrics. These mirror the server metrics above with a `http.client.*` prefix.
 
-Connection-level trace attributes (DNS, TLS handshake timing) are added when `OBSERVE_CONNECTION_TRACE_ENABLED=true`. See [traces](./traces#connection-trace-attributes) for details.
+Connection-level trace attributes (DNS, TLS handshake timing) are added when `OBSERVE_CONNECTION_TRACE_ENABLED=true`. See [traces](/reference/telemetry/traces#connection-trace-attributes) for details.
 
 ## cache.operations
 
@@ -169,8 +169,8 @@ The `cache.type` attribute distinguishes between different cache instances. Curr
 
 For metric configuration details, see:
 
-- [Configuration reference](../configuration) for `OBSERVE_METRICS_*` variables
-- [Observability guide](../../guides/observability) for setup instructions
+- [Configuration reference](/reference/configuration) for `OBSERVE_METRICS_*` variables
+- [Observability guide](/guides/observability) for setup instructions
 
 [otelhttp]: https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 [semconv-http]: https://opentelemetry.io/docs/specs/semconv/http/http-metrics/

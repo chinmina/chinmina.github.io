@@ -5,6 +5,7 @@ import starlight from "@astrojs/starlight"
 import { defineConfig } from "astro/config"
 import d2 from "astro-d2"
 import starlightHeadingBadges from "starlight-heading-badges"
+import starlightLinksValidator from "starlight-links-validator"
 import markdownPages from "./src/integrations/markdown-pages.mjs"
 
 const sidebar = [
@@ -77,7 +78,7 @@ export default defineConfig({
 
   integrations: [
     starlight({
-      plugins: [starlightHeadingBadges()],
+      plugins: [starlightHeadingBadges(), starlightLinksValidator()],
 
       title: "Chinmina",
       logo: { src: "/src/assets/chinmina-logo-white.png", alt: "Chinmina" },

@@ -31,7 +31,7 @@ Default permissions applied to all pipeline token requests when no profile is sp
 
 ###### `permissions`
 
-List of GitHub permissions. The `metadata:read` permission is [automatically included](../profiles#automatic-permissions) in all tokens. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
+List of GitHub permissions. The `metadata:read` permission is [automatically included](/reference/profiles#automatic-permissions) in all tokens. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
 
 ##### `profiles`
 
@@ -47,7 +47,7 @@ _(optional)_
 
 Claim matching rules that restrict which pipelines can use this profile. Omit this field entirely to make the profile available to all pipelines.
 
-See the [profile matching reference](matching) for complete details on:
+See the [profile matching reference](/reference/profiles/matching) for complete details on:
 
 - Match rule syntax (exact vs regex matching)
 - Available claims
@@ -56,7 +56,7 @@ See the [profile matching reference](matching) for complete details on:
 
 ###### `permissions`
 
-GitHub permissions granted by this profile. The `metadata:read` permission is [automatically included](../profiles#automatic-permissions) in all tokens.
+GitHub permissions granted by this profile. The `metadata:read` permission is [automatically included](/reference/profiles#automatic-permissions) in all tokens.
 
 ### Example
 

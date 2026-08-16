@@ -5,7 +5,7 @@ description: Health check endpoint for monitoring Chinmina Bridge service availa
 
 The `GET /healthcheck` endpoint provides a simple mechanism to verify that the Chinmina Bridge service is running and accepting HTTP requests.
 
-For documentation of token-issuing endpoints, see [POST /token](./post-token), [POST /git-credentials](./git-credentials), and [Profile-Scoped Endpoints](./profile-scoped-endpoints).
+For documentation of token-issuing endpoints, see [POST /token](/reference/api/pipeline-token), [POST /git-credentials](/reference/api/pipeline-git-credentials), [POST /organization/token/{profile}](/reference/api/organization-token), and [POST /organization/git-credentials/{profile}](/reference/api/organization-git-credentials).
 
 ## Purpose
 

@@ -77,7 +77,7 @@ Create an API key with access to the REST API **only** with access to the
 
 For a production installation on AWS it is strongly recommended that you upload
 your private key to KMS, as documented in [Protecting the GitHub private key
-](./kms)
+](/guides/kms)
 
 </Aside>
 
@@ -113,7 +113,7 @@ export function ConfigRef({ name, default: defaultValue }) {
 
 
 A minimal configuration of the service requires at least the configuration
-below. See the [Configuration](../reference/configuration) reference for details of all
+below. See the [Configuration](/reference/configuration) reference for details of all
 configuration.
 
 - <ConfigRef name="JWT_BUILDKITE_ORGANIZATION_SLUG" />
@@ -135,7 +135,7 @@ configuration.
 - **Either**:
   - <ConfigRef name="GITHUB_APP_PRIVATE_KEY_ARN" />
 
-    It is **strongly** recommended to [store the private key in AWS KMS](./kms)
+    It is **strongly** recommended to [store the private key in AWS KMS](/guides/kms)
     and provide the ARN of the key here. This will allow Chinmina to sign tokens
     but protects the key from extraction and misuse.
 
@@ -154,5 +154,5 @@ configuration.
   The installation ID of the created GitHub application into your organization.
 
 The service will start (by default) on port 8080, but this is
-[configurable](../../reference/configuration#server_port) if necessary.
+[configurable](/reference/configuration#server_port) if necessary.
 Generally speaking, this is best handled via container port mapping.

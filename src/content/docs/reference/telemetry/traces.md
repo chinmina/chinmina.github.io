@@ -203,5 +203,5 @@ Background profile refresh operations generate additional traces periodically ba
 
 For span configuration details, see:
 
-- [Configuration reference](../configuration) for `OBSERVE_*` variables
-- [Observability guide](../../guides/observability) for setup instructions
+- [Configuration reference](/reference/configuration) for `OBSERVE_*` variables
+- [Observability guide](/guides/observability) for setup instructions

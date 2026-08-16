@@ -9,12 +9,12 @@ Buildkite OIDC tokens.
 
 The profile parameter selects the pipeline profile that will be used when
 creating the token using permissions defined by the specified [pipeline
-profile](../profiles/pipeline).
+profile](/reference/profiles/pipeline).
 
 The reserved profile name `default` is always available. The default profile can
 be requested via `POST /token/default` or `POST /token`.
 Permissions for the `default` profile [can be
-changed](../profiles/pipeline#default) but `match` rules cannot be added.
+changed](/reference/profiles/pipeline#defaults) but `match` rules cannot be added.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ when you need token metadata, are making direct API calls, or want more flexible
 response handling.
 
 For Git credential helper integration, use the [`POST
-/git-credentials`](git-credentials.md) endpoint instead, which returns tokens in
+/git-credentials`](/reference/api/pipeline-git-credentials) endpoint instead, which returns tokens in
 Git's credential helper format.
 
 :::note

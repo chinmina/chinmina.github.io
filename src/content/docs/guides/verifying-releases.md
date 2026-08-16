@@ -3,7 +3,7 @@ title: Verifying a release binary
 description: Verify Chinmina release binaries with cosign
 ---
 
-Releases [are signed](./releases.md) with `cosign` as part of the release
+Releases [are signed](/contributing/releases) with `cosign` as part of the release
 process. The build produces additional attestation bundles during this process,
 which can be used to verify both binaries and Docker images.
 
