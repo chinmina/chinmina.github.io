@@ -106,7 +106,7 @@ When introducing a new concept, follow this structure:
 
 ### Directory Structure
 
-```
+```text
 src/content/docs/
 ├── index.mdx                    # Landing page
 ├── introduction.md              # System overview and concepts (Explanation)
