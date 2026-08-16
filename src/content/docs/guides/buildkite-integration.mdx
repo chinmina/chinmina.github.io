@@ -305,8 +305,8 @@ pipeline settings.
 
 <Steps>
 
-1.  Alter the agent `bootstrap` hook to clone both plugin sources to the agent so
-    they can be activated by any step.
+1. Alter the agent `bootstrap` hook to clone both plugin sources to the agent so
+   they can be activated by any step.
 
     ```bash
     # Chinmina Token plugin
@@ -338,9 +338,9 @@ pipeline settings.
         "${plugin_repo}" "${plugin_dir}"
     ```
 
-2.  Set default configuration values and call the plugins' `environment` hooks
-    directly from the agent's `environment` hook. These defaults will be used
-    by all pipelines unless explicitly overridden.
+2. Set default configuration values and call the plugins' `environment` hooks
+   directly from the agent's `environment` hook. These defaults will be used
+   by all pipelines unless explicitly overridden.
 
     ```bash title="Execute plugin environment hooks directly"
     # Set organization-wide defaults (both plugins use these)
@@ -354,8 +354,8 @@ pipeline settings.
     source /buildkite/plugins/chinmina-git-credentials-buildkite-plugin/hooks/environment
     ```
 
-    With this configuration, pipelines no longer need to specify `chinmina-url`
-    and `audience` parameters:
+   With this configuration, pipelines no longer need to specify `chinmina-url`
+   and `audience` parameters:
 
     ```yml
     plugins:
@@ -364,13 +364,13 @@ pipeline settings.
             - GITHUB_TOKEN=pipeline:default
     ```
 
-    :::note
+   :::note
 
-    The bootstrap hook is only run when the agent starts. Cloning the plugins in
-    the bootstrap hook is more efficient than doing so in the environment hook,
-    and also faster.
+   The bootstrap hook is only run when the agent starts. Cloning the plugins in
+   the bootstrap hook is more efficient than doing so in the environment hook,
+   and also faster.
 
-    :::
+   :::
 
 </Steps>
 
