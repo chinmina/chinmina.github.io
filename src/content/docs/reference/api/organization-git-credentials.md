@@ -14,7 +14,7 @@ when vending GitHub tokens. Profiles allow configuring different sets of
 repositories and permissions for different use cases.
 
 This endpoint serves the same underlying function as [POST
-/organization/token/{profile}](./organization-token) (vending GitHub installation
+/organization/token/{profile}](/reference/api/organization-token) (vending GitHub installation
 tokens), however its request and response format follows Git's [credential
 helper protocol][helper-protocol]. This allows Chinmina Bridge to act as a Git
 credential helper, enabling transparent authentication for Git operations
@@ -31,9 +31,9 @@ handling.
 
 ### See also
 
-- [Buildkite integration guide](../../guides/buildkite-integration) for details
+- [Buildkite integration guide](/guides/buildkite-integration) for details
   on how this endpoint is used in practice.
-- [Customizing token permissions guide](../../guides/customizing-permissions) for
+- [Customizing token permissions guide](/guides/customizing-permissions) for
   practical setup and usage instructions.
 
 ## Request format
@@ -58,6 +58,14 @@ Examples:
 - `POST /organization/git-credentials/buildkite-plugin`
 
 The API does not use prefixes. Prefixes like `org:` are part of the plugin interface only and are translated by the plugins to the appropriate API paths.
+
+### Repository scope
+
+For profiles configured with `repositories: ["{{caller-scoped-repository}}"]`
+(see [caller-scoped repositories](/reference/profiles/organization#caller-scoped-repositories)),
+the target repository is derived automatically from the `path` field in the
+request body — no extra parameter is needed. If the body doesn't resolve to a
+repository, the request returns `400 Bad Request`.
 
 ### Request body
 
@@ -85,18 +93,18 @@ The response body is plain text with newline-separated key-value pairs. Git pars
 
 ### Empty response (200 OK)
 
-When the requested repository is not in the profile's allowed repository list, the endpoint returns a successful but empty response. See [Git credentials format](../git-credentials-format#empty-response) for details. This allows Git credential helpers to fall through to other credential sources.
+When the requested repository is not in the profile's allowed repository list, the endpoint returns a successful but empty response. See [Git credentials format](/reference/git-credentials-format#empty-response) for details. This allows Git credential helpers to fall through to other credential sources.
 
 ### Error responses
 
-| Status code               | Condition                               | Response body      |
-| ------------------------- | --------------------------------------- | ------------------ |
-| 400 Bad Request           | Invalid profile format or parameter     | JSON error message |
+| Status code               | Condition                                                              | Response body      |
+| -------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| 400 Bad Request           | Invalid profile format or parameter, or caller-scoped repository could not be resolved | JSON error message |
 | 401 Unauthorized          | Missing or invalid JWT                  | JSON error message |
-| 403 Forbidden             | JWT valid but claims insufficient       | JSON error message |
+| 403 Forbidden             | JWT valid but claims insufficient, or GitHub rejected a caller-scoped repository | JSON error message |
 | 404 Not Found             | Profile does not exist                  | JSON error message |
 | 500 Internal Server Error | Token vending failure, GitHub API error | JSON error message |
 
 Error responses are returned in JSON format. Any response that Git does not recognize as valid for the format is regarded as an error and discarded.
 
-[helper-protocol]: ../git-credentials-format
+[helper-protocol]: /reference/git-credentials-format

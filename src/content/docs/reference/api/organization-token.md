@@ -17,9 +17,9 @@ making direct API calls, or want more flexible response handling.
 
 ### See also
 
-- [Buildkite integration guide](../../guides/buildkite-integration) for details
+- [Buildkite integration guide](/guides/buildkite-integration) for details
   on how this endpoint is used in practice.
-- [Customizing token permissions guide](../../guides/customizing-permissions) for
+- [Customizing token permissions guide](/guides/customizing-permissions) for
   practical setup and usage instructions.
 
 ## Purpose
@@ -50,6 +50,19 @@ Examples:
 - `POST /organization/token/buildkite-plugin`
 
 The API does not use prefixes. Prefixes like `org:` are part of the plugin interface only and are translated by the plugins to the appropriate API paths.
+
+### Repository scope parameter
+
+For profiles configured with `repositories: ["{{caller-scoped-repository}}"]`
+(see [caller-scoped repositories](/reference/profiles/organization#caller-scoped-repositories)),
+the target repository is supplied via the `repository-scope` query parameter:
+
+```text
+POST /organization/token/agent-pr?repository-scope=widget
+```
+
+Supplying `repository-scope` for a profile that is not caller-scoped, or
+omitting it for one that is, returns `400 Bad Request`.
 
 ### Request body
 
@@ -91,12 +104,12 @@ When the requested repository is not in the profile's repository list, the endpo
 
 ## Error responses
 
-| Status code      | Condition                     | Response   |
-| ---------------- | ----------------------------- | ---------- |
-| 400 Bad Request  | Invalid profile format        | JSON error |
-| 401 Unauthorized | Missing or invalid JWT        | JSON error |
-| 403 Forbidden    | Insufficient JWT claims       | JSON error |
-| 404 Not Found    | Profile does not exist        | JSON error |
-| 500 Server Error | Token vending or GitHub error | JSON error |
+| Status code      | Condition                                                                 | Response   |
+| ---------------- | -------------------------------------------------------------------------- | ---------- |
+| 400 Bad Request  | Invalid profile format, or repository-scope missing/unexpected/malformed | JSON error |
+| 401 Unauthorized | Missing or invalid JWT                                                    | JSON error |
+| 403 Forbidden    | Insufficient JWT claims, or GitHub rejected a caller-scoped repository   | JSON error |
+| 404 Not Found    | Profile does not exist                                                    | JSON error |
+| 500 Server Error | Token vending or GitHub error                                             | JSON error |
 
 [gh-audit-token]: https://docs.github.com/en/enterprise-cloud@latest/admin/monitoring-activity-in-your-enterprise/reviewing-audit-logs-for-your-enterprise/identifying-audit-log-events-performed-by-an-access-token
