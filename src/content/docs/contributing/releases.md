@@ -3,30 +3,45 @@ title: Release process
 description: How releases of Chinmina are considered ready, and how they're created.
 ---
 
-In short:
+```d2 sketch=true title="Release pipeline"
+grid-rows: 2
+grid-gap: 60
 
-1. Releases are triggered by creating a release tag from `main`. This is currently manual.
-2. Release tags conform to semantic versioning
-3. Commits use conventional commit messages to aid in the changelog creation process
-4. A GoReleaser pipeline is used to create the artifacts
-5. All artifacts (binaries and images) are signed by the build process using `cosign`
+merge: "1. Merge"
+draft-release: "2. Draft release"
+tag: "3. Tag"
+release-creation: "4. Release creation"
+signing: "5. Signing"
+release-ready: "6. Release ready"
 
-## When is a release ready?
+merge -> draft-release -> tag -> release-creation -> signing -> release-ready
+```
 
-Releases are created on an as-needed basis. We prefer multiple, smaller releases over releases that have a greater number of changes.
+1. **Merge**: a maintainer merges the automated Release Please pull request.
+2. **Draft release**: Release Please opens a draft GitHub release for the version.
+3. **Tag**: Release Please pushes the version tag.
+4. **Release creation**: the tag push triggers GoReleaser to build the release artifacts.
+5. **Signing**: GoReleaser signs and attests the artifacts with cosign.
+6. **Release ready**: the pipeline publishes the release once it is signed and attested.
 
-A release is ready when:
+:::note
 
-- there are committed changes on `main`, and
-- there is confidence in its stability.
+Maintainers cannot create or update version tags (`vX.Y.Z`). If the version
+number needs correction, the standard Release Please mechanisms are available.
 
-Stability is a pre-requisite for merging, so there should not be significant questions about the appropriateness of a `main` release.
+:::
 
-## Triggering a release
+## Creating a release
 
-Releases are triggered via the creation of a semantic-versioned tag, in the format `vX.Y.Z`. Creation of a tag in this format triggers the automated release process.
+A maintainer creates a release by merging the current Release PR.
 
-Only repository administrators may create a tag in this format.
+A release is ready to create when:
+
+- `main` is stable and fully tested, and
+- there are changes waiting to go out.
+
+Prefer multiple, smaller releases over releases that have a greater number of
+changes.
 
 ## Release signing
 
