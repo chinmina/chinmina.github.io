@@ -21,13 +21,25 @@ any production implementation of Chinmina (running on AWS) uses this strategy.
 
 </Aside>
 
-## Uploading the private key to AWS KMS
+## Creating the key
+
+Create the key empty, then import the GitHub private key into it. KMS cannot
+generate material for a key that must match an existing GitHub App.
+
+Use [`kms-import`][kms-import] for the import step. It reduces the wrapping and
+upload sequence to a single command. Otherwise, follow the [AWS key import
+instructions][aws-import-key-material] directly.
 
 <Aside type="caution">
-  It is possible to use IaC to import private keys into KMS. Note carefully that
-  this will generally leave your private key unencrypted in your state file, so
-  please consider your risk exposure when doing so, or consult your company's
-  security specialists. The following guide documents the manual procedure.
+
+Do not import key material with your IaC tooling. Terraform's
+`aws_kms_external_key` stores "all arguments including the key material … in the
+raw state as plain text". That recreates the plaintext copy of the private key
+that KMS exists to eliminate. CloudFormation cannot import key material at all.
+
+Provision the key, its alias, its tags and its policy declaratively. Import the
+material separately.
+
 </Aside>
 
 <Steps>
@@ -35,60 +47,178 @@ any production implementation of Chinmina (running on AWS) uses this strategy.
 1. Follow GitHub's instructions to [generate a private key][github-key-generate]
    for the GitHub application in use.
 
-2. The key spec for your GitHub key _should_ be RSA 2048. If you're curious,
-   this can be checked by examining the output of the following `openssl`
-   command.
+2. Create a KMS key with `EXTERNAL` origin, key spec `RSA_2048` and key usage
+   `SIGN_VERIFY`.
 
-   ```shell title="Show details of private key"
-   openssl rsa -text -noout -in yourkey.pem
+   `EXTERNAL` origin allows the material to be imported. `RSA_2048` is the spec
+   GitHub issues App keys in. `SIGN_VERIFY` is required: a signing key cannot
+   encrypt, and KMS rejects the attempt.
+
+   The key is created in the `PendingImport` state. Every `Sign` call fails
+   until material is imported.
+
+3. Create an alias for the key, for example `alias/chinmina-bridge`.
+
+   A key alias is **essential to allow for key rotation**. Unless you are
+   stopped by your organisational policy, use the alias.
+
+4. Apply a [key policy](#restricting-access-to-the-key) that permits signing by
+   the Chinmina task role only.
+
+5. Import the private key into the key material.
+
+   ```shell title="Import the GitHub App private key"
+   kms-import --key-file app.pem \
+     --key-arn arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab
    ```
 
-3. Convert the downloaded GitHub private key file from PEM format to DER format.
-   DER is required by AWS KMS when uploading key material.
+   `kms-import` requires `kms:GetParametersForImport` and
+   `kms:ImportKeyMaterial` on the key, in both the caller's IAM policy and the
+   key policy. Its [README][kms-import] documents both fragments.
 
-   ```shell title="Convert from PEM to DER"
-   openssl rsa -inform PEM -outform DER -in ./private-key.pem -out private-key.cer
-   ```
+6. Destroy every local copy of the PEM file.
 
-4. Follow the [AWS KMS key import instructions][aws-import-key-material] for importing the
-   application private key into KMS.
-
-   The instructions include how to create an RSA 2048 key of type `EXTERNAL`,
-   how to encrypt the key material so that it can be imported, and how to upload
-   it.
-
-   The steps of this process individually are not difficult, but it does have a
-   number of them and the details matter. **Follow the instructions carefully.**
-
-5. Create an alias for the KMS key to allow for easy [manual key
-   rotation][aws-manual-key-rotation].
-
-   This might seem like an optional step, but a key alias is **essential to
-   allow for key rotation**. Unless you're stopped
-   by your organizational policy, use the alias. The private key will be able
-   to be rotated without any service downtime.
-
-6. Ensure that the key policy has a statement allowing Chinmina to access the key. The specified role should be the role that the Chinmina process has access to at runtime.
-
-   ```json
-   {
-     "Sid": "Allow Chinmina to sign using the key",
-     "Effect": "Allow",
-     "Principal": {
-       "AWS": ["arn:aws:iam::226140413739:role/full-task-role-name"]
-     },
-     "Action": ["kms:Sign"],
-     "Resource": "*"
-   }
-   ```
+   The key material now lives only inside KMS. Any remaining copy re-creates
+   the risk that KMS removes.
 
 </Steps>
 
-<Aside type="tip">
-  Chinmina does not assume a role to access the key: it assumes valid
-  credentials are present for the AWS SDK to use. Typically these are available
-  to the container via the credentials supplied via the IMDS (instance metadata
-  service).
+## Restricting access to the key
+
+Granting the task role `kms:Sign` is not sufficient on its own. The default key
+policy statement lets **any** IAM policy in the account confer any KMS action on
+the key, so every principal holding `AdministratorAccess` can mint GitHub App
+JWTs.
+
+The policy below closes that path. Removing any of its five statements
+reopens it:
+
+| Sid | Purpose |
+| --- | --- |
+| `RootAccessNoDelegation` | Keeps the key manageable by the account root user, without delegating control to every IAM principal. |
+| `AdministratorsManage` | Allows key management, but not signing. |
+| `ChinminaSignOnly` | Allows the service to sign. |
+| `DenySignExceptChinmina` | Denies signing to everything else, including administrators. |
+| `DenyOutsideAccount` | Denies cross-account access. |
+
+```json title="example-key-policy.json" /"aws:PrincipalArn": ".*"/
+{
+  "Version": "2012-10-17",
+  "Id": "chinmina-signing-key",
+  "Statement": [
+    {
+      "Sid": "RootAccessNoDelegation",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
+      "Action": "kms:*",
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:PrincipalType": "Account" } }
+    },
+    {
+      "Sid": "AdministratorsManage",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
+      "Action": [
+        "kms:CancelKeyDeletion",
+        "kms:CreateAlias",
+        "kms:DeleteAlias",
+        "kms:DeleteImportedKeyMaterial",
+        "kms:Describe*",
+        "kms:Disable*",
+        "kms:Enable*",
+        "kms:Get*",
+        "kms:ImportKeyMaterial",
+        "kms:List*",
+        "kms:PutKeyPolicy",
+        "kms:RevokeGrant",
+        "kms:ScheduleKeyDeletion",
+        "kms:TagResource",
+        "kms:UntagResource",
+        "kms:UpdateAlias",
+        "kms:UpdateKeyDescription"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "aws:PrincipalArn": "arn:aws:iam::123456789012:role/chinmina-admin-*"
+        }
+      }
+    },
+    {
+      "Sid": "ChinminaSignOnly",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
+      "Action": "kms:Sign",
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "aws:PrincipalArn": "arn:aws:iam::123456789012:role/chinmina-service-*"
+        }
+      }
+    },
+    {
+      "Sid": "DenySignExceptChinmina",
+      "Effect": "Deny",
+      "Principal": { "AWS": "*" },
+      "Action": "kms:Sign",
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": "arn:aws:iam::123456789012:role/chinmina-service-*"
+        }
+      }
+    },
+    {
+      "Sid": "DenyOutsideAccount",
+      "Effect": "Deny",
+      "Principal": { "AWS": "*" },
+      "Action": "kms:*",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": { "aws:PrincipalAccount": "123456789012" }
+      }
+    }
+  ]
+}
+```
+
+Substitute your own account ID and role name patterns. Administrators
+provisioned by IAM Identity Center match a pattern like
+`role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_Administrator_*`. Wildcard
+the region segment: it is absent when the identity source is hosted in
+`us-east-1`.
+
+### Why the principal is never named directly
+
+Every statement names the account as the `Principal` and identifies the real
+caller with an [`aws:PrincipalArn`][aws-principal-arn] condition. Two reasons:
+
+- A role ARN in a `Principal` element is stored as the role's internal unique ID
+  (`AROA…`). Delete and recreate the role (a replaced ECS task role, or a
+  reprovisioned SSO role) and the statement silently stops matching.
+- The `Principal` element does not accept partial wildcards. A condition does,
+  so one pattern covers a role whose name carries a generated suffix.
+
+### Why the deny statement is required
+
+`DenySignExceptChinmina` is the only construct that closes every path at once:
+IAM policies, the key policy, and [grants][aws-grants]. An `Allow`-only policy
+leaves the IAM path open. Any holder of `kms:CreateGrant` can then confer
+signing on an arbitrary principal, without editing the policy.
+
+An administrator can still change the policy. That is deliberate: locking
+administrators out entirely risks an unmanageable key. The `Deny` raises the
+effort required for misuse. It also produces a `PutKeyPolicy` event for your
+security logging to alert on.
+
+<Aside type="caution">
+
+The principal that deploys this policy must retain `PutKeyPolicy` on the key.
+The policy above permits only the root user and the administrator pattern. A
+deployment role that matches neither cannot update the key on later deployments.
+Either match the deployment role in `AdministratorsManage`, or add a statement
+for it.
+
 </Aside>
 
 ## Configuring the Chinmina service
@@ -96,32 +226,16 @@ any production implementation of Chinmina (running on AWS) uses this strategy.
 <Steps>
 
 1. Set the environment variable `GITHUB_APP_PRIVATE_KEY_ARN` to the ARN of the
-   **alias** that has just been created.
+   **alias**, not the key.
 
-2. Update the key resource policy. The KMS key resource policy needs to allow
-   the service to use the key _for signing only_.
-
-   Allowing the Chinmina service to use the key can be done by specifying the
-   ARN of the role principal (see highlight below), or by using [AWS condition
-   keys][kms-condition-keys] in a `Condition` element. The [global condition
-   key][aws-global-condition-keys] [`aws:PrincipalArn`][aws-principal-arn] can
-   be useful if it's necessary to employ a wildcard on the role name.
-
-   ```json title="example-resource-policy.json" /arn:.*-role/
-   {
-     "Sid": "ChinminaServiceUsage",
-     "Effect": "Allow",
-     "Principal": {
-       "AWS": ["arn:aws:iam::123456789012:role/chinmina-process-role"]
-     },
-     "Action": "kms:Sign",
-     "Resource": "*"
-   }
+   ```shell
+   GITHUB_APP_PRIVATE_KEY_ARN=arn:aws:kms:us-east-1:123456789012:alias/chinmina-bridge
    ```
 
-3. The IAM policy for the Chinmina process (i.e. the AWS role available to
-   Chinmina when it runs) needs to be able to use the **alias** created for
-   the private key. This is done with a condition in the policy element:
+2. Allow the task role to sign with the key.
+
+   The IAM policy for the Chinmina process needs `kms:Sign`, conditioned on the
+   **alias** rather than the key:
 
    ```json title="example-iam-policy.json" /"kms:RequestAlias.*$/
    {
@@ -130,21 +244,94 @@ any production implementation of Chinmina (running on AWS) uses this strategy.
      "Resource": "*",
      "Condition": {
        "StringEquals": {
-         "kms:RequestAlias": "alias/chinmina-signing"
+         "kms:RequestAlias": "alias/chinmina-bridge"
        }
      }
    }
    ```
 
-   Using the `kms:RequestAlias` condition instead of the fully qualified
-   key ARN in the `resource` attribute allows for transparent key rotation
-   without service interruption.
+   The alias name in this condition must match the alias created earlier.
+   A mismatch fails at token-vending time with `AccessDenied`, not at deployment
+   time.
+
+   Using [`kms:RequestAlias`][kms-alias-authorization] instead of the key ARN in
+   the `Resource` element allows transparent key rotation. It also enforces the
+   rotation contract. A caller that hard-codes a key ARN is denied, rather than
+   pinned to a key that is about to be retired.
 
 </Steps>
 
+Each additional GitHub App needs its own alias. Enumerate them:
+`kms:RequestAlias` accepts a list.
+
+```json
+"kms:RequestAlias": ["alias/chinmina-bridge", "alias/chinmina-concierge"]
+```
+
+Avoid a prefix wildcard such as `alias/chinmina-*`. AWS warns that holders of
+`kms:CreateAlias` or `kms:UpdateAlias` "can give principals permission to use
+KMS keys that they didn't otherwise have permission to use". With a wildcard,
+anyone able to create a matching alias on an unrelated key can make the task
+role sign with it.
+
+<Aside type="tip">
+  Chinmina does not assume a role to access the key: it assumes valid
+  credentials are present for the AWS SDK to use. On ECS these are supplied to
+  the container by the task metadata endpoint, from the task role.
+</Aside>
+
+## Rotating the key
+
+KMS cannot rotate this key. Automatic and on-demand rotation are unavailable
+for asymmetric keys, and KMS cannot regenerate imported material.
+
+[Manual rotation][aws-manual-key-rotation] replaces the key and repoints the
+alias. AWS documents this method, and calls it "a good choice … [for] asymmetric
+KMS keys".
+
+The order matters. Repointing the alias at a key with no material fails every
+`Sign` call until the import completes.
+
+<Steps>
+
+1. Create a replacement key with the same configuration and key policy.
+
+2. Generate a new private key for the GitHub App. GitHub allows both keys to be
+   valid at once.
+
+3. Import the new private key into the replacement KMS key.
+
+4. Repoint the alias at the replacement key.
+
+5. Confirm the cutover in CloudTrail, then confirm that Chinmina still vends
+   tokens.
+
+6. Delete the old private key in GitHub, then schedule the old KMS key for
+   deletion.
+
+</Steps>
+
+The alias repoint takes effect immediately for `kms:RequestAlias`, which
+evaluates the alias named in the request. Signing is also infrequent: a JWT is
+minted once every few minutes per instance. Callers see no interruption, and
+neither a restart nor a configuration change is required.
+
+The cutover is visible in CloudTrail. When a request names an alias, [the alias
+is recorded in `requestParameters.keyId`][kms-alias-cloudtrail] and the resolved
+key ARN in `resources`. Watch the `resources` ARN change to the replacement key
+to confirm the rotation took effect.
+
+AWS documents one trap for manually rotated asymmetric keys. `Verify` and
+`Decrypt` require `KeyId`, and fail when an alias no longer points at the key
+that performed the operation. It does not apply here: Chinmina only signs, and
+GitHub verifies against the public key registered on the App. This is also why
+the service is never granted `kms:Verify`.
+
 [github-key-generate]: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys
+[kms-import]: https://github.com/chinmina/kms-import
 [aws-import-key-material]: https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html
-[aws-manual-key-rotation]: https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html#rotate-keys-manually
-[kms-condition-keys]: https://docs.aws.amazon.com/kms/latest/developerguide/conditions-kms.html
-[aws-global-condition-keys]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html
+[aws-manual-key-rotation]: https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys-manually.html
+[aws-grants]: https://docs.aws.amazon.com/kms/latest/developerguide/grants.html
+[kms-alias-cloudtrail]: https://docs.aws.amazon.com/kms/latest/developerguide/alias-ct.html
+[kms-alias-authorization]: https://docs.aws.amazon.com/kms/latest/developerguide/alias-authorization.html
 [aws-principal-arn]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-principalarn
