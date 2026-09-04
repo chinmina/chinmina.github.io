@@ -136,8 +136,8 @@ configuration.
   - <ConfigRef name="GITHUB_APP_PRIVATE_KEY_ARN" />
 
     It is **strongly** recommended to [store the private key in AWS KMS](/guides/kms)
-    and provide the ARN of the key here. This will allow Chinmina to sign tokens
-    but protects the key from extraction and misuse.
+    and provide the ARN of the key's **alias** here. This will allow Chinmina to
+    sign tokens but protects the key from extraction and misuse.
 
   - <ConfigRef name="GITHUB_APP_PRIVATE_KEY" /> **Use only if KMS is not
     available.**
