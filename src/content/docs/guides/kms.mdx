@@ -83,22 +83,30 @@ material separately.
    `kms:ImportKeyMaterial` on the key, in both the caller's IAM policy and the
    key policy. Its [README][kms-import] documents both fragments.
 
-6. Destroy every local copy of the PEM file.
+6. **Destroy every local copy of the PEM file.**
 
-   The key material now lives only inside KMS. Any remaining copy re-creates
-   the risk that KMS removes.
+   The key material cannot be recovered from KMS. A local copy is the only
+   remaining way to leak the private key.
 
 </Steps>
+
+<Aside>
+
+Once key material is imported, it cannot be changed. If the key is incorrect or
+has been removed from GitHub, use the [rotation process](#rotating-the-key) to
+replace it.
+
+</Aside>
 
 ## Restricting access to the key
 
 Granting the task role `kms:Sign` is not sufficient on its own. The default key
 policy statement lets **any** IAM policy in the account confer any KMS action on
-the key, so every principal holding `AdministratorAccess` can mint GitHub App
-JWTs.
+the key, so any principal in the account can be granted the ability to sign
+GitHub App JWTs.
 
-The policy below closes that path. Removing any of its five statements
-reopens it:
+Each statement in the example policy below works with the others to restrict
+access to the key. Adapt the policy carefully to the target environment.
 
 | Sid | Purpose |
 | --- | --- |
@@ -108,7 +116,7 @@ reopens it:
 | `DenySignExceptChinmina` | Denies signing to everything else, including administrators. |
 | `DenyOutsideAccount` | Denies cross-account access. |
 
-```json title="example-key-policy.json" /"aws:PrincipalArn": ".*"/
+```json title="example-key-policy.json" /"Sid": ".*"/
 {
   "Version": "2012-10-17",
   "Id": "chinmina-signing-key",
@@ -208,10 +216,12 @@ caller with an [`aws:PrincipalArn`][aws-principal-arn] condition. Two reasons:
 
 ### Why the deny statement is required
 
-`DenySignExceptChinmina` is the only construct that closes every path at once:
-IAM policies, the key policy, and [grants][aws-grants]. An `Allow`-only policy
-leaves the IAM path open. Any holder of `kms:CreateGrant` can then confer
-signing on an arbitrary principal, without editing the policy.
+`DenySignExceptChinmina` is the final piece that ensures only the Chinmina
+service can sign with the key. It closes three paths at once: IAM policies, the
+key policy, and [grants][aws-grants]. An `Allow`-only policy leaves the IAM path
+open. Any holder of `kms:CreateGrant` can then confer signing on an arbitrary
+principal, without editing the policy. (`kms:CreateGrant` is purposefully absent
+from the key management statement.)
 
 An administrator can still change the policy. That is deliberate: locking
 administrators out entirely risks an unmanageable key. The `Deny` raises the
@@ -233,7 +243,7 @@ for it.
 <Steps>
 
 1. Set the environment variable `GITHUB_APP_PRIVATE_KEY_ARN` to the ARN of the
-   **alias**, not the key.
+   KMS key **alias**.
 
    ```shell
    GITHUB_APP_PRIVATE_KEY_ARN=arn:aws:kms:us-east-1:123456789012:alias/chinmina-bridge
@@ -296,8 +306,8 @@ for asymmetric keys, and KMS cannot regenerate imported material.
 alias. AWS documents this method, and calls it "a good choice … [for] asymmetric
 KMS keys".
 
-The order matters. Repointing the alias at a key with no material fails every
-`Sign` call until the import completes.
+Import the key material and confirm the key is ready before repointing the
+alias. Signing requests fail against a key that is not ready.
 
 <Steps>
 
@@ -306,8 +316,9 @@ The order matters. Repointing the alias at a key with no material fails every
 2. Generate a new private key for the GitHub App. GitHub allows both keys to be
    valid at once.
 
-3. Import the new private key into the replacement KMS key, then destroy every
-   local copy of the PEM file.
+3. Import the new private key into the replacement KMS key using
+   [`kms-import`][kms-import], then **destroy every local copy of the PEM
+   file.**
 
 4. Repoint the alias at the replacement key.
 
