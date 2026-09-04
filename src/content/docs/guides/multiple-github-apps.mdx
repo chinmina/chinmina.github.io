@@ -157,8 +157,8 @@ A disabled app stays disabled until the service restarts. The reason appears in
 that app's startup log entry as `disabledReason`.
 
 Profiles that name a disabled app become invalid, and only those profiles are
-excluded. Requests for them return `404`, with the body
-`profile unavailable: validation failed`.
+excluded. Requests for them return `404`; see the [error
+responses](/reference/api/pipeline-token#error-responses) in the API reference.
 
 The cause appears in the `error` field of the [audit
 entry](/reference/auditing), and in a warning log stating that some profiles

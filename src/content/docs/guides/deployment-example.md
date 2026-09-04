@@ -297,7 +297,9 @@ All logs are forwarded to the organization's log aggregation platform using stan
 
 ### KMS unavailability
 
-KMS unavailability stops token generation for new requests. However, Chinmina creates JWTs with approximately 30-minute lifetimes and reuses them within that period, providing resilience to brief KMS outages. Cached GitHub tokens (up to 45 minutes) provide additional buffer.
+KMS is used only to sign the GitHub App JWT that authenticates token creation requests. The JWT has a 10 minute lifetime (GitHub's maximum) and is reused until it expires, so KMS is called about once every 10 minutes per instance and per app.
+
+A KMS outage therefore blocks token creation only once the current JWT expires. Installation tokens already issued remain valid for their lifetime, and cached tokens (up to 45 minutes) continue to be served.
 
 ### GitHub API failures
 
