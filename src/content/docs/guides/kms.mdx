@@ -76,6 +76,10 @@ material separately.
    `kms:ImportKeyMaterial` on the key, in both the caller's IAM policy and the
    key policy. Its [README][kms-import] documents both fragments.
 
+   The policy applied in step 4 grants those actions to the account root user
+   and to roles matching the `AdministratorsManage` pattern. Import as one of
+   those principals, or the step fails with `AccessDenied`.
+
 6. Destroy every local copy of the PEM file.
 
    The key material now lives only inside KMS. Any remaining copy re-creates
@@ -299,7 +303,8 @@ The order matters. Repointing the alias at a key with no material fails every
 2. Generate a new private key for the GitHub App. GitHub allows both keys to be
    valid at once.
 
-3. Import the new private key into the replacement KMS key.
+3. Import the new private key into the replacement KMS key, then destroy every
+   local copy of the PEM file.
 
 4. Repoint the alias at the replacement key.
 

@@ -246,7 +246,9 @@ The GitHub Application private key in PEM format, supplied as text (not a file p
 
 ###### `GITHUB_APP_PRIVATE_KEY_ARN` :badge[required]
 
-The AWS KMS key (or alias) resource ARN that has been configured for use by Chinmina.
+The resource ARN of the AWS KMS key alias that has been configured for use by
+Chinmina. A key ARN also signs, but does not satisfy the `kms:RequestAlias`
+condition recommended for the task role, and does not follow key rotation.
 
 See the [AWS KMS setup and configuration](/guides/kms) guide for more details.
 
