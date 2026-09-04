@@ -65,6 +65,13 @@ material separately.
 4. Apply a [key policy](#restricting-access-to-the-key) that permits signing by
    the Chinmina task role only.
 
+   Apply the policy before importing. Key material must never exist under a
+   policy broader than the one it will run under.
+
+   Grant the importing principal `kms:GetParametersForImport` and
+   `kms:ImportKeyMaterial` in this policy. Recovering from a key policy that
+   excludes you requires AWS Support.
+
 5. Import the private key into the key material.
 
    ```shell title="Import the GitHub App private key"
@@ -75,10 +82,6 @@ material separately.
    `kms-import` requires `kms:GetParametersForImport` and
    `kms:ImportKeyMaterial` on the key, in both the caller's IAM policy and the
    key policy. Its [README][kms-import] documents both fragments.
-
-   The policy applied in step 4 grants those actions to the account root user
-   and to roles matching the `AdministratorsManage` pattern. Import as one of
-   those principals, or the step fails with `AccessDenied`.
 
 6. Destroy every local copy of the PEM file.
 
