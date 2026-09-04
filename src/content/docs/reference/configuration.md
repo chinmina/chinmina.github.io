@@ -54,6 +54,19 @@ A request path that does not start with the configured prefix (matched on a
 segment boundary, so `SERVER_BASE_PATH=/api` does not match `/apiary`)
 returns `404 Not Found`.
 
+## File-based values
+
+`JWT_JWKS_STATIC`, `GITHUB_APP_PRIVATE_KEY` and `GITHUB_APPS` each accept their
+value from a file. For each, a `_FILE` variant holds a path, and the file's
+contents, trimmed of surrounding whitespace, are used as the value.
+
+This keeps sensitive values out of the process environment, which is readable
+from process listings, container inspection and rendered task definitions.
+
+Setting both a variable and its `_FILE` variant fails startup, as the intended
+source is ambiguous. A `_FILE` path that cannot be read, or whose trimmed
+contents are empty, also fails startup.
+
 ## Cache
 
 Chinmina caches GitHub access tokens to reduce API calls. By default, tokens are
@@ -194,9 +207,9 @@ The audience that is expected on incoming OIDC tokens. This value must be suppli
 
 Recommendation: `chinmina:your-github-organization`. This is specific to the
 purpose of the token, and also scoped to the GitHub organization that tokens
-will be vended for. `chinmina-bridge`'s GitHub app is configured for a
-particular GitHub organization/user, so if you have multiple organizations,
-multiple agents will need to be running.
+will be vended for. Every GitHub App configured for Chinmina Bridge must be
+installed on the same GitHub organization, so if you have multiple
+organizations, multiple agents will need to be running.
 
 :::
 
@@ -217,6 +230,11 @@ jwks="$(cat .development/keys/jwk-sig-testing-pub.json)"
 export JWT_JWKS_STATIC="${jwks}"
 ```
 
+###### `JWT_JWKS_STATIC_FILE`
+
+Path to a file containing the JWKS document. An alternative to
+`JWT_JWKS_STATIC`; see [file-based values](#file-based-values).
+
 ###### `JWT_ISSUER_URL`
 
 _(default: `https://agent.buildkite.com`)_
@@ -230,7 +248,14 @@ Testing only. The issuer URL expected on incoming OIDC JWT tokens.
 The Buildkite token used to access the Buildkite REST API. Should only be
 supplied the `read_pipelines` scope.
 
-## GitHub API
+## GitHub Apps
+
+The app configured by the `GITHUB_APP_*` variables is the default app, and is
+always required. Additional apps may be registered with `GITHUB_APPS`, and
+profiles select them by name (see [using multiple GitHub
+Apps](/guides/multiple-github-apps)).
+
+### Default app
 
 :::tip
 
@@ -243,6 +268,12 @@ Either `GITHUB_APP_PRIVATE_KEY` or `GITHUB_APP_PRIVATE_KEY_ARN` is required.
 ###### `GITHUB_APP_PRIVATE_KEY` :badge[required]
 
 The GitHub Application private key in PEM format, supplied as text (not a file path).
+
+###### `GITHUB_APP_PRIVATE_KEY_FILE`
+
+Path to a file containing the private key in PEM format. An alternative to
+`GITHUB_APP_PRIVATE_KEY`; setting both fails startup. See [file-based
+values](#file-based-values).
 
 ###### `GITHUB_APP_PRIVATE_KEY_ARN` :badge[required]
 
@@ -260,17 +291,102 @@ GitHub App ID of the app itself.
 
 The ID for the installation of the App in your organization.
 
+### Additional apps
+
+###### `GITHUB_APPS`
+
+An optional JSON array of additional apps that profiles may create tokens
+through. Each entry describes one app installation:
+
+| Field            | Type    | Rule                                                                                                      |
+| ---------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `name`           | string  | Required. The name profiles use to select the app.                                                        |
+| `appId`          | integer | Required. A positive GitHub App ID.                                                                       |
+| `installationId` | integer | Required. A positive installation ID.                                                                     |
+| `privateKey`     | string  | The private key in PEM format. Exactly one of `privateKey` or `privateKeyArn` must be present.            |
+| `privateKeyArn`  | string  | The resource ARN of an AWS KMS key alias. Exactly one of `privateKey` or `privateKeyArn` must be present. |
+
+Unknown fields are rejected.
+
+Names must match `^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$`, be at most 64 characters
+long, and be unique within the array. The name `default` is reserved for the
+app configured by `GITHUB_APP_ID`.
+
+```json
+[
+  {
+    "name": "packages",
+    "appId": 333,
+    "installationId": 444,
+    "privateKeyArn": "arn:aws:kms:ap-southeast-2:123456789012:alias/chinmina-packages"
+  }
+]
+```
+
+`privateKeyArn` is recommended, as it keeps key material out of the
+configuration entirely. An inline `privateKey` requires the PEM newlines to be
+escaped as `\n` within the JSON string, so `GITHUB_APPS_FILE` is preferred
+where an inline key is unavoidable.
+
+Startup fails when:
+
+- the value is not a JSON array, or is `null`
+- an entry contains an unknown field
+- a name is invalid, duplicated, or `default`
+- `appId` or `installationId` is not a positive integer
+- an entry declares neither or both of `privateKey` and `privateKeyArn`
+- an inline `privateKey` cannot be parsed
+- a GitHub client cannot be constructed for an entry
+
+Error messages identify the offending entry by name, or by array index where
+the name itself is at fault. They never include key material or the key ARN.
+
+###### `GITHUB_APPS_FILE`
+
+Path to a file containing the same JSON array. An alternative to `GITHUB_APPS`;
+setting both fails startup. See [file-based values](#file-based-values).
+
+### Startup verification
+
+When `GITHUB_APPS` is set, the installation of every registered app, including
+the default app, is queried at startup.
+
+An additional app is disabled until the next restart when its installation
+cannot be queried, or when it is installed on a different GitHub account than
+the default app. The service still starts, and profiles naming a disabled app
+are invalid. See [disabled apps](/guides/multiple-github-apps#disabled-apps).
+
+Startup fails if the default app's installation cannot be queried.
+
+Without `GITHUB_APPS`, no installation is queried at startup.
+
+Each app is logged at startup with the message `github app registry entry` and
+an `app` group containing `name`, `applicationID`, `installationID`,
+`keySource`, `organization`, `enabled` and `disabledReason`.
+
+All apps share the same GitHub API endpoint. Only their credentials differ.
+
+### Profile configuration
+
 ###### `GITHUB_ORG_PROFILE`
 
 The location of your profile configuration file, if in use. This should be a triplet
 of the form `<OWNER>:<REPO>:<PATH_TO_FILE>`. No other format is accepted.
 
-The profile configuration file contains both [pipeline profiles][pipeline-profile-config] and [organization profiles][org-profile-config].
+The profile configuration file contains both [pipeline profiles][pipeline-profile-config] and [organization profiles][org-profile-config]. It is always fetched through the default app.
 
-The source file for profiles **must** be configured as below. If the download or validation steps fail, the server will start but no profiles will be available.
+The source file for profiles **must** be configured as below.
 
 1. The GitHub application for Chinmina has read access to the repository hosting the file
 2. The profile configuration file content must conform to the [profile configuration format][profiles-config].
+
+When `GITHUB_ORG_PROFILE` is set, the service does not accept connections until
+the first profile generation loads. The listener is not opened during this
+period, so the health check refuses connections. Failed attempts are retried
+every 5 seconds and logged as `background task failed`. There is no timeout.
+
+Once the first generation loads, the file is refreshed every 5 minutes. A
+failed refresh keeps the last loaded generation in place.
 
 ## Open Telemetry
 
@@ -377,6 +493,26 @@ The endpoint to which traces and metrics will be sent.
 Standard Open Telemetry configuration is supported. See the Open
 Telemetry [exporter configuration][otel-exporter-config] for all configuration
 variables available.
+
+:::
+
+## Development
+
+###### `DEV_DISCLOSE_APP_IDENTIFIERS`
+
+_(default: `false`)_
+
+Development only. When `true`, JSON token responses include `appId` and
+`installationId`, and git-credentials responses include `chinmina_app_name`,
+`chinmina_app_id` and `chinmina_installation_id`. A warning is logged at
+startup.
+
+The audit log records these identifiers regardless of this setting.
+
+:::caution
+
+This must not be set in production. A Buildkite job has no use for the
+deployment's GitHub App topology.
 
 :::
 

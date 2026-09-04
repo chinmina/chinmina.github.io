@@ -179,10 +179,27 @@ values match the configured patterns.
 
 ### Profile returns 404 (unavailable: validation failed)
 
-Profile failed validation at service startup.
+The profile failed validation and was excluded. Common causes:
 
-Check service startup logs for validation warnings. Fix the invalid
-configuration (e.g., invalid regex pattern) and restart the service.
+- An invalid regex pattern in a match rule.
+- An [`app`](/reference/profiles/organization#app) naming a GitHub App that is
+  not configured, or that is disabled.
+- An empty `app` value.
+
+The cause is recorded in the audit entry `error` field as
+`profile "name" unavailable: <cause>`.
+
+It also appears under `invalid_profiles` in the warning log
+`organization profile: some profiles failed validation and were ignored`, or
+`pipeline profile: some profiles failed validation and were ignored` for
+pipeline profiles. The warning is emitted on every refresh while the profile
+remains invalid.
+
+The caller sees only the generic message.
+
+Correct the profile configuration to fix it. For a disabled app, fix the
+installation and restart the service; see [disabled
+apps](/guides/multiple-github-apps#disabled-apps).
 
 ### Profile matches too broadly
 

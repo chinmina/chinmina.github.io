@@ -84,12 +84,21 @@ path=owner/repository
 When a token is successfully vended:
 
 ```text
+protocol=https
+host=github.com
+path=owner/repository
 username=x-access-token
 password=ghs_...
 password_expiry_utc=1705320600
 ```
 
-The response body is plain text with newline-separated key-value pairs. Git parses this and uses the credentials for the requested operation.
+The response body is plain text with newline-separated key-value pairs. Git parses this and uses the credentials for the requested operation. The `protocol`, `host` and `path` lines echo the request.
+
+With [`DEV_DISCLOSE_APP_IDENTIFIERS`](/reference/configuration#dev_disclose_app_identifiers)
+set, the response also carries `chinmina_app_name`, `chinmina_app_id` and
+`chinmina_installation_id`. See [development
+properties](/reference/git-credentials-format#development-properties). This
+setting is for development only.
 
 ### Empty response (200 OK)
 
@@ -97,14 +106,23 @@ When the requested repository is not in the profile's allowed repository list, t
 
 ### Error responses
 
-| Status code               | Condition                                                              | Response body      |
-| -------------------------- | ----------------------------------------------------------------------- | ------------------- |
-| 400 Bad Request           | Invalid profile format or parameter, or caller-scoped repository could not be resolved | JSON error message |
-| 401 Unauthorized          | Missing or invalid JWT                  | JSON error message |
-| 403 Forbidden             | JWT valid but claims insufficient, or GitHub rejected a caller-scoped repository | JSON error message |
-| 404 Not Found             | Profile does not exist                  | JSON error message |
-| 500 Internal Server Error | Token vending failure, GitHub API error | JSON error message |
+| Status code               | Condition                                                                                                                                         | Response                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 400 Bad Request           | Invalid profile format or parameter, or caller-scoped repository could not be resolved                                                            | Empty body, `Chinmina-Denied` header |
+| 401 Unauthorized          | Missing or invalid JWT                                                                                                                            | JSON error                           |
+| 403 Forbidden             | JWT valid but claims insufficient, or GitHub rejected a caller-scoped repository                                                                  | Empty body, `Chinmina-Denied` header |
+| 404 Not Found             | Profile does not exist, or is unavailable because it failed validation (for example, it names a GitHub App that is not configured or is disabled) | Empty body, `Chinmina-Denied` header |
+| 500 Internal Server Error | Token vending failure, GitHub API error, or the profile names a GitHub App that could not be resolved                                             | Empty body, `Chinmina-Denied` header |
 
-Error responses are returned in JSON format. Any response that Git does not recognize as valid for the format is regarded as an error and discarded.
+Errors raised by the endpoint carry no response body. The caller-facing reason
+is returned in the `Chinmina-Denied` header, and the full cause is recorded in
+the [audit log](/reference/auditing). A profile that failed validation reports
+`profile unavailable: validation failed`. The server never returns client
+content as part of an error message.
+
+Two cases differ. A JWT validation failure is answered by the authentication
+middleware with a JSON body and a `WWW-Authenticate` header. A request body
+that cannot be parsed as credential helper input is answered with a plain text
+status line and no `Chinmina-Denied` header.
 
 [helper-protocol]: /reference/git-credentials-format

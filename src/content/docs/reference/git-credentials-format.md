@@ -43,6 +43,9 @@ The output format supports optional fields:
 Unix timestamp indicating when the password expires:
 
 ```text
+protocol=https
+host=github.com
+path=owner/repository
 username=x-access-token
 password=ghs_...
 password_expiry_utc=1705320600
@@ -61,6 +64,25 @@ Empty responses are used when:
 - No valid credentials are available for the request
 
 This behaviour allows multiple credential helpers to coexist, with each handling different URL patterns.
+
+## Development properties
+
+When [`DEV_DISCLOSE_APP_IDENTIFIERS`](/reference/configuration#dev_disclose_app_identifiers)
+is `true`, Chinmina Bridge adds three properties to its credential output:
+
+| Property                   | Description                                                                                  |
+| -------------------------- | -------------------------------------------------------------------------------------------- |
+| `chinmina_app_name`        | Name of the GitHub App the token was created through. `default` when the default app is used. |
+| `chinmina_app_id`          | Numeric application ID of that GitHub App.                                                   |
+| `chinmina_installation_id` | Numeric installation ID the token was issued for.                                            |
+
+Git discards attributes it does not recognise, so credential helpers that
+receive these properties are unaffected by them. The `chinmina_` prefix keeps
+them clear of the attributes Git does know: a supplied attribute overwrites the
+value Git holds for `protocol`, `host`, `path`, `username` or `password`.
+
+The setting is for development only. Chinmina Bridge logs a warning at startup
+while it is enabled.
 
 [git-custom-helpers]: https://git-scm.com/docs/gitcredentials#_custom_helpers
 [git-iofmt]: https://git-scm.com/docs/git-credential#IOFMT

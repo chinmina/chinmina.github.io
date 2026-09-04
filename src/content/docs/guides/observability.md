@@ -64,6 +64,8 @@ Server span: POST /token
 
 The server span captures total request duration and HTTP status. The Buildkite API span shows pipeline lookup performance, and the GitHub API span shows token creation performance.
 
+Once the profile resolves, the server span also carries `profile.app.name` and `profile.version_digest`. Split latency and error rate by these to attribute a regression to a single GitHub App or to a configuration generation. See [resolved profile attributes](/reference/telemetry/traces#resolved-profile-attributes).
+
 **SLIs to monitor:**
 
 - p95/p99 server span duration
@@ -124,11 +126,16 @@ Internal span: refresh_organization_profile
 - `profile.digest_current`: Previous configuration hash
 - `profile.digest_updated`: New configuration hash
 - `profile.digest_changed`: Whether content changed
+- `profile.organization.valid_count`: Organization profiles that passed validation
+- `profile.organization.invalid_count`: Organization profiles excluded by validation
+- `profile.pipeline.valid_count`: Named pipeline profiles that passed validation
+- `profile.pipeline.invalid_count`: Named pipeline profiles excluded by validation
 
 **SLIs to monitor:**
 
 - Span error rate (fetch failures affect profile availability)
 - `profile.digest_changed` frequency (unexpected changes may indicate configuration issues)
+- Non-zero `profile.*.invalid_count` (excluded profiles; the warning log names them)
 
 ## Diagnostics
 
@@ -162,10 +169,24 @@ Internal span: refresh_organization_profile
 
 **Remediation:**
 
-- Review GitHub App permissions
+- Review the permissions of the GitHub App the profile resolved to (`profile.app.name` on the span, `token.app` in the audit entry)
 - Verify Buildkite API token scopes
 - Check profile match conditions
 - Investigate panic recovery patterns
+
+### Profile unavailable (404)
+
+**Symptoms:** Requests for a profile return 404 with `profile unavailable: validation failed`. The audit entry `error` field reads `profile "x" unavailable: <cause>`. The refresh span shows a non-zero `invalid_count`.
+
+**Investigation:**
+
+1. Check the warning log `organization profile: some profiles failed validation and were ignored`. The `invalid_profiles` group names each excluded profile and its cause, and is written on every refresh while the profile remains invalid.
+2. When the cause names an app, check the startup log `github app registry entry` for that app. A disabled entry reports `enabled=false` and a `disabledReason`.
+
+**Remediation:**
+
+- Fix the profile configuration: an unknown or empty `app`, or an invalid match pattern
+- For a [disabled app](/guides/multiple-github-apps#disabled-apps), fix the installation so it is reachable and installed on the same GitHub organisation as the default app, then restart. Disabled state persists until restart.
 
 ### Cache inefficiency
 
@@ -177,6 +198,8 @@ Internal span: refresh_organization_profile
 2. Check token expiry times in audit logs
 3. Review repository access patterns
 4. Examine profile configurations
+5. Split `token.cache.outcome` by `token.app` to see whether one GitHub App dominates misses
+6. After an upgrade that changes the cache key, expect a one-time cold cache that clears as entries expire. Release 0.15.0 added app identity to the key.
 
 **Remediation:**
 
@@ -202,7 +225,7 @@ Internal span: refresh_organization_profile
 
 **Remediation:**
 
-- Prefix errors during encryption rollout are expected — unencrypted entries resolve as cached tokens expire (within 15 minutes)
+- Prefix errors during encryption rollout are expected — unencrypted entries resolve as cached tokens expire (within 45 minutes)
 - Decryption failures after key rotation: verify the rotation procedure in the [distributed cache guide](/guides/distributed-cache) and confirm the old primary key was not disabled before cached tokens expired
 - Keyset refresh warnings: verify IAM permissions for Secrets Manager and KMS, then check service health
 - Persistent errors with no configuration changes: check Valkey connectivity and data integrity

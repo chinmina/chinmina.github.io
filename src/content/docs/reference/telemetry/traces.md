@@ -51,6 +51,22 @@ The JWT validation middleware extracts Buildkite identity fields from the authen
 | `buildkite.build_number`      | int    | Build number                        |
 | `buildkite.build_branch`      | string | Branch being built                  |
 
+### Resolved profile attributes
+
+Once the requested profile and its GitHub App are resolved, the handler writes the resolved identity to the request span.
+
+| Attribute                     | Type   | Description                                                                                     |
+| ----------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| `profile.version_digest`      | string | SHA-256 digest of the profile configuration generation the request resolved against             |
+| `profile.name`                | string | Resolved profile reference, in `type:name` form (e.g., `repo:default`, `org:release-publisher`) |
+| `profile.app.name`            | string | Name of the [GitHub App](/guides/multiple-github-apps) the profile resolved to                  |
+| `profile.app.application_id`  | int64  | GitHub App ID                                                                                   |
+| `profile.app.installation_id` | int64  | Installation ID of the app                                                                      |
+
+`profile.app.name` is `default` for the default app. A caller-scoped organization profile renders as `org:name/repository-name` in `profile.name`.
+
+These attributes are absent when the request fails before resolution, such as a 404 for a profile excluded by validation. Match rules are evaluated after resolution, so a 403 match failure carries them.
+
 ### Instrumented endpoints
 
 All authenticated endpoints create server spans:
@@ -121,11 +137,17 @@ The profile refresh span represents periodic background operations that fetch an
 
 ### Profile refresh attributes
 
-| Attribute                | Type   | Description                                                    |
-| ------------------------ | ------ | -------------------------------------------------------------- |
-| `profile.digest_current` | string | SHA-256 digest of previous profile configuration (hex-encoded) |
-| `profile.digest_updated` | string | SHA-256 digest of new profile configuration (hex-encoded)      |
-| `profile.digest_changed` | bool   | Whether configuration content changed                          |
+| Attribute                            | Type   | Description                                                    |
+| ------------------------------------ | ------ | -------------------------------------------------------------- |
+| `profile.digest_current`             | string | SHA-256 digest of previous profile configuration (hex-encoded) |
+| `profile.digest_updated`             | string | SHA-256 digest of new profile configuration (hex-encoded)      |
+| `profile.digest_changed`             | bool   | Whether configuration content changed                          |
+| `profile.organization.valid_count`   | int    | Organization profiles that passed validation                   |
+| `profile.organization.invalid_count` | int    | Organization profiles excluded by validation                   |
+| `profile.pipeline.valid_count`       | int    | Named pipeline profiles that passed validation                 |
+| `profile.pipeline.invalid_count`     | int    | Named pipeline profiles excluded by validation                 |
+
+A non-zero invalid count means profiles were excluded from the generation. The warning log names them.
 
 Attributes are added during the profile update process, after the new profile is computed but before it is stored.
 
@@ -177,6 +199,8 @@ Server span: POST /token
 ├── Client span: GET api.buildkite.com/v2/organizations/.../pipelines/...
 └── Client span: POST api.github.com/app/installations/.../access_tokens
 ```
+
+The GitHub call targets the installation of the app the profile resolved to, at `/app/installations/{installation_id}/access_tokens`.
 
 ### Background refresh flow
 

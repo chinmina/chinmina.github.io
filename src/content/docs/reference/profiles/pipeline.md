@@ -13,6 +13,7 @@ pipeline:
     permissions: ["contents:read", "pull_requests:read"]
   profiles:
     - name: "pr-commenter"
+      app: "<app-name>" # Optional: the GitHub App tokens are created through
       match: # Optional claim matching
         - claim: "pipeline_slug"
           valuePattern: ".*"
@@ -29,6 +30,10 @@ Root element for pipeline profile configuration.
 
 Default permissions applied to all pipeline token requests when no profile is specified. Requests to `/token` or `/git-credentials` (without a profile name) receive these permissions.
 
+The `app` field is not accepted here. Default tokens are always created through
+the default app, and an `app` key under `defaults` fails parsing of the whole
+profile configuration file.
+
 ###### `permissions`
 
 List of GitHub permissions. The `metadata:read` permission is [automatically included](/reference/profiles#automatic-permissions) in all tokens. See the [GitHub documentation for tokens][github-token-permissions] for available permission values.
@@ -40,6 +45,17 @@ A list of named pipeline profiles available for pipelines to request.
 ###### `name`
 
 Profile identifier used in API requests. The name `default` is reserved and cannot be used for a custom profile.
+
+###### `app`
+
+Optional. The name of a GitHub App registered with
+[`GITHUB_APPS`](/reference/configuration#github_apps). Omitted, or set to
+`default`, creates the profile's tokens through the default app.
+
+An empty value, or a name that is not a configured, enabled app, makes the
+profile invalid: requests for it return `404`.
+
+See [using multiple GitHub Apps](/guides/multiple-github-apps).
 
 ###### `match`
 
@@ -69,6 +85,11 @@ pipeline:
     # Allow any pipeline to comment on PRs
     - name: "pr-commenter"
       permissions: ["contents:read", "pull_requests:write"]
+
+    # Push container images using a dedicated GitHub App
+    - name: "build-images"
+      app: packages
+      permissions: ["contents:read", "packages:write"]
 
     # Only main branch can publish releases
     - name: "release-publisher"

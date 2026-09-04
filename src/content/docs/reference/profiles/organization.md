@@ -23,6 +23,7 @@ The profile configuration file is provided as YAML with both organization and pi
 organization:
   profiles:
     - name: "<profile-name>"
+      app: "<app-name>" # Optional: the GitHub App tokens are created through
       match: # Optional: restricts which pipelines can use this profile
         - claim: "<claim-name>"
           value: "<exact-value>" # OR
@@ -52,6 +53,17 @@ A list of profiles within the organization. Each profile must contain:
 ###### `name`
 
 The name of the profile. This should be a unique identifier for the profile.
+
+###### `app`
+
+Optional. The name of a GitHub App registered with
+[`GITHUB_APPS`](/reference/configuration#github_apps). Omitted, or set to
+`default`, creates the profile's tokens through the default app.
+
+An empty value, or a name that is not a configured, enabled app, makes the
+profile invalid: requests for it return `404`.
+
+See [using multiple GitHub Apps](/guides/multiple-github-apps).
 
 ###### `match`
 
@@ -110,6 +122,12 @@ organization:
     - name: "package-registry"
       repositories: ["{{all-repositories}}"]
       permissions: ["packages:read"]
+
+    # publish packages through a dedicated GitHub App
+    - name: "package-publisher"
+      app: packages
+      repositories: ["{{all-repositories}}"]
+      permissions: ["packages:write"]
 
     # let a shared CI pipeline open PRs against any repository it names
     - name: "agent-pr"

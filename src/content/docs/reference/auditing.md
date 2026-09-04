@@ -129,6 +129,20 @@ The repository URL supplied by the client. Present when using `/git-credentials`
 
 The repository URL the token was vended for. Only present on successful token issuance.
 
+###### `app`
+
+The name of the [GitHub App](/guides/multiple-github-apps) the profile resolved to. `default` names the default app.
+
+###### `applicationID`
+
+The GitHub App ID, as an integer.
+
+###### `installationID`
+
+The GitHub App installation ID, as an integer.
+
+These three fields are present once profile resolution succeeds. They remain present when the request fails afterwards, such as when GitHub rejects the token creation request. They are absent when the request fails before resolution. In that case `error` names the reason.
+
 ###### `repositories`
 
 Array of repository URLs the token allows access to. Only present on successful token issuance.
@@ -160,6 +174,8 @@ Array showing which condition failed on denied access. Each element contains `cl
 ### `error`
 
 Top-level field. The error produced by the request. Only present when an error occurred. This may come from internal errors or panics, as well as JWT validation and token creation components.
+
+For a profile excluded by validation the value is `profile "<name>" unavailable: <cause>`. The cause is never sent to the caller.
 
 HTTP error responses return generic messages like "Forbidden" to avoid leaking policy details to clients. Detailed error information is only available in audit logs.
 
@@ -193,6 +209,9 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     "expiryRemaining": 299372
   },
   "token": {
+    "app": "default",
+    "applicationID": 111,
+    "installationID": 222,
     "repositories": ["https://github.com/example-org/example-repo.git"],
     "permissions": ["contents:read"],
     "expiry": "2025-01-20T05:09:45Z",
@@ -232,6 +251,9 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
   },
   "token": {
     "requestedProfile": "release-publisher",
+    "app": "packages",
+    "applicationID": 333,
+    "installationID": 444,
     "matches": [
       { "claim": "pipeline_slug", "value": "silk-release" },
       { "claim": "build_branch", "value": "main" }
@@ -284,6 +306,41 @@ HTTP error responses return generic messages like "Forbidden" to avoid leaking p
     ]
   },
   "error": "profile match conditions not met",
+  "type": "audit",
+  "time": "2025-01-20T04:47:00Z",
+  "message": "audit_event"
+}
+```
+
+### Unavailable profile (validation failed)
+
+```json
+{
+  "level": "INFO",
+  "request": {
+    "method": "POST",
+    "path": "/organization/token/publish-packages",
+    "status": 404,
+    "sourceIP": "1.2.3.4:34340",
+    "userAgent": "curl/8.3.0"
+  },
+  "pipeline": {
+    "organizationSlug": "example-org",
+    "pipelineSlug": "silk-release",
+    "jobID": "0184990a-477b-4fa8-9968-496074483cee",
+    "buildNumber": 8,
+    "buildBranch": "main"
+  },
+  "authorization": {
+    "authorized": true,
+    "subject": "organization:example-org:pipeline:silk-release:ref:refs/heads/main:commit:abc123:step:publish",
+    "issuer": "https://agent.buildkite.com",
+    "audience": ["github-app-auth:example-org"]
+  },
+  "token": {
+    "requestedProfile": "publish-packages"
+  },
+  "error": "profile \"publish-packages\" unavailable: app \"packages\" is not a configured, enabled application",
   "type": "audit",
   "time": "2025-01-20T04:47:00Z",
   "message": "audit_event"
