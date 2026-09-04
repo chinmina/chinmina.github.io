@@ -20,6 +20,7 @@ const sidebar = [
       "guides/buildkite-integration",
       "guides/customizing-permissions",
       "guides/kms",
+      "guides/multiple-github-apps",
       "guides/distributed-cache",
       "guides/observability",
       "guides/deployment-example",

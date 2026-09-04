@@ -59,7 +59,11 @@ deployments from a handful to hundreds of repositories.
    rules](/reference/profiles/matching), additional sets of permissions can be
    declared centrally and accessed as required.
 
-3. Chinmina is a straightforward Go application in a minimal container with
+3. Profiles can create tokens through [additional GitHub
+   Apps](/guides/multiple-github-apps) registered at deploy time. This allows a
+   profile to hold permissions that the default app is not granted.
+
+4. Chinmina is a straightforward Go application in a minimal container with
    12-factor style configuration. It can be deployed in your choice of
    environment.
 
@@ -72,10 +76,11 @@ deployments from a handful to hundreds of repositories.
    Given that it is a simple, containerized HTTP service with Open Telemetry
    support and easy scaling, this is thankfully relatively straightforward.
 
-3. The private key for the GitHub application is extremely powerful, and needs
-   to be carefully protected. It has the superset of permissions that it can
-   delegate. Storing the key in AWS KMS and using careful resource and IAM
-   policies on access is therefore [strongly recommended](/guides/kms).
+3. The private key of each registered GitHub application is extremely powerful,
+   and needs to be carefully protected. Each key has the superset of permissions
+   that it can delegate. Storing keys in AWS KMS and using careful resource and
+   IAM policies on access is therefore [strongly
+   recommended](/guides/kms).
 
 4. Adequate controls are required on Buildkite pipeline creation. At present,
    the bridge will allow access by the pipeline to the configured repository.
@@ -89,8 +94,8 @@ are requested from one of the available [endpoints](#endpoints) using [Buildkite
 OIDC][buildkite-oidc] token for authorization.
 
 GitHub tokens vended by Chinmina have a maximum lifetime of an hour. Chinmina
-will cache tokens internally for up to 15 minutes, so the token received by an
-agent will have an effective lifetime of between 45 and 60 minutes.
+will cache tokens internally for up to 45 minutes, so the token received by an
+agent will have an effective lifetime of between 15 and 60 minutes.
 
 ### Pipeline-based
 

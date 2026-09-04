@@ -19,6 +19,14 @@ Two profile types are available:
 - **[Pipeline profiles](/reference/profiles/pipeline)** - grant elevated permissions to the pipeline's own repository
 - **[Organization profiles](/reference/profiles/organization)** - provide access to other repositories across the organization
 
+## GitHub App selection
+
+A profile may name a registered GitHub App with the `app` field, and its tokens
+are then created through that app's installation. Profiles that omit the field
+use the default app configured by the `GITHUB_APP_*` environment variables.
+
+See [using multiple GitHub Apps](/guides/multiple-github-apps).
+
 ## Configuration
 
 Profiles are configured via a YAML file hosted in a GitHub repository. The
@@ -66,5 +74,6 @@ The special name `default` accesses pipeline default permissions.
 
 - [Customizing token permissions guide](/guides/customizing-permissions) - practical how-to for setting up and using profiles
 - [Profile matching reference](/reference/profiles/matching) - match rule syntax and available claims
+- [Using multiple GitHub Apps](/guides/multiple-github-apps) - registering additional apps and selecting them from a profile
 
 [github-fgpat]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens

@@ -1,0 +1,229 @@
+---
+title: Using multiple GitHub Apps
+description: Register additional GitHub Apps at deploy time so profiles can create tokens through separate permission grants.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components"
+
+A single GitHub App forces one permission grant and one repository selection on
+every profile. The app must be granted the union of everything any profile
+needs, and installed on every repository any profile refers to.
+
+Additional GitHub Apps remove that constraint. Each app is declared in the
+deployment configuration under a logical name, and a profile selects one with
+the `app` property.
+
+Profiles that name no app use the **default app**: the one configured by
+`GITHUB_APP_ID` and its companion variables.
+
+Credentials remain deploy-time configuration. Profile YAML selects from the apps
+already registered and installed, so editing the profile file cannot introduce a
+new credential.
+
+## When to use additional apps
+
+Register an additional app to obtain:
+
+- A separate permission ceiling, such as a packages-publishing app alongside a
+  read-only default app.
+- A separate repository selection, chosen in GitHub when the app is installed.
+- Separate ownership and audit, where a different team administers the app and
+  its key.
+- More installation rate-limit budget, since GitHub applies limits per
+  installation.
+
+<Aside type="caution">
+
+Registering an app raises the privilege ceiling of the profile repository to the
+union of every registered app's grant. Whoever reviews changes to the profile
+file must understand what each app is granted and where it is installed.
+
+Profile YAML shows which app a profile uses and which permissions it requests.
+It does not show the installation's reach: repository selection lives in GitHub.
+
+</Aside>
+
+## Registering an app
+
+<Steps>
+
+1. Create the GitHub App in the **same** GitHub organization as the default app.
+
+   Startup verification compares GitHub account IDs. An app installed on a
+   different account is [disabled](#disabled-apps).
+
+2. Install the app, choosing the repositories it can access.
+
+   This is the limit of the resources the app can vend tokens for.
+
+3. Record the application ID and the installation ID.
+
+   The application ID is in the "About" section of the "General" page of the
+   app. The installation ID is the last segment of the URL on the installation
+   configuration page.
+
+4. Import the app's private key into KMS under its own alias, following
+   [Protecting the GitHub private key](/guides/kms).
+
+   Add the new alias to the `kms:RequestAlias` condition on the Chinmina task
+   role. The condition accepts a list, so enumerate every alias.
+
+5. Declare the app in `GITHUB_APPS`, a JSON array of entries.
+
+   ```json title="GITHUB_APPS"
+   [
+     {
+       "name": "packages",
+       "appId": 234567,
+       "installationId": 87654321,
+       "privateKeyArn": "arn:aws:kms:us-east-1:123456789012:alias/chinmina-packages"
+     }
+   ]
+   ```
+
+   Each entry declares exactly one key source: `privateKeyArn` for a KMS alias,
+   or `privateKey` for inline PEM text. Unknown fields are rejected.
+
+   Names are lowercase letters, digits, `.`, `_` and `-`, must start and end
+   with a letter or digit, and are limited to 64 characters. `default` is
+   reserved for the app configured by `GITHUB_APP_ID`.
+
+   See [`GITHUB_APPS`](/reference/configuration#github_apps) for the full
+   schema.
+
+6. Deploy the new configuration and check the startup log.
+
+   Chinmina writes one entry per registered app, including the default app:
+
+   ```json title="startup log (fields elided)"
+   { "message": "github app registry entry", "app": { "name": "default", "keySource": "privateKeyArn", "organization": "my-org", "enabled": true } }
+   { "message": "github app registry entry", "app": { "name": "packages", "keySource": "privateKeyArn", "organization": "my-org", "enabled": true } }
+   ```
+
+   Each entry also carries `applicationID` and `installationID`, and
+   `disabledReason` when the app is disabled. Neither the key nor its ARN is
+   logged.
+
+</Steps>
+
+<Aside type="tip">
+
+`GITHUB_APPS_FILE` reads the same JSON from a file. Prefer it whenever an entry
+carries an inline `privateKey`: an environment variable is readable from process
+listings, container inspection and rendered task definitions.
+
+Setting both `GITHUB_APPS` and `GITHUB_APPS_FILE` fails startup.
+
+</Aside>
+
+## Selecting an app in a profile
+
+Add `app` to an organization profile or a named pipeline profile:
+
+```yaml title="profiles.yaml" /app: .*/
+organization:
+  profiles:
+    - name: "shared-plugins"
+      repositories: ["buildkite-plugin-1"]
+      permissions: ["contents:read"]
+
+pipeline:
+  profiles:
+    - name: "publish"
+      app: packages
+      permissions: ["contents:read", "packages:write"]
+```
+
+The `shared-plugins` profile omits `app`, so its tokens are created through the default app.
+Writing `app: default` is equivalent and explicit.
+
+`app` is not accepted under `pipeline.defaults`. Strict parsing rejects the
+whole file if it appears there.
+
+Field details are in the [organization
+profile](/reference/profiles/organization#app) and [pipeline
+profile](/reference/profiles/pipeline#app) references.
+
+JSON token responses include the `app` name. The audit entry records the app
+name and its identifiers.
+
+## Disabled apps
+
+At startup, Chinmina queries every registered app's installation concurrently.
+An app is disabled when its installation cannot be queried, or when it is
+installed on a different GitHub account from the default app.
+
+A disabled app stays disabled until the service restarts. The reason appears in
+that app's startup log entry as `disabledReason`.
+
+Profiles that name a disabled app become invalid, and only those profiles are
+excluded. Requests for them return `404`, with the body
+`profile unavailable: validation failed`.
+
+The cause appears in the `error` field of the [audit
+entry](/reference/auditing), and in a warning log stating that some profiles
+failed validation and were ignored. That warning is emitted on every refresh
+while invalid profiles exist.
+
+An unknown app name and a disabled app produce the same profile error. Only the
+startup log distinguishes them.
+
+Startup fails outright, with no listener opened, when:
+
+- The **default** app's installation cannot be queried.
+- `GITHUB_APPS` is malformed: invalid JSON, an unknown field, an invalid or
+  duplicate name, a non-positive identifier, an unparseable key, or neither or
+  both key sources.
+
+Configuration errors name the offending entry by name or index, and never
+include key material.
+
+## Rolling out
+
+Roll the binary first, then publish profile YAML that uses `app`. A Chinmina
+Bridge binary earlier than 0.15.0 rejects the whole profile file when it
+encounters `app`, not just the affected profile.
+
+The same applies in reverse. Rolling the binary back while `app` is published
+rejects the whole file, so revert the YAML first.
+
+`GITHUB_APPS` is deploy-blocking. A malformed entry halts the rollout rather
+than starting an instance with a partial registry.
+
+The upgrade to 0.15.0 changes the token cache key to include the app identity.
+Every existing cached token is orphaned once, so expect a cold cache that clears
+as entries expire. This is most visible with a [distributed
+cache](/guides/distributed-cache), where all instances share the effect.
+
+With [`GITHUB_ORG_PROFILE`](/reference/configuration#github_org_profile) set,
+the service does not accept connections until the first profile generation
+loads. Healthcheck connections are refused until then, so allow for it in your
+deployment's health grace period.
+
+## Revoking access
+
+Narrowing an app's permissions in GitHub does not revoke tokens already issued.
+Tokens live for up to 60 minutes, and cached entries for up to 45 minutes.
+Uninstalling the app revokes them immediately.
+
+Chinmina does not cross-check profile permissions against the installation's
+grant. GitHub enforces the grant when the token is created, and the failure
+appears on the audit entry naming the app.
+
+## Scaling
+
+Metric series and KMS signing calls scale linearly with the number of registered
+apps. The `token.app` attribute on `token.cache.outcome` adds one series per app.
+
+The outgoing connection pool does not scale with app count.
+`SERVER_OUTGOING_MAX_CONNS_PER_HOST` is a per-host limit, and every app uses the
+same GitHub host.
+
+## See also
+
+- [`GITHUB_APPS`](/reference/configuration#github_apps) for the entry schema and
+  validation rules.
+- [Audit logs](/reference/auditing) for the app fields recorded on each token
+  request.
+- [Trace attributes](/reference/telemetry/traces#resolved-profile-attributes)
+  for the resolved app on request spans.

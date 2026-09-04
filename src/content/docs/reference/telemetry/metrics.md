@@ -135,9 +135,12 @@ Counts token cache lookup outcomes in the vendor layer.
 
 ### Attributes
 
-| Attribute            | Type   | Values                          | Description    |
-| -------------------- | ------ | ------------------------------- | -------------- |
-| `token.cache.result` | string | `"hit"`, `"miss"`, `"mismatch"` | Lookup outcome |
+| Attribute            | Type   | Values                          | Description                                    |
+| -------------------- | ------ | ------------------------------- | ---------------------------------------------- |
+| `token.cache.result` | string | `"hit"`, `"miss"`, `"mismatch"` | Lookup outcome                                 |
+| `token.app`          | string | Registered app name             | Name of the GitHub App the profile resolved to |
+
+`token.app` is `"default"` for the default app. Series count scales with the number of registered [GitHub Apps](/guides/multiple-github-apps).
 
 ### Result semantics
 

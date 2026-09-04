@@ -278,8 +278,8 @@ for it.
 
 </Steps>
 
-Each additional GitHub App needs its own alias. Enumerate them:
-`kms:RequestAlias` accepts a list.
+Each [additional GitHub App](/guides/multiple-github-apps) needs its own alias.
+Enumerate them: `kms:RequestAlias` accepts a list.
 
 ```json
 "kms:RequestAlias": ["alias/chinmina-bridge", "alias/chinmina-concierge"]
@@ -332,7 +332,7 @@ alias. Signing requests fail against a key that is not ready.
 
 The alias repoint takes effect immediately for `kms:RequestAlias`, which
 evaluates the alias named in the request. Signing is also infrequent: a JWT is
-minted once every few minutes per instance. Callers see no interruption, and
+created once every few minutes per instance. Callers see no interruption, and
 neither a restart nor a configuration change is required.
 
 The cutover is visible in CloudTrail. When a request names an alias, [the alias

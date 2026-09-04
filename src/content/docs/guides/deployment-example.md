@@ -151,7 +151,7 @@ Chinmina determines which GitHub repository corresponds to a pipeline by calling
 
 ### Token caching and lifetime
 
-GitHub installation tokens have a one-hour lifetime. Chinmina caches these tokens in memory for up to 15 minutes to reduce load on GitHub API and KMS services.
+GitHub installation tokens have a one-hour lifetime. Chinmina caches these tokens for up to 45 minutes to reduce load on GitHub API and KMS services.
 
 Cached tokens are reused for:
 
@@ -297,11 +297,11 @@ All logs are forwarded to the organization's log aggregation platform using stan
 
 ### KMS unavailability
 
-KMS unavailability stops token generation for new requests. However, Chinmina creates JWTs with approximately 30-minute lifetimes and reuses them within that period, providing resilience to brief KMS outages. Cached GitHub tokens (up to 15 minutes) provide additional buffer.
+KMS unavailability stops token generation for new requests. However, Chinmina creates JWTs with approximately 30-minute lifetimes and reuses them within that period, providing resilience to brief KMS outages. Cached GitHub tokens (up to 45 minutes) provide additional buffer.
 
 ### GitHub API failures
 
-GitHub API failures directly impact pipelines unless the requested token exists in the cache. The 15-minute cache window provides partial resilience to GitHub outages for repeated requests.
+GitHub API failures directly impact pipelines unless the requested token exists in the cache. The 45-minute cache window provides partial resilience to GitHub outages for repeated requests.
 
 ### Profile lookup failures
 

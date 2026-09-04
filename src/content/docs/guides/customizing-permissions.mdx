@@ -161,6 +161,24 @@ pipeline:
 
 Pipelines on other branches will receive a 403 error when requesting this profile.
 
+## Creating tokens through a different GitHub App
+
+Permissions granted by a profile are bounded by the GitHub App that creates the token. When a profile needs permissions the default app does not hold, register an additional app and name it with `app`:
+
+```yaml /app: .*/
+pipeline:
+  profiles:
+    - name: "pr-commenter"
+      permissions: ["contents:read", "pull_requests:write"]
+    - name: "publish"
+      app: packages
+      permissions: ["contents:read", "packages:write"]
+```
+
+The `pr-commenter` profile omits `app`, so it uses the default app. The `publish` profile creates tokens through the `packages` app instead.
+
+Apps are registered in the deployment configuration, not in this file. See [Using multiple GitHub Apps](/guides/multiple-github-apps).
+
 ## Next steps
 
 See the [profile reference](/reference/profiles) for:
@@ -169,6 +187,8 @@ See the [profile reference](/reference/profiles) for:
 - Match rule syntax and patterns
 - Available claims for authorization
 - Troubleshooting
+
+See [Using multiple GitHub Apps](/guides/multiple-github-apps) to register an additional app and select it from a profile.
 
 [chinmina-token]: https://github.com/chinmina/chinmina-token-buildkite-plugin
 [credentials-plugin]: https://github.com/chinmina/chinmina-git-credentials-buildkite-plugin

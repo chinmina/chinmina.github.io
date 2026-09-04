@@ -77,10 +77,11 @@ When a token is successfully vended, the response is a JSON object:
 ```json
 {
   "organizationSlug": "my-org",
-  "profile": "org:default",
+  "profile": "repo:default",
   "repositoryUrl": "https://github.com/owner/repository",
   "repositories": { "names": ["owner/repository"] },
   "permissions": ["metadata:read", "contents:read"],
+  "app": "default",
   "token": "ghs_...",
   "hashedToken": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
   "expiry": "2025-12-21T10:00:00Z"
@@ -94,18 +95,26 @@ When a token is successfully vended, the response is a JSON object:
 | `repositoryUrl`    | string | The requested repository URL: this will always be empty                                                                                                                                           |
 | `repositories`     | object | Repositories the token has access to. Either `{"wildcard": true}` (all repositories accessible to the GitHub App installation) or `{"names": ["owner/repo", ...]}` (specific named repositories). |
 | `permissions`      | array  | Permissions granted. Always includes `metadata:read` plus configured permissions.                                                                                                                 |
+| `app`              | string | Name of the GitHub App the token was created through. `default` when the default app is used. See [using multiple GitHub Apps](/guides/multiple-github-apps).                                      |
 | `token`            | string | GitHub installation token (format: `ghs_...`)                                                                                                                                                     |
 | `hashedToken`      | string | SHA-256 hash of the token, base64-encoded (`base64(SHA-256(token))`). Use to correlate with [GitHub organisation audit log events][gh-audit-token] for the same token.                            |
 | `expiry`           | string | ISO 8601 timestamp when token expires                                                                                                                                                             |
 
+`appId` and `installationId` are included only when [`DEV_DISCLOSE_APP_IDENTIFIERS`](/reference/configuration#dev_disclose_app_identifiers)
+is set, a development-only setting.
+
 ### Error responses
 
-| Status code                    | Condition                                                       |
-| ------------------------------ | --------------------------------------------------------------- |
-| `401 Unauthorized`             | Missing or invalid JWT                                          |
-| `403 Forbidden`                | Pipeline doesn't match profile's access rules                   |
-| `404 Not Found`                | Profile does not exist or failed validation                     |
-| `413 Request Entity Too Large` | Request body exceeds 20 KB                                      |
-| `500 Internal Server Error`    | Token vending failure, Buildkite API error, or GitHub API error |
+| Status code                    | Condition                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401 Unauthorized`             | Missing or invalid JWT                                                                                                                            |
+| `403 Forbidden`                | Pipeline doesn't match profile's access rules                                                                                                     |
+| `404 Not Found`                | Profile does not exist, or is unavailable because it failed validation (for example, it names a GitHub App that is not configured or is disabled) |
+| `413 Request Entity Too Large` | Request body exceeds 20 KB                                                                                                                        |
+| `500 Internal Server Error`    | Token vending failure, Buildkite API error, GitHub API error, or the profile names a GitHub App that could not be resolved                        |
+
+A profile that failed validation returns
+`{"error": "profile unavailable: validation failed"}`. The cause is recorded
+only in the [audit log](/reference/auditing).
 
 [gh-audit-token]: https://docs.github.com/en/enterprise-cloud@latest/admin/monitoring-activity-in-your-enterprise/reviewing-audit-logs-for-your-enterprise/identifying-audit-log-events-performed-by-an-access-token
