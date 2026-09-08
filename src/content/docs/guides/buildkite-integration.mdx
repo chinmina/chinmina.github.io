@@ -89,6 +89,8 @@ The simplest way to use tokens is via the `environment` parameter, which
 automatically exports tokens as environment variables. This is the recommended
 approach for most use cases.
 
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
+
 ```yml
 steps:
   - label: "Deploy to production"
@@ -111,6 +113,8 @@ Tokens retrieved from Chinmina Bridge are automatically redacted from build logs
 #### Multiple tokens
 
 For workflows requiring multiple tokens (e.g., accessing different profiles or repositories):
+
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
 
 ```yml
 steps:
@@ -137,6 +141,8 @@ Profile prefixes (`pipeline:`, `org:`) identify the profile type for the plugin.
 For dynamic token selection or complex scripting scenarios, use the
 `chinmina_token` helper script directly. When the plugin is configured without
 an `environment` parameter, it adds the `chinmina_token` script to PATH.
+
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
 
 ```yml
 steps:
@@ -183,6 +189,8 @@ gh release download --repo "${repo}" \
 The [Chinmina Git Credentials][credentials-plugin] plugin enables Git operations
 to authenticate with GitHub using tokens from Chinmina Bridge.
 
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
+
 ```yml
 steps:
   - command: git clone https://github.com/myorg/private-repo.git
@@ -207,6 +215,8 @@ Alternatively, the `BUILDKITE_REPO` value can be overridden in the agent
 
 The Git credentials plugin supports using profiles to access repositories with specific permissions or to access additional repositories beyond the pipeline's own repository:
 
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
+
 ```yml
 steps:
   - command: git clone https://github.com/myorg/shared-repo.git
@@ -219,6 +229,8 @@ steps:
 ### Exclusive credential helper mode
 
 By default, the Git credentials plugin adds the Chinmina credential helper alongside any existing system or global Git credential helpers. The `exclusive` flag clears all previously configured credential helpers for GitHub, ensuring only Chinmina is used.
+
+{/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
 
 ```yml
 steps:
@@ -308,6 +320,8 @@ pipeline settings.
 1. Alter the agent `bootstrap` hook to clone both plugin sources to the agent so
    they can be activated by any step.
 
+    {/* Renovate-managed: keep plugin_repo and plugin_version adjacent. */}
+
     ```bash
     # Chinmina Token plugin
     plugin_repo="https://github.com/chinmina/chinmina-token-buildkite-plugin.git"
@@ -356,6 +370,8 @@ pipeline settings.
 
    With this configuration, pipelines no longer need to specify `chinmina-url`
    and `audience` parameters:
+
+    {/* Renovate-managed: keep the plugin#vX.Y.Z form. */}
 
     ```yml
     plugins:
