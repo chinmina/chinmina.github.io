@@ -4,4 +4,36 @@
     // Floats on the default branch by design. Do not pin.
     "github>chinmina/.github//renovate/shared.json5",
   ],
+
+  // Plugin versions quoted in the guides are docs content, living in .mdx that
+  // the native buildkite manager does not read. The docs use the shorthand
+  // plugin form, so depNameTemplate reattaches the -buildkite-plugin suffix.
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^src/content/docs/.*\\.mdx?$/"],
+      matchStrings: [
+        "chinmina/(?<depName>chinmina-token|chinmina-git-credentials)#(?<currentValue>v\\d+\\.\\d+\\.\\d+)",
+        "plugin_repo=\"https://github\\.com/chinmina/(?<depName>chinmina-token|chinmina-git-credentials)-buildkite-plugin\\.git\"\\s*plugin_version=\"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"",
+      ],
+      depNameTemplate: "chinmina/{{{depName}}}-buildkite-plugin",
+      datasourceTemplate: "github-releases",
+      versioningTemplate: "semver",
+    },
+  ],
+
+  packageRules: [
+    {
+      // Narrowing override; must follow the shared :semanticCommitTypeAll(fix)
+      // and top-level minimumReleaseAge. These refs are prose: nothing is
+      // installed or executed, so the release-age gate only delays accuracy.
+      description: "Buildkite plugin versions in the guides are documentation changes.",
+      matchPackageNames: [
+        "chinmina/chinmina-token-buildkite-plugin",
+        "chinmina/chinmina-git-credentials-buildkite-plugin",
+      ],
+      semanticCommitType: "docs",
+      minimumReleaseAge: null,
+    },
+  ],
 }
