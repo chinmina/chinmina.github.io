@@ -27,7 +27,7 @@
     "sharp": "^0.35.3",
     "starlight-heading-badges": "^0.8.0",
     "starlight-links-validator": "^0.26.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",
