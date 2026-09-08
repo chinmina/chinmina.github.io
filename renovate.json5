@@ -1,0 +1,7 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    // Floats on the default branch by design. Do not pin.
+    "github>chinmina/.github//renovate/shared.json5",
+  ],
+}

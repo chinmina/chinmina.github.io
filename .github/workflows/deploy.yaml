@@ -33,7 +33,13 @@ jobs:
 
   deploy-cloudflare:
     needs: build
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+    # Fork PRs can't reach the Cloudflare secrets; bot PRs shouldn't spend a
+    # deployment. Keyed on PR author, not github.actor, so a human reopening a
+    # bot PR doesn't deploy it either.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.type != 'Bot')
     runs-on: ubuntu-latest
     permissions:
       contents: read
