@@ -84,7 +84,7 @@ is `true`, Chinmina Bridge adds three properties to its credential output:
 Git discards attributes it does not recognise, so credential helpers that
 receive these properties are unaffected by them. The `chinmina_` prefix keeps
 them clear of the attributes Git does know: a supplied attribute overwrites the
-value Git holds for `protocol`, `host`, `path`, `username` or `password`.
+value Git holds for `protocol`, `host`, `path`, `username`, or `password`.
 
 The setting is for development only. Chinmina Bridge logs a warning at startup
 while it is enabled.

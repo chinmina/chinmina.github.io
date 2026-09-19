@@ -9,7 +9,7 @@ This document describes how an example organization deploys Chinmina, showing th
 
 The organization runs Chinmina on AWS within a dedicated VPC. The service runs as an ECS Fargate task in a Chainguard static container as a non-root user, serving Buildkite agents that run on EC2 instances in the same VPC.
 
-```d2 sketch=true title="Example Chinmina deployment architecture"
+```d2 title="Example Chinmina deployment architecture"
 direction: down
 
 cloud-services: External services {
@@ -104,7 +104,7 @@ Chinmina validates the token signature, checks the audience matches its configur
 
 ### Token request sequence
 
-```d2 sketch=true title="Token request flow"
+```d2 title="Token request flow"
 shape: sequence_diagram
 
 agent: Buildkite Agent

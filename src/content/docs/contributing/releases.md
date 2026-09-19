@@ -3,7 +3,7 @@ title: Release process
 description: How releases of Chinmina are considered ready, and how they're created.
 ---
 
-```d2 sketch=true title="Release pipeline"
+```d2 title="Release pipeline"
 grid-rows: 2
 grid-gap: 60
 
