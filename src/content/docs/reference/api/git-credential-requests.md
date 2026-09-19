@@ -12,35 +12,32 @@ It applies to:
 - [`POST /git-credentials` and `POST /git-credentials/{profile}`](/reference/api/pipeline-git-credentials)
 - [`POST /organization/git-credentials/{profile}`](/reference/api/organization-git-credentials)
 
-## Protocol integration, not authorization
+## Git protocol support
 
 Chinmina Bridge implements the Git credential helper protocol natively, so Git
 calls it directly rather than through a script that translates between formats.
 The `protocol`, `host` and `path` properties in a request body describe the
 request's target: the URL Git is asking about.
 
-Those properties exist so that Chinmina Bridge behaves as a well-formed
-credential helper. They are not a security boundary. The empty response is the
-clearest case: Git reads a 200 carrying no properties as "this helper has
-nothing for that URL" and moves on to the next helper in its chain, which is how
-several helpers coexist for one repository. An error in its place would end the
-operation instead, because the credential helper treats a failed HTTP request as
-a failure rather than a decline.
+The target is not a security boundary. It exists so Chinmina Bridge works
+within Git's credential chain, where a 200 carrying no properties reads as a
+decline and Git moves on to the next configured helper for the repository. An
+error in place of that response would end the operation, because the credential
+helper treats a failed HTTP request as a failure rather than a decline.
 
-Three controls decide what a caller may receive, and none of them is in the
-request body:
+Authority comes from three controls, none of which is in the request body:
 
-- The Buildkite OIDC token, validated before the body is read, which establishes
-  the calling pipeline's identity.
-- The profile's [match rules](/reference/profiles/matching), which decide
-  whether that pipeline may use the profile it named.
+- The Buildkite OIDC token, validated before the body is read, establishes the
+  calling pipeline's identity.
+- The profile's [match rules](/reference/profiles/matching) decide whether that
+  pipeline may use the profile it named.
 - The [profile's permissions](/reference/profiles) and the reach of the GitHub
-  App installation, which bound what the issued token can do.
+  App installation bound what the issued token can do.
 
-A target therefore narrows the answer to something the caller is already
-entitled to, or produces no credentials at all. It cannot widen one. A
-caller-scoped organization profile is the only case where the target selects a
-repository, and it selects within authority the profile already grants.
+A target narrows that authority or declines the request, and cannot extend it.
+Caller-scoped organization profiles are the only case where the target selects
+a repository, and the selection stays inside the grant the profile already
+carries.
 
 The [`/token`](/reference/api/pipeline-token) and
 [`/organization/token/{profile}`](/reference/api/organization-token) endpoints
@@ -97,8 +94,8 @@ serve -> err: "profile, scope or upstream failure"
 | Routing                                                           | 404 when the method and path do not match a route              |
 | Authentication                                                    | 401 when the OIDC token is missing or invalid                  |
 | [Property parsing](#property-parsing)                             | 413 when the body exceeds 20 KB, 500 on any other read failure |
-| [`protocol` and `host` required](#protocol-and-host-are-required) | 200 with no credentials, or 400                                |
-| [GitHub over HTTPS only](#only-github-over-https-is-supported)    | 200 with no credentials                                        |
+| [Protocol and host required](#protocol-and-host-required)                     | 200 with no credentials, or 400                                |
+| [GitHub repositories only](#github-repositories-only)              | 200 with no credentials                                        |
 | Profile resolution                                                | 400, 404 or 500                                                |
 | Profile match rules                                               | 403 when the caller may not use the profile                    |
 | [Repository matching](#repository-matching)                       | 200 with credentials, or 200 with no credentials               |
@@ -125,11 +122,11 @@ Parsing is deliberately tolerant:
 - A repeated key keeps the last value supplied.
 - Properties Chinmina Bridge does not use are ignored.
 
-A malformed line therefore does not fail the request. Only a failure to read
-the body does: an oversized body returns 413, and any other read failure
-returns 500. Both carry the `Chinmina-Denied` header.
+A malformed line does not fail the request; only a failure to read the body
+does. An oversized body returns 413 and any other read failure returns 500,
+both carrying the `Chinmina-Denied` header.
 
-## `protocol` and `host` are required
+## Protocol and host required
 
 A request that supplies no target at all is well formed but unfulfillable, and
 returns 200 with no credentials. A request that supplies part of a target must
@@ -162,7 +159,7 @@ Consequences:
 - No whitespace is trimmed. A property valued with a space is a supplied value,
   not an absent one.
 
-## Only GitHub over HTTPS is supported
+## GitHub repositories only
 
 Chinmina Bridge issues credentials for exactly one destination: `protocol=https`
 with `host=github.com`. The supplied values are compared literally. Any other
@@ -198,36 +195,31 @@ and the kind of profile named by the request.
 | A repository the profile covers         | Credentials      | Credentials                 | Credentials                        | Credentials                   |
 | A repository the profile does not cover | 200 empty        | 200 empty                   | Credentials                        | Credentials                   |
 
-Each profile kind decides coverage differently.
-
 ### Pipeline profiles
 
-The reconstructed request URL must equal the repository URL Buildkite reports
-for the authenticated pipeline. An SSH-form repository is translated to HTTPS
-before the comparison, which is otherwise exact. A failed Buildkite lookup
-returns 500; it is not converted into an empty response.
-
-See [pipeline profiles](/reference/profiles/pipeline).
+A [pipeline profile](/reference/profiles/pipeline) covers the repository
+Buildkite reports for the authenticated pipeline, and the reconstructed request
+URL must equal that repository's URL. An SSH-form repository is translated to
+HTTPS before the comparison, which is otherwise exact. A failed Buildkite
+lookup returns 500 rather than an empty response.
 
 ### Static organization profiles
 
-The repository name from the request must appear in the profile's
-`repositories` list. Only the name is compared: a `.git` suffix is removed and
-the owner is ignored. The GitHub App installation's reach, not this comparison,
-determines which repositories a token can actually be used for.
-
-See [organization profiles](/reference/profiles/organization).
+A static [organization profile](/reference/profiles/organization) covers the
+repositories named in its `repositories` list, and the repository name from the
+request must appear there. Only the name is compared, with a `.git` suffix
+removed and the owner ignored. The GitHub App installation's reach, not this
+comparison, determines which repositories a token can actually be used for.
 
 ### Caller-scoped organization profiles
 
-The token is scoped to the repository name derived from `path`, so every
-derivable repository is covered. A path that derives no name returns 400 with
-`repository scope is required for this profile`. Omitted, empty, root and
-owner-only paths derive nothing, as do paths whose repository component contains
-a further `/`, whitespace or control characters.
-
-See [caller-scoped
-repositories](/reference/profiles/organization#caller-scoped-repositories).
+A [caller-scoped
+profile](/reference/profiles/organization#caller-scoped-repositories) covers
+every repository derivable from `path`, and scopes its token to the name
+derived. A path that derives no name returns 400 with `repository scope is
+required for this profile`. Omitted, empty, root and owner-only paths derive
+nothing, as do paths whose repository component contains a further `/`,
+whitespace or control characters.
 
 ### Wildcard organization profiles
 
