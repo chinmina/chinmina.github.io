@@ -17,7 +17,7 @@ The [`/token`](/reference/api/pipeline-token) and
 accept no Git credential context, and none of the rules below apply to them.
 
 The `protocol`, `host` and `path` properties in the request body describe the
-credential context Git is asking about. They do not describe the caller's
+request's target: the URL Git is asking about. They do not describe the caller's
 authority, which comes from the OIDC token and the profile's
 [match rules](/reference/profiles/matching). The choice between an empty
 response and an error is a protocol decision: an empty response lets Git
@@ -31,11 +31,11 @@ Each stage either answers the request or passes it to the next.
 ```d2 sketch=true title="Git credential request classification"
 direction: right
 
-classify: Requested context {
-  complete: Target completeness
-  support: Destination support
+classify: Requested target {
+  complete: "protocol and host required"
+  support: "https://github.com only"
 
-  complete -> support: "protocol and host supplied"
+  complete -> support: "both supplied"
 }
 
 serve: Profile and repository {
@@ -61,9 +61,9 @@ err: "Error" {
 }
 
 classify.complete -> empty: "no target supplied"
-classify.complete -> bad
+classify.complete -> bad: "partly supplied"
 classify.support -> empty: "unsupported destination"
-classify.support -> serve.resolve: "https and github.com"
+classify.support -> serve.resolve
 serve.repo -> empty: "repository not covered"
 serve.mint -> creds
 serve -> err: "profile, scope or upstream failure"
@@ -74,8 +74,8 @@ serve -> err: "profile, scope or upstream failure"
 | Routing                                          | 404 when the method and path do not match a route               |
 | Authentication                                   | 401 when the OIDC token is missing or invalid                   |
 | [Property parsing](#property-parsing)            | 413 when the body exceeds 20 KB, 500 on any other read failure  |
-| [Target completeness](#target-completeness)      | 200 with no credentials, or 400                                 |
-| [Destination support](#supported-destinations)   | 200 with no credentials                                         |
+| [`protocol` and `host` required](#protocol-and-host-are-required) | 200 with no credentials, or 400                |
+| [GitHub over HTTPS only](#only-github-over-https-is-supported) | 200 with no credentials                           |
 | Profile resolution                               | 400, 404 or 500                                                 |
 | Profile match rules                              | 403 when the caller may not use the profile                     |
 | [Repository matching](#repository-matching)      | 200 with credentials, or 200 with no credentials                |
@@ -86,8 +86,8 @@ installed ahead of authentication, but only takes effect when the handler reads
 the body, so an oversized request without a valid token returns 401 rather than
 413.
 
-Target completeness and destination support are settled before any profile
-lookup, cache access, Buildkite repository lookup or GitHub token mint. A
+Both checks on the requested target are settled before any profile lookup,
+cache access, Buildkite repository lookup or GitHub token mint. A
 request answered at either stage cannot be affected by the profile it names, by
 the cache, or by the state of either upstream service.
 
@@ -107,13 +107,13 @@ A malformed line therefore does not fail the request. Only a failure to read
 the body does: an oversized body returns 413, and any other read failure
 returns 500. Both carry the `Chinmina-Denied` header.
 
-## Target completeness
+## `protocol` and `host` are required
 
 A request that supplies no target at all is well formed but unfulfillable, and
 returns 200 with no credentials. A request that supplies part of a target must
 supply all of the required parts.
 
-`protocol` and `host` are required. `path` is optional: Git omits it when
+`path` is optional: Git omits it when
 [`credential.useHttpPath`][use-http-path] is false. An omitted property and an
 explicitly empty one (`host=`) are equivalent everywhere.
 
@@ -140,7 +140,7 @@ Consequences:
 - No whitespace is trimmed. A property valued with a space is a supplied value,
   not an absent one.
 
-## Supported destinations
+## Only GitHub over HTTPS is supported
 
 Chinmina Bridge issues credentials for exactly one destination: `protocol=https`
 with `host=github.com`. The supplied values are compared literally. Any other
