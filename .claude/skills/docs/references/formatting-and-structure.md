@@ -51,6 +51,20 @@ For procedures, use the `<Steps>` component:
 
 Keep paragraphs to **1-3 sentences**. Single-sentence paragraphs are acceptable and common.
 
+A run of one-sentence paragraphs is as poor as one long paragraph. Fuse a claim with the mechanism that justifies it rather than asserting each separately.
+
+**Bad:** (a sequence of single-thought paragraphs)
+
+> "Those properties exist to integrate with the credential helper protocol. They are not a security boundary."
+>
+> "Git reads a 200 carrying no properties as a decline and moves on to the next helper."
+>
+> "An error instead would end the operation."
+
+**Good:**
+
+> "The target is not a security boundary. It exists so Chinmina Bridge works within Git's credential chain, where a 200 carrying no properties reads as a decline and Git moves on to the next configured helper for the repository."
+
 **Good:**
 
 > "Chinmina itself is a simple service, but it sits in the middle of an ecosystem. This means that a working installation requires a number of setup items."
@@ -135,6 +149,27 @@ The `Later` component itself is defined as a custom inline component (see [MDX c
 This pattern keeps procedural guides self-contained: the reader finishes the guide with all the values they need, without backtracking.
 
 ## Formatting Conventions
+
+### Headings
+
+Reference headings are compact noun or rule phrases, one to four words. Existing pages use `## Purpose`, `## Characteristics`, `## Log format`, `## Caller-scoped repositories`, and `## Response format`.
+
+A heading names what the section covers, or states the rule it enforces. It does not need a copula, and it does not carry rhetorical shape.
+
+**Good:**
+
+- `## Protocol and host required`
+- `## GitHub repositories only`
+- `## Git protocol support`
+
+**Bad:**
+
+- `## The request target is not a security boundary` — long; the claim belongs in the body
+- `` ## `protocol` and `host` are required `` — the copula is dead weight
+- `## Protocol integration, not authorization` — "X, not Y" is rhetorical shape
+- `## Request target` — a bare category noun that does not describe the content
+
+Keep the anchor usable, because other pages link to it. `## Only https://github.com supported` yields `#only-httpsgithubcom-supported`.
 
 ### Bold for Emphasis
 
