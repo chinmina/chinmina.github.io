@@ -61,7 +61,7 @@ value from a file. For each, a `_FILE` variant holds a path, and the file's
 contents, trimmed of surrounding whitespace, are used as the value.
 
 This keeps sensitive values out of the process environment, which is readable
-from process listings, container inspection and rendered task definitions.
+from process listings, container inspection, and rendered task definitions.
 
 Setting both a variable and its `_FILE` variant fails startup, as the intended
 source is ambiguous. A `_FILE` path that cannot be read, or whose trimmed
@@ -362,7 +362,7 @@ Without `GITHUB_APPS`, no installation is queried at startup.
 
 Each app is logged at startup with the message `github app registry entry` and
 an `app` group containing `name`, `applicationID`, `installationID`,
-`keySource`, `organization`, `enabled` and `disabledReason`.
+`keySource`, `organization`, `enabled`, and `disabledReason`.
 
 All apps share the same GitHub API endpoint. Only their credentials differ.
 
