@@ -14,30 +14,35 @@ It applies to:
 
 ## Git protocol support
 
-Chinmina Bridge implements the Git credential helper protocol natively, so Git
-calls it directly rather than through a script that translates between formats.
-The `protocol`, `host` and `path` properties in a request body describe the
+Chinmina Bridge implements the Git credential helper protocol natively, keeping
+most of the logic out of any credential helper that exercises it. The
+`protocol`, `host`, and `path` properties in a request body describe the
 request's target: the URL Git is asking about.
 
-The target is not a security boundary. It exists so Chinmina Bridge works
-within Git's credential chain, where a 200 carrying no properties reads as a
-decline and Git moves on to the next configured helper for the repository. An
-error in place of that response would end the operation, because the credential
-helper treats a failed HTTP request as a failure rather than a decline.
+The supplied target repository is not a security boundary. It exists so Chinmina
+Bridge works within Git's credential chain, where a 200 carrying no properties
+reads as a decline and Git moves on to the next configured helper for the
+repository. Git ignores a helper's exit status, so an error in place of that
+response does not stop the chain; it only adds the failure to the build log.
 
-Authority comes from three controls, none of which is in the request body:
+Authorization is determined by three controls:
 
-- The Buildkite OIDC token, validated before the body is read, establishes the
-  calling pipeline's identity.
+- The `Authorization` header carries the Buildkite OIDC token which establishes the
+  calling pipeline's identity. This is validated before the body is read.
 - The profile's [match rules](/reference/profiles/matching) decide whether that
   pipeline may use the profile it named.
 - The [profile's permissions](/reference/profiles) and the reach of the GitHub
   App installation bound what the issued token can do.
 
-A target narrows that authority or declines the request, and cannot extend it.
-Caller-scoped organization profiles are the only case where the target selects
-a repository, and the selection stays inside the grant the profile already
-carries.
+A target repository allows the request to be filtered according to the Git
+credential helper protocol, so credential helpers function without spurious
+error messages and the service telemetry stays clean. Caller-scoped organization
+profiles are the only case where the target selects a repository, and the
+selected repository must be one that the GitHub application has access to.
+
+The Git-specific logic of these specialized handlers keeps more complicated
+processing and quality testing central, rather than distributed to all
+credential helper implementations.
 
 The [`/token`](/reference/api/pipeline-token) and
 [`/organization/token/{profile}`](/reference/api/organization-token) endpoints
@@ -86,35 +91,35 @@ classify.support -> empty: "unsupported destination"
 classify.support -> serve.resolve
 serve.repo -> empty: "repository not covered"
 serve.mint -> creds
-serve -> err: "profile, scope or upstream failure"
+serve -> err: "profile, scope, or upstream failure"
 ```
 
-| Stage                                                             | Answers with                                                   |
-| ----------------------------------------------------------------- | -------------------------------------------------------------- |
-| Routing                                                           | 404 when the method and path do not match a route              |
-| Authentication                                                    | 401 when the OIDC token is missing or invalid                  |
-| [Property parsing](#property-parsing)                             | 413 when the body exceeds 20 KB, 500 on any other read failure |
-| [Protocol and host required](#protocol-and-host-required)                     | 200 with no credentials, or 400                                |
-| [GitHub repositories only](#github-repositories-only)              | 200 with no credentials                                        |
-| Profile resolution                                                | 400, 404 or 500                                                |
-| Profile match rules                                               | 403 when the caller may not use the profile                    |
-| [Repository matching](#repository-matching)                       | 200 with credentials, or 200 with no credentials               |
-| Token issuance                                                    | 403 when GitHub refuses, 500 on other upstream failures        |
+| Stage                                                     | Answers with                                                   |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| Routing                                                   | 404 when the method and path do not match a route              |
+| Authentication                                            | 401 when the OIDC token is missing or invalid                  |
+| [Property parsing](#property-parsing)                     | 413 when the body exceeds 20 KB, 500 on any other read failure |
+| [Protocol and host required](#protocol-and-host-required) | 200 with no credentials, or 400                                |
+| [GitHub repositories only](#github-repositories-only)     | 200 with no credentials                                        |
+| Profile resolution                                        | 400, 404, or 500                                               |
+| Profile match rules                                       | 403 when the caller may not use the profile                    |
+| [Repository matching](#repository-matching)               | 200 with credentials, or 200 with no credentials               |
+| Token issuance                                            | 403 when GitHub refuses, 500 on other upstream failures        |
 
 Authentication runs before the body is touched. The 20 KB body limit is
 installed ahead of authentication, but only takes effect when the handler reads
 the body, so an oversized request without a valid token returns 401 rather than 413.
 
 Both checks on the requested target are settled before any profile lookup,
-cache access, Buildkite repository lookup or GitHub token mint. A
-request answered at either stage cannot be affected by the profile it names, by
-the cache, or by the state of either upstream service.
+cache access, Buildkite repository lookup, or GitHub token mint. Their outcome
+does not vary with the profile named, the cache state, or either upstream
+service.
 
 ## Property parsing
 
 The request body follows Git's
 [credential helper input format](/reference/git-credentials-format#input-format).
-Parsing is deliberately tolerant:
+Parsing is tolerant:
 
 - Each line is split at the first `=`. The remainder of the line is the value.
 - The first empty line terminates input. Anything after it is ignored.
@@ -122,9 +127,9 @@ Parsing is deliberately tolerant:
 - A repeated key keeps the last value supplied.
 - Properties Chinmina Bridge does not use are ignored.
 
-A malformed line does not fail the request; only a failure to read the body
-does. An oversized body returns 413 and any other read failure returns 500,
-both carrying the `Chinmina-Denied` header.
+A malformed line does not fail the request. A failure to read the body returns
+413 when the body exceeded 20 KB, and 500 otherwise. Both carry the
+`Chinmina-Denied` header.
 
 ## Protocol and host required
 
@@ -153,11 +158,9 @@ Consequences:
 - A path on its own returns 400. `path=owner/repository` and `path=/` both
   supply target information, and neither substitutes for a missing `protocol`
   or `host`.
-- An unsupported value does not excuse a missing counterpart. A request with an
-  unsupported protocol and no host returns 400, because the target is
-  incomplete.
-- No whitespace is trimmed. A property valued with a space is a supplied value,
-  not an absent one.
+- A request with an unsupported protocol and no host returns 400. Completeness
+  is checked before destination support.
+- No whitespace is trimmed. A property valued with a space counts as supplied.
 
 ## GitHub repositories only
 
@@ -178,9 +181,8 @@ the supported pair:
 | `host=` plus spaces   | Whitespace is not trimmed     |
 
 An unsupported destination is classified before the requested profile is
-resolved. An unknown profile name, or one the caller may not use, still returns
-200 with no credentials when the destination is unsupported: the profile is
-never consulted, because no profile could fulfil the request.
+resolved, so the profile is never consulted. An unknown profile name, or one the
+caller may not use, still returns 200 with no credentials.
 
 ## Repository matching
 
@@ -208,8 +210,8 @@ lookup returns 500 rather than an empty response.
 A static [organization profile](/reference/profiles/organization) covers the
 repositories named in its `repositories` list, and the repository name from the
 request must appear there. Only the name is compared, with a `.git` suffix
-removed and the owner ignored. The GitHub App installation's reach, not this
-comparison, determines which repositories a token can actually be used for.
+removed and the owner ignored. The GitHub App installation's reach determines
+which repositories the token can actually be used for.
 
 ### Caller-scoped organization profiles
 
@@ -217,9 +219,9 @@ A [caller-scoped
 profile](/reference/profiles/organization#caller-scoped-repositories) covers
 every repository derivable from `path`, and scopes its token to the name
 derived. A path that derives no name returns 400 with `repository scope is
-required for this profile`. Omitted, empty, root and owner-only paths derive
+required for this profile`. Omitted, empty, root, and owner-only paths derive
 nothing, as do paths whose repository component contains a further `/`,
-whitespace or control characters.
+whitespace, or control characters.
 
 ### Wildcard organization profiles
 
@@ -244,7 +246,7 @@ individual endpoint pages document the properties returned.
 `Content-Type: text/plain`, `Content-Length: 0`, an empty body, and no
 `Chinmina-Denied` header. Git treats this as "this helper has nothing for that
 URL" and moves on to the next configured helper. Empty target, unsupported
-destination and repository mismatch all produce the same response.
+destination, and repository mismatch all produce the same response.
 
 ### Incomplete target (400)
 
@@ -265,12 +267,12 @@ Every request is audited, including those answered before profile resolution.
 
 - A response carrying no credentials records
   `skipped(success): no credentials for requested context` as its error value.
-  This is a successful outcome, not a failure, and applies equally to an empty
-  target, an unsupported destination and a repository mismatch.
+  The value records a success, and applies equally to an empty target, an
+  unsupported destination, and a repository mismatch.
 - The requested repository is recorded as the URL reconstructed from the
   supplied properties, including for an unsupported destination. An empty
   target has no requested repository, and an incomplete target records none.
 - A request answered before profile resolution records the profile name it
-  asked for, and no resolved profile, App or token metadata.
+  asked for, and no resolved profile, App, or token metadata.
 
 [use-http-path]: https://git-scm.com/docs/gitcredentials#Documentation/gitcredentials.txt-credentialuseHttpPath
