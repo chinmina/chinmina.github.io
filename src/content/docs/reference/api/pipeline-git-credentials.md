@@ -101,10 +101,10 @@ password_expiry_utc=1705320600
 
 The response body is plain text with newline-separated key-value pairs. Git
 parses this and uses the credentials for the requested operation. The
-`protocol`, `host` and `path` lines echo the request.
+`protocol`, `host`, and `path` lines echo the request.
 
 With [`DEV_DISCLOSE_APP_IDENTIFIERS`](/reference/configuration#dev_disclose_app_identifiers)
-set, the response also carries `chinmina_app_name`, `chinmina_app_id` and
+set, the response also carries `chinmina_app_name`, `chinmina_app_id`, and
 `chinmina_installation_id`. See [development
 properties](/reference/git-credentials-format#development-properties). This
 setting is for development only.
