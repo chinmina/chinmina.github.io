@@ -58,6 +58,7 @@ const sidebar = [
           "reference/api/pipeline-token",
           "reference/api/organization-git-credentials",
           "reference/api/organization-token",
+          "reference/api/git-credential-requests",
         ],
       },
     ],

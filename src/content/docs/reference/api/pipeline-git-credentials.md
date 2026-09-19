@@ -76,6 +76,11 @@ host=github.com
 path=owner/repository
 ```
 
+`protocol` and `host` are required and must be non-empty. `path` is optional.
+[Git credential request handling](/reference/api/git-credential-requests)
+describes how the request target is validated, and which targets return no
+credentials without consulting the profile.
+
 ## Response format
 
 ### Success response (200 OK)
@@ -103,18 +108,24 @@ setting is for development only.
 
 ### Empty response (200 OK)
 
-When the requested repository does not match the pipeline's repository, the
-endpoint returns a successful but empty response. See [Git credentials
-format](/reference/git-credentials-format#empty-response) for details on
-empty response behavior.
+The endpoint returns a successful but empty response when it has no credentials
+for the requested context: the request supplies no target, names a destination
+other than `https` and `github.com`, or requests a repository other than the
+pipeline's. See [Git credential request
+handling](/reference/api/git-credential-requests) for the full set of
+conditions, and [Git credentials
+format](/reference/git-credentials-format#empty-response) for how Git treats the
+response.
 
 ### Error responses
 
 | Status code               | Condition                                                                                                                                         | Response                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 400 Bad Request           | Target partially specified: `protocol` or `host` missing or empty                                                                                 | `Bad Request` in plain text          |
 | 401 Unauthorized          | Missing or invalid JWT                                                                                                                            | JSON error                           |
 | 403 Forbidden             | Pipeline doesn't match profile's access rules                                                                                                     | Empty body, `Chinmina-Denied` header |
 | 404 Not Found             | Profile does not exist, or is unavailable because it failed validation (for example, it names a GitHub App that is not configured or is disabled) | Empty body, `Chinmina-Denied` header |
+| 413 Content Too Large     | Request body exceeds the 20 KB limit                                                                                                              | Empty body, `Chinmina-Denied` header |
 | 500 Internal Server Error | Token vending failure, Buildkite or GitHub API error, or the profile names a GitHub App that could not be resolved                                | Empty body, `Chinmina-Denied` header |
 
 Errors raised by the endpoint carry no response body. The caller-facing reason
@@ -124,8 +135,8 @@ the [audit log](/reference/auditing). A profile that failed validation reports
 content as part of an error message.
 
 Two cases differ. A JWT validation failure is answered by the authentication
-middleware with a JSON body and a `WWW-Authenticate` header. A request body
-that cannot be parsed as credential helper input is answered with a plain text
-status line and no `Chinmina-Denied` header.
+middleware with a JSON body and a `WWW-Authenticate` header. An incomplete
+request target is answered with a plain text status line and no
+`Chinmina-Denied` header.
 
 [helper-protocol]: /reference/git-credentials-format

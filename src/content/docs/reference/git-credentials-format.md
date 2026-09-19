@@ -65,6 +65,11 @@ Empty responses are used when:
 
 This behaviour allows multiple credential helpers to coexist, with each handling different URL patterns.
 
+Chinmina Bridge returns an empty response for an absent target, an unsupported
+destination, and a repository its profile does not cover. [Git credential
+request handling](/reference/api/git-credential-requests) documents the exact
+conditions and the response headers that accompany them.
+
 ## Development properties
 
 When [`DEV_DISCLOSE_APP_IDENTIFIERS`](/reference/configuration#dev_disclose_app_identifiers)
