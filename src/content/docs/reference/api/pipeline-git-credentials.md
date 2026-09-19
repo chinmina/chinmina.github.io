@@ -76,7 +76,10 @@ host=github.com
 path=owner/repository
 ```
 
-`protocol` and `host` are required and must be non-empty. `path` is optional.
+When any of `protocol`, `host`, or `path` is non-empty, both `protocol` and
+`host` must be non-empty. An entirely empty target returns 200 without
+credentials. `path` is optional.
+
 [Git credential request handling](/reference/api/git-credential-requests)
 describes how the request target is validated, and which targets return no
 credentials without consulting the profile.

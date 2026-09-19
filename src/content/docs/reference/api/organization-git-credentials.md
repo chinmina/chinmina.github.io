@@ -64,8 +64,8 @@ The API does not use prefixes. Prefixes like `org:` are part of the plugin inter
 For profiles configured with `repositories: ["{{caller-scoped-repository}}"]`
 (see [caller-scoped repositories](/reference/profiles/organization#caller-scoped-repositories)),
 the target repository is derived automatically from the `path` field in the
-request body — no extra parameter is needed. If the body doesn't resolve to a
-repository, the request returns `400 Bad Request`. See [caller-scoped
+request body. For a supported destination, a path that does not resolve to a
+repository returns `400 Bad Request`. See [caller-scoped
 organization
 profiles](/reference/api/git-credential-requests#caller-scoped-organization-profiles)
 for the paths that derive a repository.
@@ -80,8 +80,11 @@ host=github.com
 path=owner/repository
 ```
 
-`protocol` and `host` are required and must be non-empty. `path` is optional,
-except on a caller-scoped profile, which derives its repository from it.
+When any of `protocol`, `host`, or `path` is non-empty, both `protocol` and
+`host` must be non-empty. An entirely empty target returns 200 without
+credentials. For a supported destination, caller-scoped profiles require a
+`path` that resolves to a repository. `path` is optional for other profiles.
+
 [Git credential request handling](/reference/api/git-credential-requests)
 describes how the request target is validated, and which targets return no
 credentials without consulting the profile.

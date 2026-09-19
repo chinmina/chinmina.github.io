@@ -94,17 +94,17 @@ serve.mint -> creds
 serve -> err: "profile, scope, or upstream failure"
 ```
 
-| Stage                                                     | Answers with                                                   |
+| Stage                                                     | Outcome                                                   |
 | --------------------------------------------------------- | -------------------------------------------------------------- |
 | Routing                                                   | 404 when the method and path do not match a route              |
 | Authentication                                            | 401 when the OIDC token is missing or invalid                  |
 | [Property parsing](#property-parsing)                     | 413 when the body exceeds 20 KB, 500 on any other read failure |
 | [Protocol and host required](#protocol-and-host-required) | 200 with no credentials, or 400                                |
 | [GitHub repositories only](#github-repositories-only)     | 200 with no credentials                                        |
-| Profile resolution                                        | 400, 404, or 500                                               |
+| Profile resolution                                        | 400, including an unresolved caller-scoped repository; 404 or 500 for other resolution failures |
 | Profile match rules                                       | 403 when the caller may not use the profile                    |
-| [Repository matching](#repository-matching)               | 200 with credentials, or 200 with no credentials               |
-| Token issuance                                            | 403 when GitHub refuses, 500 on other upstream failures        |
+| [Repository matching](#repository-matching)               | Continues on a match; 200 with no credentials on mismatch; 500 if the Buildkite repository lookup fails |
+| Token issuance                                            | 200 with credentials; 403 when GitHub refuses; 500 on other upstream failures |
 
 Authentication runs before the body is touched. The 20 KB body limit is
 installed ahead of authentication, but only takes effect when the handler reads
