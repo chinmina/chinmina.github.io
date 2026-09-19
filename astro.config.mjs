@@ -98,7 +98,7 @@ export default defineConfig({
       },
     }),
     d2({
-      layout: "elk",
+      layout: "tala",
     }),
     markdownPages({
       sidebar,

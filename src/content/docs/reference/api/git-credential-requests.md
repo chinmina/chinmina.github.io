@@ -28,6 +28,47 @@ could not have meant to send.
 
 Each stage either answers the request or passes it to the next.
 
+```d2 sketch=true title="Git credential request classification"
+direction: right
+
+classify: Requested context {
+  complete: Target completeness
+  support: Destination support
+
+  complete -> support: "protocol and host supplied"
+}
+
+serve: Profile and repository {
+  resolve: Profile resolution
+  match: Profile match rules
+  repo: Repository matching
+  mint: Token issuance
+
+  resolve -> match -> repo -> mint
+}
+
+empty: "200, no credentials" {
+  style.fill: "#e8f4ea"
+}
+creds: "200, credentials" {
+  style.fill: "#e8f4ea"
+}
+bad: "400, incomplete target" {
+  style.fill: "#f8eaea"
+}
+err: "Error" {
+  style.fill: "#f8eaea"
+}
+
+classify.complete -> empty: "no target supplied"
+classify.complete -> bad
+classify.support -> empty: "unsupported destination"
+classify.support -> serve.resolve: "https and github.com"
+serve.repo -> empty: "repository not covered"
+serve.mint -> creds
+serve -> err: "profile, scope or upstream failure"
+```
+
 | Stage                                            | Answers with                                                    |
 | ------------------------------------------------ | --------------------------------------------------------------- |
 | Routing                                          | 404 when the method and path do not match a route               |
