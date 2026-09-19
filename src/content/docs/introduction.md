@@ -18,7 +18,7 @@ term.
 Chinmina Bridge offers substantial security and flexibility benefits for any
 size organization, and scales easily as the size of your Buildkite stack grows.
 
-Zero PATs, zero deploy keys, central permissions declarations, strong auditing
+Zero PATs, zero deploy keys, central permissions declarations, strong auditing,
 and a simple runtime model make Chinmina Bridge ideal for scaling Buildkite
 deployments from a handful to hundreds of repositories.
 
