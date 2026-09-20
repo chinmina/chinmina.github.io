@@ -161,7 +161,7 @@ Two-item lists take no comma: "written and invoked", not "written, and invoked".
 
 ### No Rhetorical Scaffolding
 
-Constructions that stage a fact rather than stating it. They read as generated prose and add length without adding information.
+These constructions stage a fact rather than state it. They read as generated prose and add length without adding information.
 
 **Never use:**
 
