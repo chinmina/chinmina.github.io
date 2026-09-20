@@ -124,9 +124,11 @@ conditions, and [Git credentials
 format](/reference/git-credentials-format#empty-response) for how Git treats the
 response.
 
-Caller-scoped and wildcard profiles are covered separately: a wildcard profile
-returns credentials for any repository its installation can reach, and a
-caller-scoped profile returns 400 when the request supplies no repository.
+Caller-scoped and wildcard profiles are covered separately. A wildcard profile
+returns credentials for any repository its installation can reach. A
+caller-scoped profile returns 400 only when a supported target's path does not
+resolve to a repository. When no target is supplied, it returns 200 with no
+credentials.
 
 ### Error responses
 
