@@ -183,24 +183,29 @@ repository each run without needing one profile per repository.
 POST /organization/token/agent-pr?repository-scope=widget
 ```
 
+This endpoint returns `400 Bad Request` when `repository-scope` is:
+
+- Missing on a caller-scoped profile
+- Supplied to a profile that is not caller-scoped
+- Empty or malformed
+
 **`/organization/git-credentials/{profile}`** derives the target repository
-from the Git remote URL in the request body, with no extra parameter
-required.
+from the `path` property in the request body. It ignores the `repository-scope`
+query parameter. For a supported destination, a caller-scoped profile returns
+`400 Bad Request` when `path` does not resolve to a repository.
 
-Validation is strict and bidirectional:
+Empty targets and unsupported destinations return 200 without credentials
+before profile resolution. See [Git credential request
+handling](/reference/api/git-credential-requests) for the target validation and
+repository derivation rules.
 
-- Supplying `repository-scope` to a profile that isn't caller-scoped returns
-  `400 Bad Request`.
-- Omitting `repository-scope` (and, for `/organization/token`, having no
-  resolvable repository) on a caller-scoped profile returns `400 Bad
-Request`.
-- A scope value containing `/`, whitespace, or control characters returns
-  `400 Bad Request`; it is otherwise used verbatim (not normalized) as the
-  repository name and cache key.
-- If GitHub rejects the resulting token request — for example, the named
-  repository doesn't exist or isn't in the installation — the response is a
-  generic `403 Forbidden`, never a `404`, so the response never reveals
-  whether a repository exists.
+On both endpoints, repository names containing `/`, whitespace, or control
+characters return `400 Bad Request`. Valid names are used verbatim as the
+repository name and cache key.
+
+If GitHub rejects the token request, the response is a generic `403 Forbidden`.
+This includes repositories that do not exist or are outside the installation.
+The response does not reveal whether a repository exists.
 
 ## See also
 

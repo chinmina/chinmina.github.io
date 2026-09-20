@@ -64,8 +64,11 @@ The API does not use prefixes. Prefixes like `org:` are part of the plugin inter
 For profiles configured with `repositories: ["{{caller-scoped-repository}}"]`
 (see [caller-scoped repositories](/reference/profiles/organization#caller-scoped-repositories)),
 the target repository is derived automatically from the `path` field in the
-request body — no extra parameter is needed. If the body doesn't resolve to a
-repository, the request returns `400 Bad Request`.
+request body. For a supported destination, a path that does not resolve to a
+repository returns `400 Bad Request`. See [caller-scoped
+organization
+profiles](/reference/api/git-credential-requests#caller-scoped-organization-profiles)
+for the paths that derive a repository.
 
 ### Request body
 
@@ -76,6 +79,15 @@ protocol=https
 host=github.com
 path=owner/repository
 ```
+
+When any of `protocol`, `host`, or `path` is non-empty, both `protocol` and
+`host` must be non-empty. An entirely empty target returns 200 without
+credentials. For a supported destination, caller-scoped profiles require a
+`path` that resolves to a repository. `path` is optional for other profiles.
+
+[Git credential request handling](/reference/api/git-credential-requests)
+describes how the request target is validated, and which targets return no
+credentials without consulting the profile.
 
 ## Response format
 
@@ -102,16 +114,32 @@ setting is for development only.
 
 ### Empty response (200 OK)
 
-When the requested repository is not in the profile's allowed repository list, the endpoint returns a successful but empty response. See [Git credentials format](/reference/git-credentials-format#empty-response) for details. This allows Git credential helpers to fall through to other credential sources.
+The endpoint returns a successful but empty response when it has no credentials
+for the requested context: the request supplies no target, names a destination
+other than `https` and `github.com`, or requests a repository outside a static
+profile's repository list. This allows Git to fall through to other credential
+sources. See [Git credential request
+handling](/reference/api/git-credential-requests) for the full set of
+conditions, and [Git credentials
+format](/reference/git-credentials-format#empty-response) for how Git treats the
+response.
+
+Caller-scoped and wildcard profiles are covered separately. A wildcard profile
+returns credentials for any repository its installation can reach. A
+caller-scoped profile returns 400 only when a supported target's path does not
+resolve to a repository. When no target is supplied, it returns 200 with no
+credentials.
 
 ### Error responses
 
 | Status code               | Condition                                                                                                                                         | Response                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
 | 400 Bad Request           | Invalid profile format or parameter, or caller-scoped repository could not be resolved                                                            | Empty body, `Chinmina-Denied` header |
+| 400 Bad Request           | Target partially specified: `protocol` or `host` missing or empty                                                                                 | `Bad Request` in plain text          |
 | 401 Unauthorized          | Missing or invalid JWT                                                                                                                            | JSON error                           |
 | 403 Forbidden             | JWT valid but claims insufficient, or GitHub rejected a caller-scoped repository                                                                  | Empty body, `Chinmina-Denied` header |
 | 404 Not Found             | Profile does not exist, or is unavailable because it failed validation (for example, it names a GitHub App that is not configured or is disabled) | Empty body, `Chinmina-Denied` header |
+| 413 Content Too Large     | Request body exceeds the 20 KB limit                                                                                                              | Empty body, `Chinmina-Denied` header |
 | 500 Internal Server Error | Token vending failure, GitHub API error, or the profile names a GitHub App that could not be resolved                                             | Empty body, `Chinmina-Denied` header |
 
 Errors raised by the endpoint carry no response body. The caller-facing reason
@@ -121,8 +149,8 @@ the [audit log](/reference/auditing). A profile that failed validation reports
 content as part of an error message.
 
 Two cases differ. A JWT validation failure is answered by the authentication
-middleware with a JSON body and a `WWW-Authenticate` header. A request body
-that cannot be parsed as credential helper input is answered with a plain text
-status line and no `Chinmina-Denied` header.
+middleware with a JSON body and a `WWW-Authenticate` header. An incomplete
+request target is answered with a plain text status line and no
+`Chinmina-Denied` header.
 
 [helper-protocol]: /reference/git-credentials-format
