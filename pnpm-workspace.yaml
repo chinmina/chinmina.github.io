@@ -1,0 +1,5 @@
+# Platform-specific optional packages provide these binaries. Do not run their
+# postinstall fallback downloads; fail when the required package is unavailable.
+allowBuilds:
+  esbuild: false
+  workerd: false
