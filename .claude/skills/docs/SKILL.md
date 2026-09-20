@@ -45,6 +45,8 @@ The content type determines voice, structure, and level of detail. When classify
 - **No apologetic language:** Never use "This might seem complicated, but..." or "Don't worry..."
 - **Sentences:** Aim for under 20 words. Single-sentence paragraphs are acceptable.
 - **Spelling:** Use British/Australian English spellings (e.g., "favour", "organise", "colour", "licence" as noun).
+- **Punctuation:** Use the Oxford comma in serial lists of three or more items.
+- **No staged facts:** State a fact directly. Never introduce it with a count and a negative reveal, an "X, not Y" interpolation, or an inverted contrast.
 
 ## Summary Checklist
 
@@ -53,7 +55,7 @@ Before finalizing content, verify:
 1. **Mode**: Am I writing a Guide (action) or Reference (facts)?
 2. **Perspective**: Guides use "you" + imperative; Reference uses third person + declarative
 3. **Structure**: Concepts follow Definition → Purpose → Mechanics
-4. **Format**: Titles in sentence case; `<Steps>` and `<Aside>` imported if used
+4. **Format**: Titles in sentence case and one to four words; `<Steps>` and `<Aside>` imported if used
 5. **Tone**: Guides "coach"; Reference "defines"
 6. **Style**: Direct, concise, honest—no filler, hedging, or rhetorical questions
 
