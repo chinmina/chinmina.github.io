@@ -37,7 +37,7 @@ Do not import key material with your IaC tooling. Terraform's
 raw state as plain text". That recreates the plaintext copy of the private key
 that KMS exists to eliminate. CloudFormation cannot import key material at all.
 
-Provision the key, its alias, its tags and its policy declaratively. Import the
+Provision the key, its alias, its tags, and its policy declaratively. Import the
 material separately.
 
 </Aside>
@@ -47,7 +47,7 @@ material separately.
 1. Follow GitHub's instructions to [generate a private key][github-key-generate]
    for the GitHub application in use.
 
-2. Create a KMS key with `EXTERNAL` origin, key spec `RSA_2048` and key usage
+2. Create a KMS key with `EXTERNAL` origin, key spec `RSA_2048`, and key usage
    `SIGN_VERIFY`.
 
    `EXTERNAL` origin allows the material to be imported. `RSA_2048` is the spec

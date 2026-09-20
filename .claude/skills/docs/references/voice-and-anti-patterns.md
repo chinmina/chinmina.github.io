@@ -79,6 +79,23 @@ Include dedicated sections for limitations when relevant:
 >
 > The private key for the GitHub application is quite powerful, and needs to be carefully protected.
 
+### Punctuation: Oxford Comma
+
+Use the Oxford comma in every serial list of three or more items.
+
+**Good:**
+
+- "The `protocol`, `host`, and `path` properties describe the request's target."
+- "400, 404, or 500"
+- "Omitted, empty, root, and owner-only paths derive nothing."
+
+**Bad:**
+
+- "The `protocol`, `host` and `path` properties describe the request's target."
+- "Omitted, empty, root and owner-only paths derive nothing."
+
+Two-item lists take no comma: "written and invoked", not "written, and invoked". A comma ending a clause is not a list separator, and does not attract this rule.
+
 ## Anti-Patterns: What to Never Write
 
 ### No Filler Phrases
@@ -141,6 +158,45 @@ Include dedicated sections for limitations when relevant:
 **Good:**
 
 > "Audit logs provide a level of non-repudiation for the system."
+
+### No Rhetorical Scaffolding
+
+These constructions stage a fact rather than state it. They read as generated prose and add length without adding information.
+
+**Never use:**
+
+- A count paired with a negative reveal: "three controls, none of which is in the request body"
+- "X, not Y, determines Z": "the installation's reach, not this comparison, determines which repositories..."
+- Closing flourishes of the form "It is A, not B" or "It cannot widen one"
+- Inverted contrasts: "A does not fail the request; only B does"
+- Presenting evidence as a build-up: "The empty response is the clearest case:"
+- Editorialising on intent: "Parsing is deliberately tolerant"
+
+**Instead:** State the fact, then list or explain.
+
+**Bad:**
+
+> "Authority comes from three controls, none of which is in the request body:"
+
+**Good:**
+
+> "Authorization is determined by three controls:"
+
+**Bad:**
+
+> "The GitHub App installation's reach, not this comparison, determines which repositories a token can actually be used for."
+
+**Good:**
+
+> "The GitHub App installation's reach determines which repositories the token can actually be used for."
+
+**Bad:**
+
+> "A malformed line does not fail the request; only a failure to read the body does."
+
+**Good:**
+
+> "A malformed line does not fail the request. A failure to read the body returns 413 when the body exceeded 20 KB, and 500 otherwise."
 
 ### No Apologetic Language
 
