@@ -3,39 +3,42 @@ title: GET /healthcheck
 description: Health check endpoint for monitoring Chinmina Bridge service availability.
 ---
 
-The `GET /healthcheck` endpoint provides a simple mechanism to verify that the Chinmina Bridge service is running and accepting HTTP requests.
+The `GET /healthcheck` endpoint reports whether Chinmina Bridge is accepting HTTP requests.
+It supports container probes, load balancer health checks, and monitoring systems.
 
-For documentation of token-issuing endpoints, see [POST /token](/reference/api/pipeline-token), [POST /git-credentials](/reference/api/pipeline-git-credentials), [POST /organization/token/{profile}](/reference/api/organization-token), and [POST /organization/git-credentials/{profile}](/reference/api/organization-git-credentials).
-
-## Purpose
-
-This endpoint is designed for use with Kubernetes liveness probes, load balancer health checks, and monitoring systems. It provides a lightweight, unauthenticated health check that validates only HTTP server functionality, not external dependencies.
-
-:::note
-
-The health check does not validate the state of GitHub API, Buildkite API, or AWS KMS connectivity. Use the token-issuing endpoints if you need to verify full system health.
-
-:::
+The endpoint does not check GitHub API, Buildkite API, or AWS KMS connectivity.
+A successful response does not guarantee that token requests will succeed.
 
 ## Request format
 
-This endpoint is not authenticated and takes no parameters.
+The endpoint requires no authentication and takes no parameters.
+When [`SERVER_BASE_PATH`](/reference/configuration#server_base_path) is set, the endpoint is served under that prefix.
+For example, `/api` places the endpoint at `/api/healthcheck`.
+
+```http
+GET /healthcheck HTTP/1.1
+Host: localhost:8080
+```
 
 ## Response format
 
-The endpoint returns an HTTP status code with no response body:
+The endpoint returns `200 OK` with `Content-Type: text/plain` and the body `OK`.
 
-| Status Code               | Meaning                                                  |
-| ------------------------- | -------------------------------------------------------- |
-| `200 OK`                  | Service is running and accepting requests                |
-| `503 Service Unavailable` | Service is not ready (typically during startup/shutdown) |
+```http
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 2
 
-### Example request
-
-```bash
-curl http://localhost:8080/healthcheck
+OK
 ```
 
-## Error responses
+## Startup and shutdown
 
-This endpoint does not return JSON error responses. HTTP status codes are the sole indicator of health.
+When [`GITHUB_ORG_PROFILE`](/reference/configuration#github_org_profile) is set, the listener remains closed until the first profile generation loads.
+Health checks receive a connection failure during this period.
+A failed refresh after startup retains the last loaded generation and does not change the health response.
+
+During shutdown, the listener closes and stops accepting new connections.
+The endpoint has no startup or shutdown `503` response.
+
+Container probe configuration is covered in the [deployment example](/guides/deployment-example#health-checks).

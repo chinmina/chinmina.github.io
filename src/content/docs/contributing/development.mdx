@@ -3,34 +3,19 @@ title: Local development
 description: Setting up a local development environment so you can contribute to Chinmina.
 ---
 
-import { Aside, Steps } from "@astrojs/starlight/components"
+import { Steps } from "@astrojs/starlight/components"
 
-Running Chinmina locally is a crucial part of successfully contributing. Since
-Chinmina acts as a bridge between Buildkite and GitHub though, local execution
-has similar prerequisites to installing it into a standard environment.
-
-This guide will walk you through the setup of GitHub and Buildkite, then
-introduce running the server locally in Docker. It is possible to run the
-executable directly, but this tends to make running the server more difficult.
+Run Chinmina locally with Docker Compose to test changes against Buildkite and GitHub.
+The local stack requires credentials for both services.
 
 ## Setting up your local environment
 
-Required tools:
+Use [direnv][direnv] for environment configuration and [mise][mise] to install and select the project toolchain.
+Install both tools and enable their shell integrations.
+Install Docker with Docker Compose to run the local integration stack.
 
-1. [`direnv`](https://direnv.net/) for local environment configuration
-2. Docker (`docker compose`) to run the server on the local machine.
-3. Go language and toolchain.
-
-<Aside type="tip">
-
-The Go environment in use needs to be able to build the version specified in the
-project's `go.mod` file.
-
-[Mise](https://mise.jdx.dev/) is a useful tool for ensuring that you have
-the right toolchain for this project, in such a way that it doesn't mess with
-other projects.
-
-</Aside>
+Run `mise install` from the bridge repository root to install the tools defined in [`mise.toml`][bridge-tools].
+If you use a different toolkit, use this file as the authority for required tools and versions.
 
 ## Setting up GitHub and Buildkite
 
@@ -56,13 +41,10 @@ Used in testing only. These comma-separated, key-value pairs should be provided 
 
 <Steps>
 
-1. Setup your local environment by creating a `.envrc.local` file, using the
-   template provided in the repository's `.envrc` file. This file's contents will
-   override any defaults set in `.envrc`.
+1. Create `.envrc.private` using the variable examples in the repository's `.envrc` file.
+   This file supplies local values without changing tracked configuration.
 
-2. Using the "Getting started" guide's [essential
-   configuration](/guides/getting-started#chinmina-bridge-setup) section, fill in the
-   suggested values in `.envrc.local`.
+2. Fill in the [essential configuration](/guides/getting-started#chinmina-bridge-setup) values in `.envrc.private`.
 
 3. Run `direnv allow` to bring the updated configuration into the environment.
 
@@ -70,14 +52,19 @@ Used in testing only. These comma-separated, key-value pairs should be provided 
 
 ## Running the server
 
-This project uses the venerable `make` as a build tool.
+Run these commands from the bridge repository root:
 
-Run:
+- `just build` to build the executables.
+- `just test` to run unit tests.
+- `just docker-up --build` to build the executables and container image, then start the integration stack.
+- `just docker down` to stop the integration stack.
 
-- `make build` to build the executables
-- `make test` to ... run the tests
-- `make docker` to start the system with Docker Compose, running Chinmina, the Buildkite agent, and Jaeger.
+The stack runs Chinmina workers behind Traefik, with a Buildkite agent, Valkey, and OpenObserve.
+The agent processes jobs from pipelines in your test organisation and authenticates to GitHub through Chinmina.
+View telemetry in OpenObserve at `http://localhost:5080`.
 
-When `compose` is running, the Buildkite agents will process jobs from pipelines
-in your test organization, and authenticate to GitHub. Jaeger is accessible to
-observe the Chinmina telemetry.
+Run `just` to list available recipes, and `just agent` to format, lint, test, and build before committing.
+
+[direnv]: https://direnv.net/
+[mise]: https://mise.jdx.dev/getting-started.html
+[bridge-tools]: https://github.com/chinmina/chinmina-bridge/blob/main/mise.toml
