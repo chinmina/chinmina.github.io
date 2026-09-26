@@ -382,7 +382,7 @@ The source file for profiles **must** be configured as below.
 
 When `GITHUB_ORG_PROFILE` is set, the service does not accept connections until
 the first profile generation loads. The listener is not opened during this
-period, so [health checks](api/health-check-and-status#startup-and-shutdown) receive connection failures. Failed attempts are retried
+period, so [health checks](/reference/api/health-check-and-status#startup-and-shutdown) receive connection failures. Failed attempts are retried
 every 5 seconds and logged as `background task failed`. There is no timeout.
 
 Once the first generation loads, the file is refreshed every 5 minutes. A

@@ -200,18 +200,21 @@ Use inline code for:
 
 #### Internal Links
 
-Use relative paths without file extensions:
+Use root-relative site paths without file extensions or trailing slashes.
+The build's link validator rejects document-relative links such as `../configuration`.
 
 ```markdown
-[Getting Started](../guides/getting-started)
-[Configuration](../reference/configuration)
+[Getting started](/guides/getting-started)
+[Configuration](/reference/configuration)
 ```
 
 For section anchors:
 
 ```markdown
-[essential configuration](getting-started#chinmina-bridge-setup)
+[essential configuration](/guides/getting-started#chinmina-bridge-setup)
 ```
+
+Same-page anchors can omit the path, for example `[Response format](#response-format)`.
 
 #### External Links
 
@@ -224,3 +227,6 @@ Authentication is handled via [GitHub App][github-app] with
 [github-app]: https://docs.github.com/en/apps
 [github-app-tokens]: https://docs.github.com/en/apps/creating-github-apps/...
 ```
+
+Write local development addresses as inline code, for example `http://localhost:5080`.
+The link validator rejects clickable `localhost` and `127.0.0.1` URLs.

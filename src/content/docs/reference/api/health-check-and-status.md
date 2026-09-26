@@ -12,7 +12,7 @@ A successful response does not guarantee that token requests will succeed.
 ## Request format
 
 The endpoint requires no authentication and takes no parameters.
-When [`SERVER_BASE_PATH`](../configuration#server_base_path) is set, the endpoint is served under that prefix.
+When [`SERVER_BASE_PATH`](/reference/configuration#server_base_path) is set, the endpoint is served under that prefix.
 For example, `/api` places the endpoint at `/api/healthcheck`.
 
 ```http
@@ -34,11 +34,11 @@ OK
 
 ## Startup and shutdown
 
-When [`GITHUB_ORG_PROFILE`](../configuration#github_org_profile) is set, the listener remains closed until the first profile generation loads.
+When [`GITHUB_ORG_PROFILE`](/reference/configuration#github_org_profile) is set, the listener remains closed until the first profile generation loads.
 Health checks receive a connection failure during this period.
 A failed refresh after startup retains the last loaded generation and does not change the health response.
 
 During shutdown, the listener closes and stops accepting new connections.
 The endpoint has no startup or shutdown `503` response.
 
-Container probe configuration is covered in the [deployment example](../../guides/deployment-example#health-checks).
+Container probe configuration is covered in the [deployment example](/guides/deployment-example#health-checks).

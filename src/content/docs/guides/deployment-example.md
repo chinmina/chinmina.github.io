@@ -295,7 +295,7 @@ Add this `healthCheck` object to the Chinmina container definition in your ECS t
 ```
 
 Use `CMD` to execute the binary directly in the published image.
-The probe targets loopback using [`SERVER_PORT`](../reference/configuration#server_port) and [`SERVER_BASE_PATH`](../reference/configuration#server_base_path).
+The probe targets loopback using [`SERVER_PORT`](/reference/configuration#server_port) and [`SERVER_BASE_PATH`](/reference/configuration#server_base_path).
 
 An HTTP `200` response produces exit code `0` with no output.
 Other statuses, redirects, connection failures, and timeouts produce exit code `1` with a diagnostic on stderr.
@@ -303,11 +303,11 @@ Other statuses, redirects, connection failures, and timeouts produce exit code `
 Keep the ECS timeout longer than the probe timeout; this example allows three seconds for a two-second probe.
 Configure retries in ECS, because each probe sends one request.
 
-Adjust `startPeriod` to allow for the [initial profile load](../reference/api/health-check-and-status#startup-and-shutdown).
+Adjust `startPeriod` to allow for the [initial profile load](/reference/api/health-check-and-status#startup-and-shutdown).
 Set the ECS service's [health check grace period][ecs-service-health-grace] to allow startup before unhealthy checks trigger task replacement.
 This grace period covers container and ALB checks.
 
-Configure the ALB to check the [HTTP health endpoint](../reference/api/health-check-and-status), including any base-path prefix.
+Configure the ALB to check the [HTTP health endpoint](/reference/api/health-check-and-status), including any base-path prefix.
 Consult the `healthcheck` subcommand's `--help` output for custom targets and other options.
 
 ### Performance
