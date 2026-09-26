@@ -277,7 +277,7 @@ The deployment uses a single ECS Fargate instance behind an Application Load Bal
 
 ### Health checks
 
-Use the built-in `healthcheck` subcommand in Chinmina v0.16.0 and later for container health checks.
+Use the built-in `healthcheck` subcommand for container health checks.
 It probes the running service without a shell, a separate HTTP client, or service credentials.
 
 Add this `healthCheck` object to the Chinmina container definition in your ECS task definition:
