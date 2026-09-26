@@ -275,6 +275,41 @@ organization:
 
 The deployment uses a single ECS Fargate instance behind an Application Load Balancer (ALB). If the container crashes, the ECS service automatically restarts it.
 
+### Health checks
+
+Use the built-in `healthcheck` subcommand in Chinmina v0.16.0 and later for container health checks.
+It probes the running service without a shell, a separate HTTP client, or service credentials.
+
+Add this `healthCheck` object to the Chinmina container definition in your ECS task definition:
+
+```json
+{
+  "healthCheck": {
+    "command": ["CMD", "/ko-app/chinmina-bridge", "healthcheck", "--timeout", "2s"],
+    "interval": 10,
+    "timeout": 3,
+    "retries": 3,
+    "startPeriod": 60
+  }
+}
+```
+
+Use `CMD` to execute the binary directly in the published image.
+The probe targets loopback using [`SERVER_PORT`](../reference/configuration#server_port) and [`SERVER_BASE_PATH`](../reference/configuration#server_base_path).
+
+An HTTP `200` response produces exit code `0` with no output.
+Other statuses, redirects, connection failures, and timeouts produce exit code `1` with a diagnostic on stderr.
+
+Keep the ECS timeout longer than the probe timeout; this example allows three seconds for a two-second probe.
+Configure retries in ECS, because each probe sends one request.
+
+Adjust `startPeriod` to allow for the [initial profile load](../reference/api/health-check-and-status#startup-and-shutdown).
+Set the ECS service's [health check grace period][ecs-service-health-grace] to allow startup before unhealthy checks trigger task replacement.
+This grace period covers container and ALB checks.
+
+Configure the ALB to check the [HTTP health endpoint](../reference/api/health-check-and-status), including any base-path prefix.
+Consult the `healthcheck` subcommand's `--help` output for custom targets and other options.
+
 ### Performance
 
 The service handles concurrent requests efficiently. Request latency depends on cache status:
@@ -338,3 +373,4 @@ Chinmina requires these services to be operational:
 Service degradation or outages in any of these dependencies will impact Chinmina's ability to vend tokens, though caching provides limited resilience for repeated requests.
 
 [buildkite-job-token]: https://buildkite.com/docs/agent/v3/tokens#additional-agent-tokens-token-exchange-process
+[ecs-service-health-grace]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_definition_parameters.html#service_definition_parameters_healthCheckGracePeriodSeconds

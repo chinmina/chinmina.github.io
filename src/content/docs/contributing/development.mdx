@@ -5,13 +5,8 @@ description: Setting up a local development environment so you can contribute to
 
 import { Aside, Steps } from "@astrojs/starlight/components"
 
-Running Chinmina locally is a crucial part of successfully contributing. Since
-Chinmina acts as a bridge between Buildkite and GitHub though, local execution
-has similar prerequisites to installing it into a standard environment.
-
-This guide will walk you through the setup of GitHub and Buildkite, then
-introduce running the server locally in Docker. It is possible to run the
-executable directly, but this tends to make running the server more difficult.
+Run Chinmina locally with Docker Compose to test changes against Buildkite and GitHub.
+The local stack requires credentials for both services.
 
 ## Setting up your local environment
 
@@ -20,6 +15,7 @@ Required tools:
 1. [`direnv`](https://direnv.net/) for local environment configuration
 2. Docker (`docker compose`) to run the server on the local machine.
 3. Go language and toolchain.
+4. [`just`][just] to build, test, and run the project.
 
 <Aside type="tip">
 
@@ -70,14 +66,18 @@ Used in testing only. These comma-separated, key-value pairs should be provided 
 
 ## Running the server
 
-This project uses the venerable `make` as a build tool.
+Run these commands from the bridge repository root:
 
-Run:
+- `just build` to build the executables.
+- `just test` to run unit tests.
+- `just docker-up --build` to build the executables and container image, then start the integration stack.
+- `just docker down` to stop the integration stack.
 
-- `make build` to build the executables
-- `make test` to ... run the tests
-- `make docker` to start the system with Docker Compose, running Chinmina, the Buildkite agent, and Jaeger.
+The stack runs Chinmina workers behind Traefik, with a Buildkite agent, Valkey, and OpenObserve.
+The agent processes jobs from pipelines in your test organisation and authenticates to GitHub through Chinmina.
+View telemetry in OpenObserve at [http://localhost:5080][openobserve-local].
 
-When `compose` is running, the Buildkite agents will process jobs from pipelines
-in your test organization, and authenticate to GitHub. Jaeger is accessible to
-observe the Chinmina telemetry.
+Run `just` to list available recipes, and `just agent` to format, lint, test, and build before committing.
+
+[just]: https://just.systems/
+[openobserve-local]: http://localhost:5080

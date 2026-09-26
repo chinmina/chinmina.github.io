@@ -9,7 +9,7 @@ Chinmina creates distributed trace spans for HTTP requests, external API calls, 
 
 HTTP server spans represent incoming requests to Chinmina endpoints.
 
-**Span name:** Route pattern (e.g., `/token`, `/git-credentials`, `/healthcheck`, `/organization/token/{profile}`)
+**Span name:** Route pattern (e.g., `/token`, `/git-credentials`, or `/organization/token/{profile}`)
 
 **Span kind:** Server
 
