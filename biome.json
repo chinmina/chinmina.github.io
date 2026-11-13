@@ -11,6 +11,11 @@
       "quoteStyle": "double"
     }
   },
+  "markdown": {
+    "parser": {
+      "frontmatter": true
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -35,6 +40,15 @@
   "overrides": [
     {
       "includes": ["**/*.astro"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.md", "**/*.mdx"],
       "linter": {
         "enabled": false
       },
